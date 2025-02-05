@@ -157,7 +157,7 @@ def transform_datfile(infile, outfile):
 
 if __name__ == "__main__":
     # Example usage:
-    infile = "FTC_10_2023_12-001.dat"
-    outfile= "FTC_10_2023_12-001_py.dat"
+    infile = "FTC_10_2023_12-004.dat"
+    outfile= "FTC_10_2023_12-004_py.dat"
     transform_datfile(infile, outfile)
     print(f"Transformed file written to {outfile}")
