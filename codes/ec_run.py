@@ -46,7 +46,7 @@ demfile  = None
 # In your code, "include ucwb_famscen.run" & "include ucwb_SIMS.run" might set them.
 famscen = "FTC_10_2023_12"
 # Suppose we have SIMS = [001..031]
-SIMS = [f"{i:03d}_py" for i in range(3, 4)]  # Example with just 2 days for brevity
+SIMS = [f"{i:03d}_py" for i in range(1, 4)]  # Example with just 2 days for brevity
 
 pathscen = f"scenarios/{famscen}/"
 pathdem  = "data/demand/"
@@ -168,6 +168,23 @@ for sim in SIMS:
         print(f"var_fd size: {len(list(instance.var_fd.keys()))}")  # Should be 24
     print(f"T size: {len(list(instance.T))}")  # Should be 24
     print(f"S size: {len(list(instance.S))}")  # Should be 10
+    
+    # instance.del_component("Ssd")
+
+    # instance.add_component(
+    #     "Ssd",
+    #     pyo.Set(
+    #         initialize=lambda m: [
+    #             (t, l, j)
+    #             for t in m.T
+    #             for l in m.S
+    #             for j in m.S
+    #             if (float(value(m.lD[t, l])) <= float(value(m.lD[t, j]))) and (j != l)
+    #         ],
+    #         dimen=3
+    #     )
+    # )
+
 
     # Compute Expected Scenario (ScenE)
     ScenE_dict = {}
@@ -616,33 +633,111 @@ for sim in SIMS:
     #         print(f"RM Upward BESS[{t},{s}] = {value(instance.rU_B[t,s])}")
     #         print(f"RM Upward Flex Demand[{t},{s}] = {value(instance.rU_FD[t,s])}")
 
-    # ---------------------------------------------------------
-    # HELPER FUNCTION to replicate AMPL's "next(l, c[sg,k],1)"
-    # ---------------------------------------------------------
+
+    
     def consecutive_scenarios(model, sg, k):
-        """
-        Return a list of (l, l_next) pairs by sorting the scenario IDs
-        in model.c[sg, k].
-        If c[sg,k] doesn't exist or is empty, returns [].
-        """
         if (sg, k) not in model.c.index_set():
             return []
-        scenario_list = list(model.c[sg, k])
-        scenario_list.sort()  # ascending sort
-        pairs = []
-        for i in range(len(scenario_list) - 1):
-            l = scenario_list[i]
-            l_next = scenario_list[i + 1]
-            pairs.append((l, l_next))
-        return pairs
+        # Sort using the same numeric key!
+        scenario_list = sorted([l for l in model.c[sg, k] if l in model.S],
+                               key=lambda x: int(x))
+        return [(scenario_list[i], scenario_list[i+1]) for i in range(len(scenario_list)-1)]
 
-
+    
     print(f"Checking non-anticipativity for Day {sim}")
+    
+    # List of all variables in non-anticipativity constraints
+    nac_variables = [
+        "eDA_p", "eDA_m", "ieDA_p",  # Day-Ahead Market
+        "rU", "rU_B", "rU_FD",        # Reserve Market Upward
+        "rD", "rD_B", "rD_FD",        # Reserve Market Downward
+    ]
+    
+    # Iterate over all variables
+    for var_name in nac_variables:
+        if not hasattr(instance, var_name):  # Skip if variable not in model
+            print(f"Skipping {var_name} (not found in model)")
+            continue
+    
+        print(f"\nChecking NAC for {var_name}:")
+        var = getattr(instance, var_name)  # Get the variable dynamically
+    
+        for t in instance.T:
+            for k in instance.S0:
+                for (l, l_next) in consecutive_scenarios(instance, 1, k):
+                    try:
+                        diff = abs(value(var[t, l]) - value(var[t, l_next]))
+                        if diff > 1e-6:
+                            print(f"Non-anticipativity violated: {var_name}[{t}, {l}] ≠ {var_name}[{t}, {l_next}]")
+                    except KeyError:
+                        print(f"Skipping {var_name}[{t}, {l}] or {var_name}[{t}, {l_next}] due to missing index")
+    
+    print(f"\nChecking NAC for pIB_p:")
     for t in instance.T:
-        for k in instance.S:
-            for (l, l_next) in consecutive_scenarios(instance, 1, k):
-                if abs(value(instance.rU[t, l]) - value(instance.rU[t, l_next])) > 1e-6:
-                    print(f"Non-anticipativity violated: rU[{t}, {l}] ≠ rU[{t}, {l_next}]")
+        for k in instance.S0:
+            sg_for_t = instance.sgpw[t]  # use the same stage as in the constraint
+            for (l, l_next) in consecutive_scenarios(instance, sg_for_t, k):
+                try:
+                    diff = abs(value(instance.pIB_p[t, l]) - value(instance.pIB_p[t, l_next]))
+                    if diff > 1e-6:
+                        print(f"Non-anticipativity violated: pIB_p[{t}, {l}] ≠ pIB_p[{t}, {l_next}]")
+                except KeyError:
+                    print(f"Skipping pIB_p[{t}, {l}] or pIB_p[{t}, {l_next}] due to missing index")
+
+    print(f"\nChecking NAC for pIB_m:")
+    for t in instance.T:
+        for k in instance.S0:
+            sg_for_t = instance.sgpw[t]  # use the same stage as in the constraint
+            for (l, l_next) in consecutive_scenarios(instance, sg_for_t, k):
+                try:
+                    diff = abs(value(instance.pIB_m[t, l]) - value(instance.pIB_m[t, l_next]))
+                    if diff > 1e-6:
+                        print(f"Non-anticipativity violated: pIB_m[{t}, {l}] ≠ pIB_m[{t}, {l_next}]")
+                except KeyError:
+                    print(f"Skipping pIB_m[{t}, {l}] or pIB_m[{t}, {l_next}] due to missing index")
+
+
+    # List of all variables in non-anticipativity constraints
+    nac_variables = [
+        "var_fd", "var_afd_p", "var_afd_m",  # Flexible Demand
+        "dV", "cV", "idV", "socV"     # Battery Energy Storage
+    ]
+    
+    # Iterate over all variables
+    for var_name in nac_variables:
+        if not hasattr(instance, var_name):  # Skip if variable not in model
+            print(f"Skipping {var_name} (not found in model)")
+            continue
+    
+        print(f"\nChecking NAC for {var_name}:")
+        var = getattr(instance, var_name)  # Get the variable dynamically
+    
+        for t in instance.T:
+            for k in instance.S0:
+                sg_for_t = instance.sgpw[t] - 1  # use the same stage as in the constraint
+                for (l, l_next) in consecutive_scenarios(instance, sg_for_t, k):
+                    try:
+                        diff = abs(value(var[t, l]) - value(var[t, l_next]))
+                        if diff > 1e-6:
+                            print(f"Non-anticipativity violated: {var_name}[{t}, {l}] ≠ {var_name}[{t}, {l_next}]")
+                    except KeyError:
+                        print(f"Skipping {var_name}[{t}, {l}] or {var_name}[{t}, {l_next}] due to missing index")
+    
+
+    print(f"\nChecking NAC for all eIM:")
+    # Check nonanticipativity for eIM using the same index logic as in build_nac_eIM_index:
+    for i in instance.IM:
+        for t in instance.TIM[i]:
+            for k in instance.S0:
+                sg_for_i = instance.sgim[i] - 1
+                for (l, l_next) in consecutive_scenarios(instance, sg_for_i, k):
+                    try:
+                        diff = abs(value(instance.eIM[i, t, l]) - value(instance.eIM[i, t, l_next]))
+                        if diff > 1e-6:
+                            print(f"Non-anticipativity violated: eIM[{i}, {t}, {l}] ≠ eIM[{i}, {t}, {l_next}]")
+                    except KeyError:
+                        print(f"Skipping eIM[{i}, {t}, {l}] or eIM[{i}, {t}, {l_next}] due to missing index")
+
 
 
     # Store results

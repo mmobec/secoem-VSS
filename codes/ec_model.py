@@ -134,7 +134,11 @@ model.SOCfin = pyo.Param(within=pyo.NonNegativeReals)  # BESS final SOC
 
 # 8.1 Day Ahead Market 
 model.lD = pyo.Param(model.T, model.S, within=pyo.Reals, mutable = True)    # !!! Day-ahead prices TO BE DEFINED BEFORE CREATING INSTANCE
-                                                            # Because they are needed to build set Ssd
+        
+# # In ec_model.py, near the other set definitions:
+# model.Ssd = pyo.Set(dimen=3, initialize=[])
+
+                                                    # Because they are needed to build set Ssd
 model.Ssd = pyo.Set(
     initialize=lambda m: [
         (t, l, j)
@@ -507,29 +511,21 @@ implementing the 'next(l, c[sg,k],1)' logic in Pyomo for an AbstractModel.
 # ---------------------------------------------------------
 # HELPER FUNCTION to replicate AMPL's "next(l, c[sg,k],1)"
 # ---------------------------------------------------------
+
 def consecutive_scenarios(model, sg, k):
-    """
-    Return a list of (l, l_next) pairs by sorting the scenario IDs
-    in model.c[sg, k].
-    If c[sg,k] doesn't exist or is empty, returns [].
-    """
     if (sg, k) not in model.c.index_set():
         return []
-    scenario_list = list(model.c[sg, k])
-    scenario_list.sort()  # ascending sort
-    pairs = []
-    for i in range(len(scenario_list) - 1):
-        l = scenario_list[i]
-        l_next = scenario_list[i + 1]
-        pairs.append((l, l_next))
-    return pairs
+    # Sort using the same numeric key!
+    scenario_list = sorted([l for l in model.c[sg, k] if l in model.S],
+                           key=lambda x: int(x))
+    return [(scenario_list[i], scenario_list[i+1]) for i in range(len(scenario_list)-1)]
+
 
 # ---------------------------------------------------------
 # DAY AHEAD MARKET (c[1, k])
 # ---------------------------------------------------------
 
 # NAC_eDA_p
-
 def build_nac_eDA_p_index(model):
     idx = []
     for t in model.T:
@@ -539,22 +535,10 @@ def build_nac_eDA_p_index(model):
                     idx.append((t, k, l, l_next))
     return idx
 
-# def build_nac_eDA_p_index(model):
-#     idx = []
-#     for t in model.T:
-#         for k in model.S0:
-#             # c[1, k] -> stage=1
-#             for (l, l_next) in consecutive_scenarios(model, 1, k):
-#                 idx.append((t, k, l, l_next))
-#     return idx
-
 def NAC_eDA_p_rule(m, t, k, l, l_next):
     if (t, l) not in m.eDA_p or (t, l_next) not in m.eDA_p:
         return pyo.Constraint.Skip  # Skip invalid indices
     return m.eDA_p[t, l] == m.eDA_p[t, l_next]
-
-# def NAC_eDA_p_rule(m, t, k, l, l_next):
-#     return m.eDA_p[t, l] == m.eDA_p[t, l_next]
 
 model.NAC_eDA_p_index = pyo.Set(dimen=4, initialize=build_nac_eDA_p_index)
 model.NAC_eDA_p = pyo.Constraint(model.NAC_eDA_p_index, rule=NAC_eDA_p_rule)
@@ -611,8 +595,8 @@ def build_nac_rU_index(model):
     return idx
 
 def NAC_rU_rule(m, t, k, l, l_next):
-    if (t, l) not in m.rU or (t, l_next) not in m.rU:
-        return pyo.Constraint.Skip
+    # if (t, l) not in m.rU or (t, l_next) not in m.rU:
+    #     return pyo.Constraint.Skip
     return m.rU[t, l] == m.rU[t, l_next]
 
 model.NAC_rU_index = pyo.Set(dimen=4, initialize=build_nac_rU_index)
