@@ -1,0 +1,9 @@
+###### Printing BESS Parameters and Optimal Variables #########
+
+Emax: 10
+Dmax: 3
+RTE: 0.8
+SOCmax: 0.9
+SOCmin: 0.1
+SOCini: 0.4
+SOCfin: 0.4
