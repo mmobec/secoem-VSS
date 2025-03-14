@@ -150,6 +150,7 @@ model.Ssd = pyo.Set(
 )
 
 model.mean_lD = pyo.Param(model.T, within=pyo.Reals, mutable=True)        # average day-ahead price
+model.PDA_LB = pyo.Param(within=pyo.NonNegativeReals)  # Minimum bid size
 
 # 8.2 Reserve Market
 model.lR = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)  # secondary reserve price
@@ -210,7 +211,7 @@ model.max_pNIB_RP = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mut
 
 # Define indexed sets for problem and simulations
 model.PROB = pyo.Set(initialize=['ec'])  # This should be a fixed set of problems
-model.SIMS = pyo.Set(initialize=[f"{i:03d}_py" for i in range(1, 32)])  # Extend as needed
+model.SIMS = pyo.Set(initialize=[f"{i:03d}" for i in range(1, 32)])  # Extend as needed
 
 # Elapsed Time Parameters
 model.time = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
@@ -258,7 +259,8 @@ model.socV = pyo.Var(model.T0, model.S, within=pyo.NonNegativeReals, bounds = (m
 # 8.1 Day Ahead Market
 model.eDA_p = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # sold energy
 model.eDA_m = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # bought energy
-model.ieDA_p = pyo.Var(model.T, model.S, within=pyo.Binary)            # binary for selling vs. not selling
+model.ieDA_p = pyo.Var(model.T, model.S, within=pyo.Binary)            # binary for selling bid
+model.ieDA_m = pyo.Var(model.T, model.S, within=pyo.Binary)            # binary for buying bid
 
 # 8.2 Reserve Market
 model.rU = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # upward reserve
@@ -400,15 +402,27 @@ model.VPP_RD_SOCV = pyo.Constraint(model.T, model.S, rule=VPP_RD_SOCV_rule)
 # 8.1 Day Ahead Market
 # -------------------------------------------------------
 
-# eDA_p[t,s] <= (max_pW + max_pPV + Dmax - FD_L[t]) * ieDA_p[t,s];
+# Lower & Upper Bounds on DA Sell & Buy Energy
+def DA_sell_bid_LB_rule(m, t, s):
+    return m.PDA_LB * m.ieDA_p[t, s] <= m.eDA_p[t, s]
+model.DA_sell_bid_LB = pyo.Constraint(model.T, model.S, rule=DA_sell_bid_LB_rule)
+
 def DA_sell_bid_UB_rule(m, t, s):
     return m.eDA_p[t, s] <= (m.max_pW + m.max_pPV + m.Dmax - m.FD_L[t]) * m.ieDA_p[t, s]
 model.DA_sell_bid_UB = pyo.Constraint(model.T, model.S, rule=DA_sell_bid_UB_rule)
 
-# eDA_m[t,s] <= (Dmax + FD_U[t]) * (1 - ieDA_p[t,s]);
+def DA_buy_bid_LB_rule(m, t, s):
+    return m.PDA_LB * m.ieDA_m[t, s] <= m.eDA_m[t, s]
+model.DA_buy_bid_LB = pyo.Constraint(model.T, model.S, rule=DA_buy_bid_LB_rule)
+
 def DA_buy_bid_UB_rule(m, t, s):
-    return m.eDA_m[t, s] <= (m.Dmax + m.FD_U[t]) * (1 - m.ieDA_p[t, s])
+    return m.eDA_m[t, s] <= (m.Dmax + m.FD_U[t]) * m.ieDA_m[t, s]
 model.DA_buy_bid_UB = pyo.Constraint(model.T, model.S, rule=DA_buy_bid_UB_rule)
+
+# Constraint to Ensure Either Buying or Selling, Not Both
+def DA_buy_or_sell_rule(m, t, s):
+    return m.ieDA_m[t, s] + m.ieDA_p[t, s] <= 1
+model.DA_buy_or_sell = pyo.Constraint(model.T, model.S, rule=DA_buy_or_sell_rule)
 
 # DA monotonicity constraints (eDA_p[t,l] <= eDA_p[t,k], eDA_m[t,l] >= eDA_m[t,k])
 def DA_bid_mono_1_rule(m, t, l, k):
@@ -418,6 +432,7 @@ model.DA_bid_mono_1 = pyo.Constraint(model.Ssd, rule=DA_bid_mono_1_rule)
 def DA_bid_mono_2_rule(m, t, l, k):
     return m.eDA_m[t, l] >= m.eDA_m[t, k]
 model.DA_bid_mono_2 = pyo.Constraint(model.Ssd, rule=DA_bid_mono_2_rule)
+
 
 # -------------------------------------------------------
 # 8.2 Reserve Market
@@ -578,6 +593,25 @@ def NAC_ieDA_p_rule(m, t, k, l, l_next):
 
 model.NAC_ieDA_p_index = pyo.Set(dimen=4, initialize=build_nac_ieDA_p_index)
 model.NAC_ieDA_p = pyo.Constraint(model.NAC_ieDA_p_index, rule=NAC_ieDA_p_rule)
+
+# NAC_ieDA_m
+def build_nac_ieDA_m_index(model):
+    idx = []
+    for t in model.T:
+        for k in model.S0:
+            for (l, l_next) in consecutive_scenarios(model, 1, k):
+                if l in model.S and l_next in model.S:  # Ensure valid indices
+                    idx.append((t, k, l, l_next))
+    return idx
+
+def NAC_ieDA_m_rule(m, t, k, l, l_next):
+    if (t, l) not in m.ieDA_m or (t, l_next) not in m.ieDA_m:
+        return pyo.Constraint.Skip  # Skip invalid indices
+    return m.ieDA_m[t, l] == m.ieDA_m[t, l_next]
+
+model.NAC_ieDA_m_index = pyo.Set(dimen=4, initialize=build_nac_ieDA_m_index)
+model.NAC_ieDA_m = pyo.Constraint(model.NAC_ieDA_m_index, rule=NAC_ieDA_m_rule)
+
 
 # ---------------------------------------------------------
 # RESERVE MARKET (c[1, k])

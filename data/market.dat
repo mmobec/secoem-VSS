@@ -3,6 +3,9 @@
 param nT :=24;      # Number of time periods
 param nIM := 7;     # Number of intraday markets
 
+# Day Ahead Market
+param PDA_LB := 0.1;    # DA minimum bid size.	
+				  
 # Reserve Market
 param TSR  := 0.25;   # Duration of reserve response [h]
 

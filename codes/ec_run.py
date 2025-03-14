@@ -28,8 +28,7 @@ from ec_model import model as abstract_model  # Your AbstractModel definition
 # ---------------------------------------------------------------------
 # 1) Basic "AMPL param" equivalents
 # ---------------------------------------------------------------------
-modfile          = "ec.mod"
-runfile          = "ec.run"
+
 BESS_datfile     = "ec_BESS.dat"
 wind_datfile     = "ec_wind.dat"
 market_datfile   = "market.dat"
@@ -46,7 +45,7 @@ demfile  = None
 # In your code, "include ucwb_famscen.run" & "include ucwb_SIMS.run" might set them.
 famscen = "FTC_10_2023_12"
 # Suppose we have SIMS = [001..031]
-SIMS = [f"{i:03d}_py" for i in range(1, 4)]  # Example with just 2 days for brevity
+SIMS = [f"{i:03d}" for i in range(1, 4)]  # Example with just 2 days for brevity
 
 pathscen = f"scenarios/{famscen}/"
 pathdem  = "data/demand/"
@@ -82,6 +81,13 @@ print("########################\n")
 # # Create a partial instance with base data. We'll re-initialize for each scenario in the loop.
 # base_instance = abstract_model.create_instance(base_data)
 
+obj_results = {key: {} for key in [
+    "obj_fun", "obj_DA_income", "obj_RM_income", "obj_IM_income",
+    "obj_IB_income", "obj_IB_costs", "obj_IB_net", "obj_FD_costs"
+]}
+
+solve_time = {}
+n_scenarios = {}
 
 # ---------------------------------------------------------------------
 # 3) For each sim in SIMS, replicate the logic in ec.run
@@ -584,7 +590,7 @@ for sim in SIMS:
         res_log.write(f"sOR: {value(instance.sOR)}\n")
 
     # SOLVER OPTIONS
-    solver = SolverFactory("gurobi")  # Use CPLEX solver
+    solver = SolverFactory("gurobi")  # Use gurobi solver
     
     # Set Gurobi options equivalent to CPLEX settings
     solver.options["MIPGap"] = 0.0001      # Equivalent to mipgap in CPLEX
@@ -610,7 +616,7 @@ for sim in SIMS:
     
     solve_elapsed_time = end_time - start_time  # Compute elapsed time
     print(f"Solve elapsed time: {solve_elapsed_time:.2f} seconds")
-
+    
     print(f"DA Income: {sum(value(instance.Prob[s]) * value(instance.lD[t, s]) * (value(instance.eDA_p[t, s]) - value(instance.eDA_m[t, s])) for t in instance.T for s in instance.S)}")
     print(f"RM Income: {sum(value(instance.Prob[s]) * (value(instance.rD[t, s]) + value(instance.rU[t, s])) * value(instance.lR[t, s]) for t in instance.T for s in instance.S)}")
     print(f"IM Income: {sum(value(instance.Prob[s]) * sum(value(instance.lI[i, t, s]) * value(instance.eIM[i, t, s]) for i in instance.IMT[t]) for t in instance.T for s in instance.S)}")
@@ -644,7 +650,7 @@ for sim in SIMS:
         return [(scenario_list[i], scenario_list[i+1]) for i in range(len(scenario_list)-1)]
 
     
-    print(f"Checking non-anticipativity for Day {sim}")
+    print(f"\nChecking non-anticipativity for Day {sim}")
     
     # List of all variables in non-anticipativity constraints
     nac_variables = [
@@ -659,7 +665,7 @@ for sim in SIMS:
             print(f"Skipping {var_name} (not found in model)")
             continue
     
-        print(f"\nChecking NAC for {var_name}:")
+        print(f"Checking NAC for {var_name}:")
         var = getattr(instance, var_name)  # Get the variable dynamically
     
         for t in instance.T:
@@ -672,7 +678,7 @@ for sim in SIMS:
                     except KeyError:
                         print(f"Skipping {var_name}[{t}, {l}] or {var_name}[{t}, {l_next}] due to missing index")
     
-    print(f"\nChecking NAC for pIB_p:")
+    print(f"Checking NAC for pIB_p:")
     for t in instance.T:
         for k in instance.S0:
             sg_for_t = instance.sgpw[t]  # use the same stage as in the constraint
@@ -684,7 +690,7 @@ for sim in SIMS:
                 except KeyError:
                     print(f"Skipping pIB_p[{t}, {l}] or pIB_p[{t}, {l_next}] due to missing index")
 
-    print(f"\nChecking NAC for pIB_m:")
+    print(f"Checking NAC for pIB_m:")
     for t in instance.T:
         for k in instance.S0:
             sg_for_t = instance.sgpw[t]  # use the same stage as in the constraint
@@ -709,7 +715,7 @@ for sim in SIMS:
             print(f"Skipping {var_name} (not found in model)")
             continue
     
-        print(f"\nChecking NAC for {var_name}:")
+        print(f"Checking NAC for {var_name}:")
         var = getattr(instance, var_name)  # Get the variable dynamically
     
         for t in instance.T:
@@ -724,7 +730,7 @@ for sim in SIMS:
                         print(f"Skipping {var_name}[{t}, {l}] or {var_name}[{t}, {l_next}] due to missing index")
     
 
-    print(f"\nChecking NAC for all eIM:")
+    print(f"Checking NAC for all eIM:")
     # Check nonanticipativity for eIM using the same index logic as in build_nac_eIM_index:
     for i in instance.IM:
         for t in instance.TIM[i]:
@@ -758,6 +764,9 @@ for sim in SIMS:
     
     instance.time[probl, sim] = solve_elapsed_time  # Assign elapsed time
     instance.num_scen[probl, sim] = len(instance.S)  # Store scenario count
+    # Store elapsed time in dictionary
+    solve_time[(probl, sim)] = solve_elapsed_time
+    n_scenarios[(probl, sim)] = len(instance.S)
     
     print(f"solve_message: {results.solver.message}")
     print(f"solve_result_num: {results.solver.status}")
@@ -950,13 +959,22 @@ for sim in SIMS:
                 f.write(f"{value(instance.eDA_m[t, s])} ")
             f.write("\n")
     
-    # Store DA matched binary variables (ieDA_p)
+    # Store DA matched binary selling variables (ieDA_p)
     ieda_p_file = os.path.join(da_path, "ieDA_p.txt")
     with open(ieda_p_file, "w") as f:
         for s in instance.S:
             f.write(f"{s} {value(instance.Prob[s])} ")
             for t in instance.T:
                 f.write(f"{value(instance.ieDA_p[t, s])} ")
+            f.write("\n")
+    
+    # Store DA matched binary buying variables (ieDA_m)
+    ieda_m_file = os.path.join(da_path, "ieDA_m.txt")
+    with open(ieda_m_file, "w") as f:
+        for s in instance.S:
+            f.write(f"{s} {value(instance.Prob[s])} ")
+            for t in instance.T:
+                f.write(f"{value(instance.ieDA_m[t, s])} ")
             f.write("\n")
     
     # Define the RM results directory
@@ -1096,10 +1114,6 @@ for sim in SIMS:
         res_log.write("\n###### Printing Imbalances Parameters and Optimal Variables #########\n\n")
     
 
-    # import pdb
-    # pdb.set_trace()
-    
-    
     # Define the IB results directory
     ib_path = os.path.join("..", pathmarketres, "IB/")
     os.makedirs(ib_path, exist_ok=True)
@@ -1120,16 +1134,6 @@ for sim in SIMS:
             for t in instance.T:
                 f.write(f"{value(instance.lNIB[t, s])} ")
             f.write("\n")
-    
-    # # Store PIB_m and PIB_p in IB_params.txt
-    # ib_params_file = os.path.join(ib_path, "IB_params.txt")
-    # with open(ib_params_file, "w") as f:
-    #     f.write("PIB_m:\n")
-    #     for t in instance.T:
-    #         f.write(f"{t} {value(instance.PIB_m[t])}\n")
-    #     f.write("\nPIB_p:\n")
-    #     for t in instance.T:
-    #         f.write(f"{t} {value(instance.PIB_p[t])}\n")
     
     # Store IB Variables (pIB_p and pIB_m)
     pIB_p_file = os.path.join(ib_path, "pIB_p.txt")
@@ -1157,6 +1161,7 @@ for sim in SIMS:
                 pIB_net = value(instance.pIB_p[t, s]) - value(instance.pIB_m[t, s])
                 f.write(f"{pIB_net} ")
             f.write("\n")
+    
     
     # Print header for Scenarios
     with open(os.path.join("..", pathmarketres, resfile), "a") as res_log:
@@ -1189,110 +1194,64 @@ for sim in SIMS:
                         f.write(f"{min_representative} ")
             f.write("\n")
     
-#     # Print header for Objective Function
-#     with open(os.path.join("..", pathres, resfile), "a") as res_log:
-#         res_log.write("\n###### Objective Function #########\n\n")
+    # Print header for Objective Function
+    with open(os.path.join("..", pathres, resfile), "a") as res_log:
+        res_log.write("\n###### Objective Function #########\n\n")
     
-#     # Define the Objective function results directory
-#     obj_path = os.path.join("..", pathres, "OBJ/")
-#     os.makedirs(obj_path, exist_ok=True)
-    
-#     # Compute Objective Function Components
-#     obj_fun = value(instance.EECSW)
-    
-#     obj_DA_income = sum(
-#         value(instance.Prob[s]) * value(instance.lD[t, s]) * 
-#         (value(instance.eDA_p[t, s]) - value(instance.eDA_m[t, s]))
-#         for t in instance.T for s in instance.S
-#     )
-    
-#     obj_RM_income = sum(
-#         value(instance.Prob[s]) * (value(instance.rD[t, s]) + value(instance.rU[t, s])) * value(instance.lR[t, s])
-#         for t in instance.T for s in instance.S
-#     )
-    
-#     obj_IM_income = sum(
-#         value(instance.Prob[s]) * sum(value(instance.lI[i, t, s]) * value(instance.eIM[i, t, s]) for i in instance.IMT[t])
-#         for t in instance.T for s in instance.S
-#     )
-    
-#     obj_IB_income = sum(
-#         value(instance.Prob[s]) * value(instance.lPIB[t, s]) * value(instance.pIB_p[t, s])
-#         for t in instance.T for s in instance.S
-#     )
-    
-#     obj_IB_costs = sum(
-#         value(instance.Prob[s]) * value(instance.lNIB[t, s]) * value(instance.pIB_m[t, s])
-#         for t in instance.T for s in instance.S
-#     )
-    
-#     obj_IB_net = obj_IB_income - obj_IB_costs
-    
-#     obj_FD_costs = sum(
-#         value(instance.Prob[s]) * value(instance.C_FD) * 
-#         (value(instance.var_afd_p[t, s]) + value(instance.var_afd_m[t, s]))
-#         for t in instance.T for s in instance.S
-#     )
-    
-#     # Store Objective Function Components
-#     obj_components = {
-#         "obj_fun.txt": obj_fun,
-#         "obj_DA_income.txt": obj_DA_income,
-#         "obj_RM_income.txt": obj_RM_income,
-#         "obj_IM_income.txt": obj_IM_income,
-#         "obj_IB_income.txt": obj_IB_income,
-#         "obj_IB_costs.txt": obj_IB_costs,
-#         "obj_IB_net.txt": obj_IB_net,
-#         "obj_FD_costs.txt": obj_FD_costs,
-#     }
-    
-#     for filename, value in obj_components.items():
-#         with open(os.path.join(obj_path, filename), "w") as f:
-#             f.write(f"{value}\n")
-    
+    # Define the Objective function results directory
+    obj_path = os.path.join("..", pathres, "OBJ/")
+    os.makedirs(obj_path, exist_ok=True)
 
-    # # Print header for Objective Function
-    # with open(os.path.join("..", pathres, resfile), "a") as res_log:
-    #     res_log.write("\n###### Objective Function #########\n\n")
+    # Compute Objective Function Components
+    obj_fun = value(instance.EECSW)
     
-    # # Define the Objective function results directory
-    # obj_path = os.path.join("..", pathres, "OBJ/")
-    # os.makedirs(obj_path, exist_ok=True)
+    obj_DA_income = sum(value(instance.Prob[s]) * value(instance.lD[t, s]) * 
+        (value(instance.eDA_p[t, s]) - value(instance.eDA_m[t, s]))
+        for t in instance.T for s in instance.S)
     
-    # # Compute and store objective function components
-    # instance.obj_fun[probl, sim] = value(instance.EECSW)
-    # instance.obj_DA_income[probl, sim] = sum(value(instance.Prob[s]) * value(instance.lD[t, s]) * 
-    #                                         (value(instance.eDA_p[t, s]) - value(instance.eDA_m[t, s])) 
-    #                                         for t in instance.T for s in instance.S)
-    # instance.obj_RM_income[probl, sim] = sum(value(instance.Prob[s]) * (value(instance.rD[t, s]) + value(instance.rU[t, s])) *
-    #                                         value(instance.lR[t, s]) for t in instance.T for s in instance.S)
-    # instance.obj_IM_income[probl, sim] = sum(value(instance.Prob[s]) * sum(value(instance.lI[i, t, s]) * value(instance.eIM[i, t, s]) 
-    #                                         for i in instance.IMT[t]) for t in instance.T for s in instance.S)
-    # instance.obj_IB_income[probl, sim] = sum(value(instance.Prob[s]) * value(instance.lPIB[t, s]) * value(instance.pIB_p[t, s]) 
-    #                                         for t in instance.T for s in instance.S)
-    # instance.obj_IB_costs[probl, sim] = sum(value(instance.Prob[s]) * value(instance.lNIB[t, s]) * value(instance.pIB_m[t, s]) 
-    #                                         for t in instance.T for s in instance.S)
-    # instance.obj_IB_net[probl, sim] = instance.obj_IB_income[probl, sim] - instance.obj_IB_costs[probl, sim]
-    # instance.obj_FD_costs[probl, sim] = sum(value(instance.Prob[s]) * value(instance.C_FD) * 
-    #                                        (value(instance.var_afd_p[t, s]) + value(instance.var_afd_m[t, s])) 
-    #                                        for t in instance.T for s in instance.S)
+    obj_RM_income = sum(value(instance.Prob[s]) * (value(instance.rD[t, s]) + value(instance.rU[t, s])) * value(instance.lR[t, s])
+        for t in instance.T for s in instance.S)
+    
+    obj_IM_income = sum(value(instance.Prob[s]) * sum(value(instance.lI[i, t, s]) * value(instance.eIM[i, t, s]) for i in instance.IMT[t])
+        for t in instance.T for s in instance.S)
+    
+    obj_IB_income = sum(value(instance.Prob[s]) * value(instance.lPIB[t, s]) * value(instance.pIB_p[t, s])
+        for t in instance.T for s in instance.S)
+    
+    obj_IB_costs = sum(value(instance.Prob[s]) * value(instance.lNIB[t, s]) * value(instance.pIB_m[t, s])
+        for t in instance.T for s in instance.S)
+    
+    obj_IB_net = obj_IB_income - obj_IB_costs
+    
+    obj_FD_costs = sum(value(instance.Prob[s]) * value(instance.C_FD) * 
+        (value(instance.var_afd_p[t, s]) + value(instance.var_afd_m[t, s]))
+        for t in instance.T for s in instance.S)
 
-    # # Store Objective Function Components
-    # obj_components = {
-    #     "obj_fun.txt": instance.obj_fun,
-    #     "obj_DA_income.txt": instance.obj_DA_income,
-    #     "obj_RM_income.txt": instance.obj_RM_income,
-    #     "obj_IM_income.txt": instance.obj_IM_income,
-    #     "obj_IB_income.txt": instance.obj_IB_income,
-    #     "obj_IB_costs.txt": instance.obj_IB_costs,
-    #     "obj_IB_net.txt": instance.obj_IB_net,
-    #     "obj_FD_costs.txt": instance.obj_FD_costs,
-    # }
-    
-    # for filename, value in obj_components.items():
-    #     with open(os.path.join(obj_path, filename), "w") as f:
-    #         f.write(f"{value}\n")
+    instance.obj_fun[probl, sim] = obj_fun
+    instance.obj_DA_income[probl, sim] = obj_DA_income
+    instance.obj_RM_income[probl, sim] = obj_RM_income
+    instance.obj_IM_income[probl, sim] = obj_IM_income
+    instance.obj_IB_income[probl, sim] = obj_IB_income
+    instance.obj_IB_costs[probl, sim] = obj_IB_costs
+    instance.obj_IB_net[probl, sim] = obj_IB_net
+    instance.obj_FD_costs[probl, sim] = obj_FD_costs
 
+    # Store Objective Function Components
+    obj_components = {
+        "obj_fun.txt": obj_fun,
+        "obj_DA_income.txt": obj_DA_income,
+        "obj_RM_income.txt": obj_RM_income,
+        "obj_IM_income.txt": obj_IM_income,
+        "obj_IB_income.txt": obj_IB_income,
+        "obj_IB_costs.txt": obj_IB_costs,
+        "obj_IB_net.txt": obj_IB_net,
+        "obj_FD_costs.txt": obj_FD_costs,
+    }
+    
+    for filename, obj_val in obj_components.items():
+        with open(os.path.join(obj_path, filename), "w") as f:
+            f.write(f"{obj_val}\n")
+    
     # -------------------------------------------------
     # Next Initial Conditions
     # -------------------------------------------------
@@ -1313,7 +1272,6 @@ for sim in SIMS:
     print(f"New Initial Conditions:")
     print(f"SOCini: {SOCini_next}, sOR: {value(instance.sOR)}")
 
-
     # -------------------------------------------------
     # Print Objective Function and its Components to Results Log
     # -------------------------------------------------
@@ -1332,166 +1290,189 @@ for sim in SIMS:
     
         res_log.write("#######################################################\n")
 
-
-
-
-# # -------------------------------------------------
-# # Print Objective Function and Components Summary to Console
-# # -------------------------------------------------
-# print("############################################################")
-# print(f"Benefit/costs problem {probl}")
-
-# # Print header with all scenario labels
-# print("           ", end=" ")
-# for s in SIMS:
-#     print(f"{s:>6s}", end=" ")
-# print("\n")
-
-# # Print each objective function component for all scenarios
-# def print_obj_component(name, obj_dict):
-#     print(f"{name:<15}", end=" ")
-#     for s in SIMS:
-#         print(f"{value(obj_dict[probl, s]):6.0f}", end=" ")
-#     print("\n")
-
-# print_obj_component("obj_fun =", instance.obj_fun)
-# print_obj_component("obj_DA_income =", instance.obj_DA_income)
-# print_obj_component("obj_RM_income =", instance.obj_RM_income)
-# print_obj_component("obj_IM_income =", instance.obj_IM_income)
-# print_obj_component("obj_IB_income =", instance.obj_IB_income)
-# print_obj_component("obj_IB_costs =", instance.obj_IB_costs)
-# print_obj_component("obj_IB_net =", instance.obj_IB_net)
-# print_obj_component("obj_FD_costs =", instance.obj_FD_costs)
-
-# print("############################################################")
-
-
-# # ---------------------------------------------------------------------------------
-# # Print solving times
-# # ---------------------------------------------------------------------------------
-# print("#" * 80)
-# print(f"{' ' * 24} Solve elapsed time {probl} =", end=" ")
-# for sim in SIMS:
-#     print(f"{solve_time[probl, sim]:7.1f}", end=" ")
-# print("\n" + "#" * 80)
-
-# # ---------------------------------------------------------------------------------
-# # Print Objective Function and Components in 'results_log.res'
-# # ---------------------------------------------------------------------------------
-# with open(os.path.join("..", pathres, resfile), "a") as res_log:
-#     res_log.write("\n#######################################################\n")
-#     res_log.write(f"Objective Function and its Components {probl}\n")
-#     res_log.write(f"obj_fun = {obj_fun[probl, sim]:.0f}\n")
-#     res_log.write(f"obj_DA_income = {obj_DA_income[probl, sim]:.0f}\n")
-#     res_log.write(f"obj_RM_income = {obj_RM_income[probl, sim]:.0f}\n")
-#     res_log.write(f"obj_IM_income = {obj_IM_income[probl, sim]:.0f}\n")
-#     res_log.write(f"obj_IB_income = {obj_IB_income[probl, sim]:.0f}\n")
-#     res_log.write(f"obj_IB_costs = {obj_IB_costs[probl, sim]:.0f}\n")
-#     res_log.write(f"obj_IB_net = {obj_IB_net[probl, sim]:.0f}\n")
-#     res_log.write(f"obj_FD_costs = {obj_FD_costs[probl, sim]:.0f}\n")
-#     res_log.write("#######################################################\n")
-
-# # ---------------------------------------------------------------------------------
-# # Print Objective Function and Components into profit file (ec_"famscen"_"month".out)
-# # ---------------------------------------------------------------------------------
-# profit_file = os.path.join("..", pathtablesres, profitfile[probl])
-# with open(profit_file, "w") as f:
-#     f.write(f"     {probl} ")
-#     f.write(" ".join([f"{sim:6s}" for sim in SIMS]) + "\n")
-
-#     f.write("obj_fun ")
-#     f.write(" ".join([f"{obj_fun[probl, s]:6.0f}" for s in SIMS]) + "\n")
-
-#     f.write("obj_DA_income ")
-#     f.write(" ".join([f"{obj_DA_income[probl, s]:6.0f}" for s in SIMS]) + "\n")
-
-#     f.write("obj_RM_income ")
-#     f.write(" ".join([f"{obj_RM_income[probl, s]:6.0f}" for s in SIMS]) + "\n")
-
-#     f.write("obj_IM_income ")
-#     f.write(" ".join([f"{obj_IM_income[probl, s]:6.0f}" for s in SIMS]) + "\n")
-
-#     f.write("obj_IB_income ")
-#     f.write(" ".join([f"{obj_IB_income[probl, s]:6.0f}" for s in SIMS]) + "\n")
-
-#     f.write("obj_IB_costs ")
-#     f.write(" ".join([f"{obj_IB_costs[probl, s]:6.0f}" for s in SIMS]) + "\n")
-
-#     f.write("obj_IB_net ")
-#     f.write(" ".join([f"{obj_IB_net[probl, s]:6.0f}" for s in SIMS]) + "\n")
-
-#     f.write("obj_FD_costs ")
-#     f.write(" ".join([f"{obj_FD_costs[probl, s]:6.0f}" for s in SIMS]) + "\n")
-
-# # ---------------------------------------------------------------------------------
-# # Print Summary of Computational Time
-# # ---------------------------------------------------------------------------------
-# time_file = os.path.join("..", pathtablesres, timefile[probl])
-# with open(time_file, "w") as f:
-#     f.write(f" {probl} ")
-#     f.write(" ".join([f"{sim:7s}" for sim in SIMS]) + "\n")
+    obj_results["obj_fun"][sim] = obj_fun
+    obj_results["obj_DA_income"][sim] = obj_DA_income
+    obj_results["obj_RM_income"][sim] = obj_RM_income
+    obj_results["obj_IM_income"][sim] = obj_IM_income
+    obj_results["obj_IB_income"][sim] = obj_IB_income
+    obj_results["obj_IB_costs"][sim] = obj_IB_costs
+    obj_results["obj_IB_net"][sim] = obj_IB_net
+    obj_results["obj_FD_costs"][sim] = obj_FD_costs
     
-#     f.write("time ")
-#     f.write(" ".join([f"{solve_time[probl, s]:7.1f}" for s in SIMS]) + "\n")
+# -------------------------------------------------
+# Print Objective Function and Components Summary to Console
+# -------------------------------------------------
+print("############################################################")
+print(f"Benefit/costs problem {probl}")
 
-# # ---------------------------------------------------------------------------------
-# # Print Number of Scenarios File
-# # ---------------------------------------------------------------------------------
-# numscen_file = os.path.join("..", pathtablesres, numscenfile)
-# with open(numscen_file, "w") as f:
-#     f.write(f" {probl} ")
-#     f.write(" ".join([f"{sim:7s}" for sim in SIMS]) + "\n")
+# Print header with all scenario labels
+print("           ", end=" ")
+for s in SIMS:
+    print(f"{s:>6s}", end=" ")
+print("\n")
 
-#     f.write("num scenarios ")
-#     f.write(" ".join([f"{num_scen[probl, s]:7d}" for s in SIMS]) + "\n")
+# Print Objective Function Components
+def print_obj_component(name, results_dict):
+    print(f"{name + ' =':<15}", end=" ")  # Append '=' to the name
+    for s in SIMS:
+        print(f"{results_dict[name].get(s, 0):6.0f}", end=" ")
+    print("\n")
 
-# print("############################################################")
-# print(f"Benefit/costs problem {probl}")
-# print("           ", end="")
-# for sim in SIMS:
-#     print(f" {sim:7s}", end="")
-# print("\n")
+print_obj_component("obj_fun", obj_results)
+print_obj_component("obj_DA_income", obj_results)
+print_obj_component("obj_RM_income", obj_results)
+print_obj_component("obj_IM_income", obj_results)
+print_obj_component("obj_IB_income", obj_results)
+print_obj_component("obj_IB_costs", obj_results)
+print_obj_component("obj_IB_net", obj_results)
+print_obj_component("obj_FD_costs", obj_results)
 
-# print("obj_fun =", end="")
-# for sim in SIMS:
-#     print(f" {obj_fun[probl, sim]:6.0f}", end="")
-# print("\n")
+print("############################################################")
 
-# print("obj_DA_income =", end="")
-# for sim in SIMS:
-#     print(f" {obj_DA_income[probl, sim]:6.0f}", end="")
-# print("\n")
 
-# print("obj_RM_income =", end="")
-# for sim in SIMS:
-#     print(f" {obj_RM_income[probl, sim]:6.0f}", end="")
-# print("\n")
+# ---------------------------------------------------------------------------------
+# Print solving times
+# ---------------------------------------------------------------------------------
+print("#" * 80)
+print(f"{' ' * 24} Solve elapsed time {probl} =", end=" ")
+for sim in SIMS:
+    print(f"{solve_time[probl, sim]:7.1f}", end=" ")
+print("\n" + "#" * 80)
 
-# print("obj_IM_income =", end="")
-# for sim in SIMS:
-#     print(f" {obj_IM_income[probl, sim]:6.0f}", end="")
-# print("\n")
+# ---------------------------------------------------------------------------------
+# Print Objective Function and Components in 'results_log.res'
+# ---------------------------------------------------------------------------------
+with open(os.path.join("..", pathres, resfile), "a") as res_log:
+    res_log.write("\n#######################################################\n")
+    res_log.write(f"Objective Function and its Components {probl}\n")
 
-# print("obj_IB_income =", end="")
-# for sim in SIMS:
-#     print(f" {obj_IB_income[probl, sim]:6.0f}", end="")
-# print("\n")
+    # Retrieve values from obj_results dictionary
+    res_log.write(f"obj_fun = {obj_results['obj_fun'].get(sim, 0):.0f}\n")
+    res_log.write(f"obj_DA_income = {obj_results['obj_DA_income'].get(sim, 0):.0f}\n")
+    res_log.write(f"obj_RM_income = {obj_results['obj_RM_income'].get(sim, 0):.0f}\n")
+    res_log.write(f"obj_IM_income = {obj_results['obj_IM_income'].get(sim, 0):.0f}\n")
+    res_log.write(f"obj_IB_income = {obj_results['obj_IB_income'].get(sim, 0):.0f}\n")
+    res_log.write(f"obj_IB_costs = {obj_results['obj_IB_costs'].get(sim, 0):.0f}\n")
+    res_log.write(f"obj_IB_net = {obj_results['obj_IB_net'].get(sim, 0):.0f}\n")
+    res_log.write(f"obj_FD_costs = {obj_results['obj_FD_costs'].get(sim, 0):.0f}\n")
 
-# print("obj_IB_costs =", end="")
-# for sim in SIMS:
-#     print(f" {obj_IB_costs[probl, sim]:6.0f}", end="")
-# print("\n")
+    res_log.write("#######################################################\n")
 
-# print("obj_IB_net =", end="")
-# for sim in SIMS:
-#     print(f" {obj_IB_net[probl, sim]:6.0f}", end="")
-# print("\n")
+# ---------------------------------------------------------------------------------
+# Print Objective Function and Components into profit file (ec_"famscen"_"month".out)
+# ---------------------------------------------------------------------------------
+# Define the path where summary results are stored
+pathtablesres = os.path.join("..", "results", famscen, "tables/")
+os.makedirs(pathtablesres, exist_ok=True)  # Ensure the directory exists
 
-# print("obj_FD_costs =", end="")
-# for sim in SIMS:
-#     print(f" {obj_FD_costs[probl, sim]:6.0f}", end="")
-# print("\n")
+profit_file = os.path.join(pathtablesres, profitfile[probl])
+with open(profit_file, "w") as f:
+    f.write(f"     {probl} ")
+    f.write(" ".join([f"{sim:6s}" for sim in SIMS]) + "\n")
 
-# print("############################################################")
-# print("END")
+    f.write("obj_fun ")
+    f.write(" ".join([f"{obj_results['obj_fun'].get(s, 0):6.0f}" for s in SIMS]) + "\n")
+
+    f.write("obj_DA_income ")
+    f.write(" ".join([f"{obj_results['obj_DA_income'].get(s, 0):6.0f}" for s in SIMS]) + "\n")
+
+    f.write("obj_RM_income ")
+    f.write(" ".join([f"{obj_results['obj_RM_income'].get(s, 0):6.0f}" for s in SIMS]) + "\n")
+
+    f.write("obj_IM_income ")
+    f.write(" ".join([f"{obj_results['obj_IM_income'].get(s, 0):6.0f}" for s in SIMS]) + "\n")
+
+    f.write("obj_IB_income ")
+    f.write(" ".join([f"{obj_results['obj_IB_income'].get(s, 0):6.0f}" for s in SIMS]) + "\n")
+
+    f.write("obj_IB_costs ")
+    f.write(" ".join([f"{obj_results['obj_IB_costs'].get(s, 0):6.0f}" for s in SIMS]) + "\n")
+
+    f.write("obj_IB_net ")
+    f.write(" ".join([f"{obj_results['obj_IB_net'].get(s, 0):6.0f}" for s in SIMS]) + "\n")
+
+    f.write("obj_FD_costs ")
+    f.write(" ".join([f"{obj_results['obj_FD_costs'].get(s, 0):6.0f}" for s in SIMS]) + "\n")
+
+# ---------------------------------------------------------------------------------
+# Print Summary of Computational Time
+# ---------------------------------------------------------------------------------
+time_file = os.path.join(pathtablesres, timefile[probl])
+with open(time_file, "w") as f:
+    f.write(f" {probl} ")
+    f.write(" ".join([f"{sim:7s}" for sim in SIMS]) + "\n")
+    
+    f.write("time ")
+    f.write(" ".join([f"{solve_time[probl, s]:7.1f}" for s in SIMS]) + "\n")
+
+# ---------------------------------------------------------------------------------
+# Print Number of Scenarios File
+# ---------------------------------------------------------------------------------
+numscen_file = os.path.join(pathtablesres, numscenfile)
+with open(numscen_file, "w") as f:
+    f.write(f" {probl} ")
+    f.write(" ".join([f"{sim:7s}" for sim in SIMS]) + "\n")
+
+    f.write("num scenarios ")
+    f.write(" ".join([f"{n_scenarios[probl, s]:7d}" for s in SIMS]) + "\n")
+
+
+# ---------------------------------------------------------------------------------
+# Generate the .out file (equivalent to AMPL output)
+# ---------------------------------------------------------------------------------
+
+out_filename = os.path.join("..", "results", famscen, f"ec_{famscen}_summary.out")
+
+with open(out_filename, "w") as out_file:
+    # Print and store Objective Function Components
+    out_file.write("############################################################\n")
+    out_file.write(f"Benefit/costs problem {probl}\n")
+    
+    # Print header with all scenario labels
+    out_file.write("           ")
+    for sim in SIMS:
+        out_file.write(f"{sim:7s} ")
+    out_file.write("\n")
+
+    # Function to write objective function components to file
+    def write_obj_component(name, key):
+        out_file.write(f"{name:<15}")
+        for sim in SIMS:
+            out_file.write(f"{obj_results[key].get(sim, 0):6.0f} ")
+        out_file.write("\n")
+
+    # Write each objective function component
+    write_obj_component("obj_fun", "obj_fun")
+    write_obj_component("obj_DA_income", "obj_DA_income")
+    write_obj_component("obj_RM_income", "obj_RM_income")
+    write_obj_component("obj_IM_income", "obj_IM_income")
+    write_obj_component("obj_IB_income", "obj_IB_income")
+    write_obj_component("obj_IB_costs", "obj_IB_costs")
+    write_obj_component("obj_IB_net", "obj_IB_net")
+    write_obj_component("obj_FD_costs", "obj_FD_costs")
+
+    out_file.write("############################################################\n")
+
+    # Solve elapsed times
+    out_file.write("#" * 80 + "\n")
+    out_file.write(f"{' ' * 24} Solve elapsed time {probl} = ")
+    for sim in SIMS:
+        out_file.write(f"{solve_time[probl, sim]:7.1f} ")
+    out_file.write("\n" + "#" * 80 + "\n")
+
+    # Number of scenarios per simulation
+    out_file.write(f"\nNumber of Scenarios ({probl})\n")
+    out_file.write("           ")
+    for sim in SIMS:
+        out_file.write(f"{sim:7s} ")
+    out_file.write("\nnum scenarios ")
+    for sim in SIMS:
+        out_file.write(f"{n_scenarios[probl, sim]:7d} ")
+    out_file.write("\n")
+
+    out_file.write("\nEND\n")
+
+print(f"\nSummary .out file saved to: {out_filename}")
+
+print("END")
 
