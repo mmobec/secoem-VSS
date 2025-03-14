@@ -1,9 +1,0 @@
-     ec 001    002    003   
-obj_fun -21674   8044  31646
-obj_DA_income -51149 -57638 -71335
-obj_RM_income   7241  54520  77957
-obj_IM_income  22294  11173  24974
-obj_IB_income    215    367    817
-obj_IB_costs    191    287    671
-obj_IB_net     23     80    146
-obj_FD_costs     82     91     96
