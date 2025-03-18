@@ -15,9 +15,12 @@ import os
 import shutil
 import re
 
+# Data
+fam_scen = "FTC_1_2023_12"
+
 # Define paths
 root_dir = os.path.abspath(os.path.join(os.getcwd(), ".."))  # Root directory (mmobec-pyomo)
-scenarios_dir = os.path.join(root_dir, "scenarios", "FTC_10_2023_12")
+scenarios_dir = os.path.join(root_dir, "scenarios", fam_scen)
 backup_dir = os.path.join(root_dir, "pre_process_AMPL_to_Pyomo_scenario_data", "AMPL format scenario data")
 converted_dir = os.path.join(root_dir, "pre_process_AMPL_to_Pyomo_scenario_data", "Python format scenario data")
 

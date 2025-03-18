@@ -7,11 +7,13 @@ Created on Fri Jan 24 16:12:34 2025
 
 # ==========================================================
 # Pyomo Translation of ec.mod
-# Fundamental Elements, Flexible Demand, Wind, Solar, Battery,
-# and partial Market Parameters
 # ==========================================================
 
 import pyomo.environ as pyo
+
+# ----------------------------------------------------------
+# 1. Abstract model initialization
+# ----------------------------------------------------------
 
 model = pyo.AbstractModel()
 
@@ -21,14 +23,11 @@ model = pyo.AbstractModel()
 
 # >>> Time periods:
 model.nT = pyo.Param(within=pyo.PositiveIntegers)       # number of time periods
-# model.T = pyo.Set(initialize=lambda m: range(1, pyo.value(m.nT) + 1))
 model.T = pyo.RangeSet(1, model.nT)                 # set of time periods
-# model.T0 = pyo.Set(initialize=lambda m: range(0, pyo.value(m.nT) + 1))
 model.T0 = pyo.RangeSet(0, model.nT)                # T union {0}
 
 # >>> Intraday markets:
 model.nIM = pyo.Param(within=pyo.PositiveIntegers)      # number of intraday markets
-# model.IM = pyo.Set(initialize=lambda m: range(1, pyo.value(m.nIM) + 1))
 model.IM = pyo.RangeSet(1, model.nIM)               # set of intraday markets
 
 # For sets of time periods in each intraday market:
@@ -41,49 +40,41 @@ model.nS = pyo.Param(within=pyo.NonNegativeIntegers)     # num. of scenarios
 model.nSG = pyo.Param(within=pyo.NonNegativeIntegers)    # num. of stages
 
 # Full scenario set and preserved set
-# model.S0 = pyo.Set(initialize=lambda m: range(1, pyo.value(m.nS) + 1))  # Complete scenario set
 model.S0 = pyo.RangeSet(1, model.nS)                 # complete set of scenarios
-model.S = pyo.Set(within=model.S0, ordered=True)      # !!! preserved scenario (Prob>0)
+model.S = pyo.Set(within=model.S0, ordered=True)      # preserved scenario (Prob>0) 
 # We could have put mutable = True and define it after creating the instance but it would have been uncorrect as S is then used to define other sets
 
 # Stage sets
 model.SG = pyo.RangeSet(1, model.nSG)
 model.SG0 = pyo.Set(initialize=lambda m: [0] + list(range(1, pyo.value(m.nSG)+1)), ordered=True)
 
-# Scenario clusters c {SG0, S0}:
-# In Pyomo, we can define this as a two-dimensional set: 
-def c_init(model, sg, s): # !!! Then I will modify this cluster after creating the instance in ec_run.py
-    return sorted(set())  # or some logic to populate valid clusters
+# Scenario clusters c {SG0, S0}: # In Pyomo, we can define this as a two-dimensional set: 
+def c_init(model, sg, s): # Then I will modify this cluster after creating the instance in ec_run.py
+    return sorted(set())
 model.c = pyo.Set(model.SG0, model.S0, initialize=c_init, within=model.S0)
-# model.c = pyo.Set(model.SG0, model.S0, ordered=True, initialize=[])
 
-# Number of random variables at each stage
-model.nRVSG = pyo.Param(model.SG, within=pyo.NonNegativeIntegers, default=0)
-# total number of random variables = sum of nRVSG
-model.nRV = pyo.Param(initialize=lambda model: sum(model.nRVSG[sg] for sg in model.SG)) # !!!
-# fRVSG = index of first RV of each stage
-model.fRVSG = pyo.Param(model.SG, initialize=lambda model, i: 1 + sum(model.nRVSG[sg] for sg in range(1, i)))
+model.nRVSG = pyo.Param(model.SG, within=pyo.NonNegativeIntegers, default=0) # Number of random variables at each stage
+model.nRV = pyo.Param(initialize=lambda model: sum(model.nRVSG[sg] for sg in model.SG)) # total number of random variables = sum of nRVSG
+model.fRVSG = pyo.Param(model.SG, initialize=lambda model, i: 1 + sum(model.nRVSG[sg] for sg in range(1, i))) # fRVSG = index of first RV of each stage
 
 # Probabilities and random variables
-model.Prob0 = pyo.Param(model.S0)                     # scenario's probabilities (including zero for eliminated)
-model.Prob  = pyo.Param(model.S)        # !!! preserved scenario probabilities
+model.Prob0 = pyo.Param(model.S0)       # scenario's probabilities (including zero values)
+model.Prob  = pyo.Param(model.S)        # preserved scenario probabilities
 
 # Complete and preserved scenario sets
 model.Scen0 = pyo.Param(pyo.RangeSet(1, model.nRV), model.S0, within=pyo.Reals, default=0.0)
-model.Scen = pyo.Param(pyo.RangeSet(1, model.nRV), model.S, within=pyo.Reals, default=0.0) # !!!
-
+model.Scen = pyo.Param(pyo.RangeSet(1, model.nRV), model.S, within=pyo.Reals, default=0.0)
 
 # ----------------------------------------------------------
 # 3. Flexible Demand
 # ----------------------------------------------------------
 
 # Sets
-model.nFI = pyo.Param(within=pyo.NonNegativeIntegers)   # number of items in FI
-# model.FI = pyo.Set(initialize=lambda m: range(1, pyo.value(m.nFI) + 1))  # Demand intervals
-model.FI = pyo.RangeSet(1, model.nFI)               # set of intervals for demand
+model.nFI = pyo.Param(within=pyo.NonNegativeIntegers)   # set of time intervals where a fraction of demand cf has to be met.
+model.FI = pyo.RangeSet(1, model.nFI)                   # set of intervals for demand
 
 # Operational Parameters
-model.FD   = pyo.Param(model.T, within=pyo.NonNegativeReals)   # Central demand
+model.FD   = pyo.Param(model.T, within=pyo.NonNegativeReals)   # Central demand [MWh]
 model.FD_L = pyo.Param(model.T, within=pyo.NonNegativeReals)   # Lower bound on flexible demand
 model.FD_U = pyo.Param(model.T, within=pyo.NonNegativeReals)   # Upper bound on flexible demand
 model.TF_L = pyo.Param(model.FI, within=pyo.PositiveIntegers)  # First time step of interval
@@ -98,23 +89,17 @@ model.RDFD = pyo.Param(model.T, within=pyo.NonNegativeReals)   # Downwards reser
 # ----------------------------------------------------------
 
 model.sgpw = pyo.Param(pyo.RangeSet(1, model.nT))   # stage associated to wind and PV production each hour
-
-# !!! Where there is mutable = True, it means that values are filled after creating the instance (but before calling the solver)
-# This can be done if none of these values are used to build sets in model.py.
+model.Pavg     = pyo.Param(within=pyo.Reals)    # Wind nominal power [MW]
 model.pW = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True)  # wind production
 model.max_pW = pyo.Param(within=pyo.NonNegativeReals, mutable=True)                # maximum wind capacity
-model.mean_pW = pyo.Param(model.T, within=pyo.NonNegativeReals, mutable=True)      # average wind
-model.Pavg     = pyo.Param(within=pyo.Reals)    # Wind nominal power [MW]
-model.sigma_pW = pyo.Param(model.T, within=pyo.NonNegativeReals, mutable=True, default=0.0)
 
 # ----------------------------------------------------------
 # 5. Solar PV
 # ----------------------------------------------------------
 
+model.Pavg_PV  = pyo.Param(within=pyo.Reals)    # PV nominal power [MW]
 model.pPV = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True) 
 model.max_pPV = pyo.Param(within=pyo.NonNegativeReals, mutable=True)
-model.mean_pPV = pyo.Param(model.T, within=pyo.NonNegativeReals, mutable=True)     # average solar
-model.Pavg_PV  = pyo.Param(within=pyo.Reals)    # PV nominal power [MW]
 
 # ----------------------------------------------------------
 # 6. Battery Energy Storage System
@@ -125,7 +110,7 @@ model.Dmax   = pyo.Param(within=pyo.NonNegativeReals)  # BESS max charge/dischar
 model.RTE    = pyo.Param(within=pyo.NonNegativeReals)  # BESS round-trip efficiency
 model.SOCmin = pyo.Param(within=pyo.NonNegativeReals)  # BESS minimum SOC
 model.SOCmax = pyo.Param(within=pyo.NonNegativeReals)  # BESS maximum SOC
-model.SOCini = pyo.Param(within=pyo.NonNegativeReals, mutable=True)  # BESS initial SOC
+model.SOCini = pyo.Param(within=pyo.NonNegativeReals, mutable=True)  #  !!! BESS initial SOC It's mutable because every day has to be re-initialized
 model.SOCfin = pyo.Param(within=pyo.NonNegativeReals)  # BESS final SOC
 
 # ----------------------------------------------------------
@@ -133,12 +118,8 @@ model.SOCfin = pyo.Param(within=pyo.NonNegativeReals)  # BESS final SOC
 # ----------------------------------------------------------
 
 # 8.1 Day Ahead Market 
-model.lD = pyo.Param(model.T, model.S, within=pyo.Reals, mutable = True)    # !!! Day-ahead prices TO BE DEFINED BEFORE CREATING INSTANCE
-        
-# # In ec_model.py, near the other set definitions:
-# model.Ssd = pyo.Set(dimen=3, initialize=[])
+model.lD = pyo.Param(model.T, model.S, within=pyo.Reals, mutable = True)    # !!! Day-ahead prices TO BE DEFINED BEFORE CREATING INSTANCE because they re used to create Ssd set
 
-                                                    # Because they are needed to build set Ssd
 model.Ssd = pyo.Set(
     initialize=lambda m: [
         (t, l, j)
@@ -149,44 +130,57 @@ model.Ssd = pyo.Set(
     ]
 )
 
-model.mean_lD = pyo.Param(model.T, within=pyo.Reals, mutable=True)        # average day-ahead price
-model.PDA_LB = pyo.Param(within=pyo.NonNegativeReals)  # Minimum bid size
+model.PDA_LB = pyo.Param(within=pyo.NonNegativeReals)  # Minimum bid size [MWh]
 
 # 8.2 Reserve Market
 model.lR = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)  # secondary reserve price
 model.TSR = pyo.Param(within=pyo.NonNegativeReals)        # time response of SR
-model.mean_lR = pyo.Param(model.T, within=pyo.Reals, mutable=True)
 
 # 8.3 Intraday Market
 model.lI = pyo.Param(model.IM, model.T, model.S, default=0.0, within=pyo.Reals, mutable=True)  
 model.maxTIM = pyo.Param(within=pyo.Reals, default=0.2)
-model.mean_lI = pyo.Param(model.IM, model.T, within=pyo.Reals, mutable=True)
 
 # 8.4 System Imbalances
-model.lIB  = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)             # imbalances price
 model.lPIB = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True)  # positive imbalance price
 model.lNIB = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True)  # negative imbalance price
 model.PIB_p = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)            # upper bound on positive imbalance
 model.PIB_m = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)            # upper bound on negative imbalance
 
+# =============================================================================
+# Parameters not used in the model but useful for Post-Processing in ec_run.py
+# =============================================================================
+# Below you'll see mutable = True, it means that values are filled after creating the instance (but before calling the solver). This can be done if none of these values are used to build sets in model.py.
+
+# Wind Farm
+model.mean_pW = pyo.Param(model.T, within=pyo.NonNegativeReals, mutable=True)      # average wind
+model.sigma_pW = pyo.Param(model.T, within=pyo.NonNegativeReals, mutable=True, default=0.0)
+
+# PV Farm
+model.mean_pPV = pyo.Param(model.T, within=pyo.NonNegativeReals, mutable=True)     # average solar
+
+# Day-Ahead market
+model.mean_lD = pyo.Param(model.T, within=pyo.Reals, mutable=True)        # average day-ahead price
+
+# Reserve market
+model.mean_lR = pyo.Param(model.T, within=pyo.Reals, mutable=True)          # average reserve price
+
+# Infraday market
+model.mean_lI = pyo.Param(model.IM, model.T, within=pyo.Reals, mutable=True) # average IMs price
+
+# Imbalances
+model.lIB  = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)             # imbalances price
 model.mean_lPIB = pyo.Param(model.T, within=pyo.Reals, mutable=True)
 model.mean_lNIB = pyo.Param(model.T, within=pyo.Reals, mutable=True)
 model.mean_lIB  = pyo.Param(model.T, within=pyo.Reals, mutable=True)
 
-# =============================================================================
-# Parameters not used in the model but useful for Post-Processing in ec_run.py
-# =============================================================================
-
 # Parameters for the VSS Calculation
-model.ScenF = pyo.Param(pyo.RangeSet(1, model.nRV), within=pyo.Reals)
-model.ScenO = pyo.Param(pyo.RangeSet(1, model.nRV), within=pyo.Reals)
-model.ScenE = pyo.Param(pyo.RangeSet(1, model.nRV), within=pyo.Reals, mutable=True, default=0.0)
+model.ScenF = pyo.Param(pyo.RangeSet(1, model.nRV), within=pyo.Reals)           # Forecasted scenario
+model.ScenO = pyo.Param(pyo.RangeSet(1, model.nRV), within=pyo.Reals)           # Observed scenario
+model.ScenE = pyo.Param(pyo.RangeSet(1, model.nRV), within=pyo.Reals, mutable=True, default=0.0) # Expected scenario
 
 # Nearest Tree Scenario Parameters
-# model.dTO = pyo.Param(model.S, within=pyo.NonNegativeReals, mutable=True, default=0.0)
 model.min_dTO = pyo.Param(within=pyo.Reals, mutable=True, default=10**10)
 model.sOR = pyo.Param(within=pyo.NonNegativeIntegers, mutable=True)
-# model.sO = pyo.Param(within=pyo.NonNegativeIntegers, mutable=True)
 
 # Scenario Clustering and Probabilities
 def SSG_init(model, sg):
@@ -196,13 +190,6 @@ model.SSG = pyo.Set(model.SG0, initialize=SSG_init, within=model.S0)
 # Prob. of cluster c[sg,sc].
 model.probc = pyo.Param(model.SG0, model.S, within=pyo.NonNegativeReals, mutable=True, default=0.0)
 
-# # Wind Power Mean Values
-# model.mean_pWc = pyo.Param(model.SG0, model.S, model.T, within=pyo.NonNegativeReals, mutable=True, default=0.0)
-
-# Reserve Market Bounds
-model.max_pPIB_RP = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True, default=0.0)
-model.max_pNIB_RP = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True, default=0.0)
-
 # # Intraday Market Bounds
 # model.meanmax_pVI_RP = pyo.Param(model.IM, model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)
 # model.meanmin_pVI_RP = pyo.Param(model.IM, model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)
@@ -211,7 +198,7 @@ model.max_pNIB_RP = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mut
 
 # Define indexed sets for problem and simulations
 model.PROB = pyo.Set(initialize=['ec'])  # This should be a fixed set of problems
-model.SIMS = pyo.Set(initialize=[f"{i:03d}" for i in range(1, 32)])  # Extend as needed
+model.SIMS = pyo.Set(initialize=[f"{i:03d}" for i in range(1, 366)])  # Extend as needed
 
 # Elapsed Time Parameters
 model.time = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
@@ -227,13 +214,12 @@ model.obj_IB_costs = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0
 model.obj_IB_net = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
 model.obj_FD_costs = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
 
-
 # # Wind Uncertainty Parameters
 # model.meanmax = pyo.Param(within=pyo.Reals, mutable=True, default=0.0)
 # model.meanmin = pyo.Param(within=pyo.Reals, mutable=True, default=0.0)
 
-# Intraday Market Totals
-model.eIM_TOT = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)
+# # Intraday Market Totals
+# model.eIM_TOT = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)
 
 
 # =========================================================
@@ -249,9 +235,6 @@ model.var_afd_m = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # Neg
 model.dV = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)          # Discharge rate [MW]
 model.cV = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)          # Charge rate [MW]
 model.idV = pyo.Var(model.T, model.S, within=pyo.Binary)                   # Charge/discharge state (binary)
-# BESS's SOC with bounds [SOCmin, SOCmax]
-# In Pyomo, we handle fixed bounds in a constraint. Alternatively, we can specify
-# "within=NonNegativeReals" plus constraints that enforce min/max.
 model.socV = pyo.Var(model.T0, model.S, within=pyo.NonNegativeReals, bounds = (model.SOCmin,model.SOCmax))
 
 # 8. Market Participation
@@ -272,8 +255,7 @@ model.rD_FD = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # FD down
 
 # 8.3 Intraday Markets
 # "model.IM" is intraday markets, "model.TIM[i]" is the set of times for each market i
-# We'll define eIM for each i, t, s
-model.eIM = pyo.Var(model.IM, model.T, model.S)  # Could constrain domain more if needed
+model.eIM = pyo.Var(model.IM, model.T, model.S)
 
 # 8.4 System Imbalances
 model.pIB_p = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # positive imbalance
@@ -336,8 +318,7 @@ model.DailyDem = pyo.Constraint(model.S, rule=DailyDem_rule)
 def InterDem_rule(m, f, s):
     # gather time steps t in [TF_L[f], TF_U[f]]
     t_in_range = [t for t in m.T if m.TF_L[f] <= t <= m.TF_U[f]]
-    return sum(m.var_fd[t, s] for t in t_in_range) >= \
-            m.coef_FD[f] * sum(m.FD[t] for t in t_in_range)
+    return sum(m.var_fd[t, s] for t in t_in_range) >= m.coef_FD[f] * sum(m.FD[t] for t in t_in_range)
 model.InterDem = pyo.Constraint(model.FI, model.S, rule=InterDem_rule)
 
 # FD[t] - var_fd[t, s] = var_afd_p[t, s] - var_afd_m[t, s];
@@ -349,6 +330,7 @@ model.FlexDemDisplace = pyo.Constraint(model.T, model.S, rule=FlexDemDisplace_ru
 # 5. Battery System
 # -------------------
 
+#### BESS opeartion
 # dV[t,s] <= Dmax * idV[t,s];
 def VPP_state_dV_rule(m, t, s):
     return m.dV[t, s] <= m.Dmax * m.idV[t, s]
@@ -378,6 +360,7 @@ def SOCV_fin_rule(m, s):
     return m.socV[m.nT, s] == m.SOCfin
 model.SOCV_fin = pyo.Constraint(model.S, rule=SOCV_fin_rule)
 
+#### BESS relation to reserve market
 # rD_B[t,s] + cV[t,s] - dV[t,s] <= Dmax;
 def VPP_RD2s_rule(m, t, s):
     return m.rD_B[t, s] + m.cV[t, s] - m.dV[t, s] <= m.Dmax
@@ -433,7 +416,6 @@ def DA_bid_mono_2_rule(m, t, l, k):
     return m.eDA_m[t, l] >= m.eDA_m[t, k]
 model.DA_bid_mono_2 = pyo.Constraint(model.Ssd, rule=DA_bid_mono_2_rule)
 
-
 # -------------------------------------------------------
 # 8.2 Reserve Market
 # -------------------------------------------------------
@@ -457,16 +439,12 @@ model.RM_components_D = pyo.Constraint(model.T, model.S, rule=RM_components_D_ru
 
 # - maxTIM*(eDA_p[t,s]+eDA_m[t,s]) <= sum{i in IMT[t]} eIM[i,t,s];
 def IM_bounds_1_rule(m, t, s):
-    lhs = -m.maxTIM * (m.eDA_p[t, s] + m.eDA_m[t, s])
-    rhs = sum(m.eIM[i, t, s] for i in m.IMT[t])
-    return lhs <= rhs
+    return -m.maxTIM * (m.eDA_p[t, s] + m.eDA_m[t, s]) <= sum(m.eIM[i, t, s] for i in m.IMT[t])
 model.IM_bounds_1 = pyo.Constraint(model.T, model.S, rule=IM_bounds_1_rule)
 
 # sum{i in IMT[t]} eIM[i,t,s] <= maxTIM*(eDA_p[t,s]+eDA_m[t,s]);
 def IM_bounds_2_rule(m, t, s):
-    lhs = sum(m.eIM[i, t, s] for i in m.IMT[t])
-    rhs = m.maxTIM * (m.eDA_p[t, s] + m.eDA_m[t, s])
-    return lhs <= rhs
+    return sum(m.eIM[i, t, s] for i in m.IMT[t]) <= m.maxTIM * (m.eDA_p[t, s] + m.eDA_m[t, s])
 model.IM_bounds_2 = pyo.Constraint(model.T, model.S, rule=IM_bounds_2_rule)
 
 # - maxTIM*(eDA_p[t,s]+eDA_m[t,s]) <= eIM[i,t,s];
