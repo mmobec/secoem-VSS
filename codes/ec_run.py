@@ -41,7 +41,7 @@ scenfile = None
 demfile  = None
 
 # Suppose we define a scenario family (famscen) & set of SIMS in Python:
-famscen = "FTC_10_2023_12"
+famscen = "FTC_1_2023_12"
 # Suppose we have SIMS = [001..031]
 n_days = 2
 SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days for brevity
@@ -752,6 +752,27 @@ for sim in SIMS:
                 f.write(f"{value(instance.pPV[t, s])} ")
             f.write("\n")
     
+
+    # Function to export values of each variable in .txt files
+    def export_variable(var, file_path, time_set):
+        """
+        Exports a Pyomo variable 'var' to 'file_path'.
+        'time_set' is the set over which the variable is indexed in time (e.g., instance.T or instance.T0).
+        Each line starts with the scenario and its probability, followed by the variable's values for each time period.
+        """
+        with open(file_path, "w") as f:
+            for s in instance.S:
+                # Build a list of string values for each time index
+                values_str = " ".join(str(value(var[t, s])) for t in time_set)
+                f.write(f"{s} {value(instance.Prob[s])} {values_str}\n")
+
+    # For a variable defined as a difference, you can also write:
+    def export_diff(var1, var2, file_path, time_set):
+        with open(file_path, "w") as f:
+            for s in instance.S:
+                diff_values = " ".join(str(value(var1[t, s] - var2[t, s])) for t in time_set)
+                f.write(f"{s} {value(instance.Prob[s])} {diff_values}\n")
+
     # Define the BESS results directory
     bess_path = os.path.join("..", pathres, "BESS/")
     os.makedirs(bess_path, exist_ok=True)
@@ -767,176 +788,43 @@ for sim in SIMS:
         f.write(f"SOCmin: {value(instance.SOCmin)}\n")
         f.write(f"SOCini: {value(instance.SOCini)}\n")
         f.write(f"SOCfin: {value(instance.SOCfin)}\n")
+
+    # Export BESS variables
+    export_variable(instance.dV, os.path.join(bess_path, "dV.txt"), instance.T)
+    export_variable(instance.cV, os.path.join(bess_path, "cV.txt"), instance.T)
+    export_variable(instance.idV, os.path.join(bess_path, "idV.txt"), instance.T)
+    export_variable(instance.socV, os.path.join(bess_path, "socV.txt"), instance.T0)
+    export_diff(instance.cV, instance.dV, os.path.join(bess_path, "cV-dV.txt"), instance.T)
     
-    # Store BESS discharge variable (dV)
-    dv_file = os.path.join(bess_path, "dV.txt")
-    with open(dv_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.dV[t, s])} ")
-            f.write("\n")
-    
-    # Store BESS charge variable (cV)
-    cv_file = os.path.join(bess_path, "cV.txt")
-    with open(cv_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.cV[t, s])} ")
-            f.write("\n")
-    
-    # Store BESS binary charge/discharge indicator (idV)
-    idv_file = os.path.join(bess_path, "idV.txt")
-    with open(idv_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.idV[t, s])} ")
-            f.write("\n")
-    
-    # Store net charge-discharge difference (cV - dV)
-    cv_dv_file = os.path.join(bess_path, "cV-dV.txt")
-    with open(cv_dv_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.cV[t, s]) - value(instance.dV[t, s])} ")
-            f.write("\n")
-    
-    # Store BESS state of charge (socV)
-    socv_file = os.path.join(bess_path, "socV.txt")
-    with open(socv_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T0:  # Includes initial state at t=0
-                f.write(f"{value(instance.socV[t, s])} ")
-            f.write("\n")
-    
-    # Define the DA results directory
-    da_path = os.path.join("..", pathmarketres, "DA/")
+    # Similarly for DA variables:
+    da_path = os.path.join(pathmarketres, "DA/")
     os.makedirs(da_path, exist_ok=True)
     
-    # Store DA price data (lD)
-    ld_file = os.path.join(da_path, "lD.txt")
-    with open(ld_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.lD[t, s])} ")
-            f.write("\n")
-    
-    # Close DA params file (even if not used explicitly, to align with AMPL behavior)
-    da_params_file = os.path.join(da_path, "DA_params.txt")
-    open(da_params_file, "w").close()
-    
-    # Store DA matched energy variables (eDA_p)
-    eda_p_file = os.path.join(da_path, "eDA_p.txt")
-    with open(eda_p_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.eDA_p[t, s])} ")
-            f.write("\n")
-    
-    # Store DA matched energy variables (eDA_m)
-    eda_m_file = os.path.join(da_path, "eDA_m.txt")
-    with open(eda_m_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.eDA_m[t, s])} ")
-            f.write("\n")
-    
-    # Store DA matched binary selling variables (ieDA_p)
-    ieda_p_file = os.path.join(da_path, "ieDA_p.txt")
-    with open(ieda_p_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.ieDA_p[t, s])} ")
-            f.write("\n")
-    
-    # Store DA matched binary buying variables (ieDA_m)
-    ieda_m_file = os.path.join(da_path, "ieDA_m.txt")
-    with open(ieda_m_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.ieDA_m[t, s])} ")
-            f.write("\n")
-    
+    export_variable(instance.lD, os.path.join(da_path, "lD.txt"), instance.T)
+    export_variable(instance.eDA_p, os.path.join(da_path, "eDA_p.txt"), instance.T)
+    export_variable(instance.eDA_m, os.path.join(da_path, "eDA_m.txt"), instance.T)
+    export_variable(instance.ieDA_p, os.path.join(da_path, "ieDA_p.txt"), instance.T)
+    export_variable(instance.ieDA_m, os.path.join(da_path, "ieDA_m.txt"), instance.T)
+        
     # Define the RM results directory
     rm_path = os.path.join("..", pathmarketres, "RM/")
     os.makedirs(rm_path, exist_ok=True)
     
-    # Store RM price variables (lR)
-    lr_file = os.path.join(rm_path, "lR.txt")
-    with open(lr_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.lR[t, s])} ")
-            f.write("\n")
+    # Export RM price variables (lR)
+    export_variable(instance.lR, os.path.join(rm_path, "lR.txt"), instance.T)
     
-    # Store RM parameter TSR
-    rm_params_file = os.path.join(rm_path, "RM_params.txt")
-    with open(rm_params_file, "w") as f:
+    # Export RM parameter TSR (a single value)
+    with open(os.path.join(rm_path, "RM_params.txt"), "w") as f:
         f.write(f"TSR: {value(instance.TSR)}\n")
-       
-    # Store RM variable rU[t, s]
-    ru_file = os.path.join(rm_path, "rU.txt")
-    with open(ru_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.rU[t, s])} ")
-            f.write("\n")
     
-    # Store RM variable rU_B[t, s]
-    ru_b_file = os.path.join(rm_path, "rU_B.txt")
-    with open(ru_b_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.rU_B[t, s])} ")
-            f.write("\n")
-    
-    # Store RM variable rU_FD[t, s]
-    ru_fd_file = os.path.join(rm_path, "rU_FD.txt")
-    with open(ru_fd_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.rU_FD[t, s])} ")
-            f.write("\n")
-    
-    # Store RM variable rD[t, s]
-    rd_file = os.path.join(rm_path, "rD.txt")
-    with open(rd_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.rD[t, s])} ")
-            f.write("\n")
-    
-    # Store RM variable rD_B[t, s]
-    rd_b_file = os.path.join(rm_path, "rD_B.txt")
-    with open(rd_b_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.rD_B[t, s])} ")
-            f.write("\n")
-    
-    # Store RM variable rD_FD[t, s]
-    rd_fd_file = os.path.join(rm_path, "rD_FD.txt")
-    with open(rd_fd_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.rD_FD[t, s])} ")
-            f.write("\n")
+    # Export RM variables
+    export_variable(instance.rU, os.path.join(rm_path, "rU.txt"), instance.T)
+    export_variable(instance.rU_B, os.path.join(rm_path, "rU_B.txt"), instance.T)
+    export_variable(instance.rU_FD, os.path.join(rm_path, "rU_FD.txt"), instance.T)
+    export_variable(instance.rD, os.path.join(rm_path, "rD.txt"), instance.T)
+    export_variable(instance.rD_B, os.path.join(rm_path, "rD_B.txt"), instance.T)
+    export_variable(instance.rD_FD, os.path.join(rm_path, "rD_FD.txt"), instance.T)
+
 
     # Print header for Intraday Market Parameters
     with open(os.path.join("..", pathmarketres, resfile), "a") as res_log:
@@ -996,55 +884,17 @@ for sim in SIMS:
     with open(os.path.join("..", pathmarketres, resfile), "a") as res_log:
         res_log.write("\n###### Printing Imbalances Parameters and Optimal Variables #########\n\n")
     
-
+    
     # Define the IB results directory
     ib_path = os.path.join("..", pathmarketres, "IB/")
     os.makedirs(ib_path, exist_ok=True)
     
-    # Store IB Parameters (lPIB and lNIB)
-    lPIB_file = os.path.join(ib_path, "lPIB.txt")
-    with open(lPIB_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.lPIB[t, s])} ")
-            f.write("\n")
-    
-    lNIB_file = os.path.join(ib_path, "lNIB.txt")
-    with open(lNIB_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.lNIB[t, s])} ")
-            f.write("\n")
-    
-    # Store IB Variables (pIB_p and pIB_m)
-    pIB_p_file = os.path.join(ib_path, "pIB_p.txt")
-    with open(pIB_p_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.pIB_p[t, s])} ")
-            f.write("\n")
-    
-    pIB_m_file = os.path.join(ib_path, "pIB_m.txt")
-    with open(pIB_m_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                f.write(f"{value(instance.pIB_m[t, s])} ")
-            f.write("\n")
-    
-    # Store IB Net Imbalances (pIB_p - pIB_m)
-    pIB_net_file = os.path.join(ib_path, "pIB_p-pIB_m.txt")
-    with open(pIB_net_file, "w") as f:
-        for s in instance.S:
-            f.write(f"{s} {value(instance.Prob[s])} ")
-            for t in instance.T:
-                pIB_net = value(instance.pIB_p[t, s]) - value(instance.pIB_m[t, s])
-                f.write(f"{pIB_net} ")
-            f.write("\n")
-    
+    export_variable(instance.lPIB, os.path.join(ib_path, "lPIB.txt"), instance.T)
+    export_variable(instance.lNIB, os.path.join(ib_path, "lNIB.txt"), instance.T)
+    export_variable(instance.pIB_p, os.path.join(ib_path, "pIB_p.txt"), instance.T)
+    export_variable(instance.pIB_m, os.path.join(ib_path, "pIB_m.txt"), instance.T)
+    export_diff(instance.pIB_p, instance.pIB_m, os.path.join(ib_path, "pIB_p-pIB_m.txt"), instance.T)
+
     
     # Print header for Scenarios
     with open(os.path.join("..", pathmarketres, resfile), "a") as res_log:
