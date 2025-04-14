@@ -126,6 +126,10 @@ The directory `results/` contains the results files of the days for which the mo
 
 They are indexed by scenario family. This means that if the code has been executed for the scenario family `famscen`, the results will be stored in `results/famscen/`.
 
+### 4. Mathematical Formulation Files
+
+An updated mathematical formulation in `LaTeX` of the optimization model in `codes/ec_model.py` is maintained in the file `model_formulation/ec_model_formulation.pdf`.
+
 ## Notes
 
 - If you re-run the simulation, results will be overwritten.
