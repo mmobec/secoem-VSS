@@ -94,6 +94,42 @@ This will:
 
 ---
 
+## Repository Structure
+
+### 1. Data Files
+
+Data is spread through several files. It is divided in two directories. The directory `data/` contains all deterministic parameters and the directory `scenarios/` contains all uncertain parameters:
+
+a. `data/ec_BESS.dat` AMPL data file containing the values of the battery's parameters.
+
+b. `data/demand.dat` AMPL data file containing the values of the flexible demand's parameters. 
+
+c. `data/ec_wind.dat` AMPL data file containing the values of the wind farm and solar PV parameters.
+
+d. `data/market.dat` AMPL data file containing the market parameters.
+
+e. `scenarios/famscen("nom de la familia")/famscen-SIM.dat` AMPL data file containing the values of all scenarios (all electricity market prices and wind and PV generation). It also contains the cluster structure to represent the scenario tree.
+
+See Section *Convert AMPL Data to Pyomo Format* on converting the AMPL data files into Pyomo data files.
+
+### 2. Code Files
+
+The code files are in the directory `codes/`:
+
+a. `codes/ec_model.py` contains the optimization model in a Pyomo Abstract Model format. It follows the mathematical formulation found in `model_formulation/ec_model_formulation.pdf`.
+
+b. `codes/ec_run.py` controls the execution of the model. It loads the optimization model in `codes/ec_model.py`, loads the required data in `data/` and `scenarios/`, executes the model in the specified days and stores the results in `results/`.
+
+### 3. Results Files
+
+The directory `results/` contains the results files of the days for which the model has been executed. 
+
+They are indexed by scenario family. This means that if the code has been executed for the scenario family `famscen`, the results will be stored in `results/famscen/`.
+
+### 4. Mathematical Formulation Files
+
+An updated mathematical formulation in `LaTeX` of the optimization model in `codes/ec_model.py` is maintained in the file `model_formulation/ec_model_formulation.pdf`.
+
 ## Notes
 
 - If you re-run the simulation, results will be overwritten.

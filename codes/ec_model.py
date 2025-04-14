@@ -343,7 +343,7 @@ model.VPP_state_cV = pyo.Constraint(model.T, model.S, rule=VPP_state_cV_rule)
 
 # socV[t,s] = socV[t-1,s] + (cV[t,s] - dV[t,s]/RTE)/Emax;
 def SOCV_rule(m, t, s):
-    if t == m.T.first():
+    if t == m.T0.first():
         # skip t=1 because we define an initial condition separately
         return pyo.Constraint.Skip
     return m.socV[t, s] == m.socV[t-1, s] + (m.cV[t, s] - m.dV[t, s]/m.RTE)/m.Emax
@@ -514,197 +514,39 @@ def consecutive_scenarios(model, sg, k):
     return [(scenario_list[i], scenario_list[i+1]) for i in range(len(scenario_list)-1)]
 
 
-# ---------------------------------------------------------
-# DAY AHEAD MARKET (c[1, k])
-# ---------------------------------------------------------
-
-# NAC_eDA_p
-def build_nac_eDA_p_index(model):
+# ---------------------------------------------------------------------
+# 1) SINGLE BLOCK FOR DAY-AHEAD + RESERVE (stage=1) (c[1, k])
+#    Variables: eDA_p, eDA_m, ieDA_p, ieDA_m, rU, rU_B, rU_FD, rD, rD_B, rD_FD
+# ---------------------------------------------------------------------
+def build_stage1_nac_index(model):
+    """
+    Builds a single index set for all day-ahead & reserve variables that share
+    the same stage=1 logic and indexing (t, s).
+    We'll store tuples: (var_name, t, k, l, l_next).
+    """
+    day_ahead_reserve_vars = [
+        "eDA_p", "eDA_m", "ieDA_p", "ieDA_m",
+        "rU", "rU_B", "rU_FD",
+        "rD", "rD_B", "rD_FD"
+    ]
     idx = []
-    for t in model.T:
-        for k in model.S0:
-            for (l, l_next) in consecutive_scenarios(model, 1, k):
-                if l in model.S and l_next in model.S:  # Ensure valid indices
-                    idx.append((t, k, l, l_next))
+    for var_name in day_ahead_reserve_vars:
+        var_obj = getattr(model, var_name)
+        for t in model.T:
+            for k in model.S0:
+                # stage=1 for these
+                for (l, l_next) in consecutive_scenarios(model, 1, k):
+                    # skip if not in domain
+                    if (t, l) in var_obj and (t, l_next) in var_obj:
+                        idx.append((var_name, t, k, l, l_next))
     return idx
 
-def NAC_eDA_p_rule(m, t, k, l, l_next):
-    if (t, l) not in m.eDA_p or (t, l_next) not in m.eDA_p:
-        return pyo.Constraint.Skip  # Skip invalid indices
-    return m.eDA_p[t, l] == m.eDA_p[t, l_next]
+def stage1_nac_rule(m, var_name, t, k, l, l_next):
+    var_obj = getattr(m, var_name)
+    return var_obj[t, l] == var_obj[t, l_next]
 
-model.NAC_eDA_p_index = pyo.Set(dimen=4, initialize=build_nac_eDA_p_index)
-model.NAC_eDA_p = pyo.Constraint(model.NAC_eDA_p_index, rule=NAC_eDA_p_rule)
-
-# NAC_eDA_m
-def build_nac_eDA_m_index(model):
-    idx = []
-    for t in model.T:
-        for k in model.S0:
-            for (l, l_next) in consecutive_scenarios(model, 1, k):
-                if l in model.S and l_next in model.S:  # Ensure valid indices
-                    idx.append((t, k, l, l_next))
-    return idx
-
-def NAC_eDA_m_rule(m, t, k, l, l_next):
-    if (t, l) not in m.eDA_m or (t, l_next) not in m.eDA_m:
-        return pyo.Constraint.Skip  # Skip invalid indices
-    return m.eDA_m[t, l] == m.eDA_m[t, l_next]
-
-model.NAC_eDA_m_index = pyo.Set(dimen=4, initialize=build_nac_eDA_m_index)
-model.NAC_eDA_m = pyo.Constraint(model.NAC_eDA_m_index, rule=NAC_eDA_m_rule)
-
-# NAC_ieDA_p
-def build_nac_ieDA_p_index(model):
-    idx = []
-    for t in model.T:
-        for k in model.S0:
-            for (l, l_next) in consecutive_scenarios(model, 1, k):
-                if l in model.S and l_next in model.S:  # Ensure valid indices
-                    idx.append((t, k, l, l_next))
-    return idx
-
-def NAC_ieDA_p_rule(m, t, k, l, l_next):
-    if (t, l) not in m.ieDA_p or (t, l_next) not in m.ieDA_p:
-        return pyo.Constraint.Skip  # Skip invalid indices
-    return m.ieDA_p[t, l] == m.ieDA_p[t, l_next]
-
-model.NAC_ieDA_p_index = pyo.Set(dimen=4, initialize=build_nac_ieDA_p_index)
-model.NAC_ieDA_p = pyo.Constraint(model.NAC_ieDA_p_index, rule=NAC_ieDA_p_rule)
-
-# NAC_ieDA_m
-def build_nac_ieDA_m_index(model):
-    idx = []
-    for t in model.T:
-        for k in model.S0:
-            for (l, l_next) in consecutive_scenarios(model, 1, k):
-                if l in model.S and l_next in model.S:  # Ensure valid indices
-                    idx.append((t, k, l, l_next))
-    return idx
-
-def NAC_ieDA_m_rule(m, t, k, l, l_next):
-    if (t, l) not in m.ieDA_m or (t, l_next) not in m.ieDA_m:
-        return pyo.Constraint.Skip  # Skip invalid indices
-    return m.ieDA_m[t, l] == m.ieDA_m[t, l_next]
-
-model.NAC_ieDA_m_index = pyo.Set(dimen=4, initialize=build_nac_ieDA_m_index)
-model.NAC_ieDA_m = pyo.Constraint(model.NAC_ieDA_m_index, rule=NAC_ieDA_m_rule)
-
-
-# ---------------------------------------------------------
-# RESERVE MARKET (c[1, k])
-# ---------------------------------------------------------
-## Upwards Reserve
-
-# NAC_rU
-def build_nac_rU_index(model):
-    idx = []
-    for t in model.T:
-        for k in model.S0:
-            for (l, l_next) in consecutive_scenarios(model, 1, k):
-                if l in model.S and l_next in model.S:  # Ensure valid indices
-                    idx.append((t, k, l, l_next))
-    return idx
-
-def NAC_rU_rule(m, t, k, l, l_next):
-    # if (t, l) not in m.rU or (t, l_next) not in m.rU:
-    #     return pyo.Constraint.Skip
-    return m.rU[t, l] == m.rU[t, l_next]
-
-model.NAC_rU_index = pyo.Set(dimen=4, initialize=build_nac_rU_index)
-model.NAC_rU = pyo.Constraint(model.NAC_rU_index, rule=NAC_rU_rule)
-
-# NAC_rU_B
-def build_nac_rU_B_index(model):
-    idx = []
-    for t in model.T:
-        for k in model.S0:
-            for (l, l_next) in consecutive_scenarios(model, 1, k):
-                if l in model.S and l_next in model.S:
-                    idx.append((t, k, l, l_next))
-    return idx
-
-def NAC_rU_B_rule(m, t, k, l, l_next):
-    if (t, l) not in m.rU_B or (t, l_next) not in m.rU_B:
-        return pyo.Constraint.Skip
-    return m.rU_B[t, l] == m.rU_B[t, l_next]
-
-model.NAC_rU_B_index = pyo.Set(dimen=4, initialize=build_nac_rU_B_index)
-model.NAC_rU_B = pyo.Constraint(model.NAC_rU_B_index, rule=NAC_rU_B_rule)
-
-# NAC_rU_FD
-def build_nac_rU_FD_index(model):
-    idx = []
-    for t in model.T:
-        for k in model.S0:
-            for (l, l_next) in consecutive_scenarios(model, 1, k):
-                if l in model.S and l_next in model.S:
-                    idx.append((t, k, l, l_next))
-    return idx
-
-def NAC_rU_FD_rule(m, t, k, l, l_next):
-    if (t, l) not in m.rU_FD or (t, l_next) not in m.rU_FD:
-        return pyo.Constraint.Skip
-    return m.rU_FD[t, l] == m.rU_FD[t, l_next]
-
-model.NAC_rU_FD_index = pyo.Set(dimen=4, initialize=build_nac_rU_FD_index)
-model.NAC_rU_FD = pyo.Constraint(model.NAC_rU_FD_index, rule=NAC_rU_FD_rule)
-
-## Downwards Reserve
-
-# NAC_rD
-def build_nac_rD_index(model):
-    idx = []
-    for t in model.T:
-        for k in model.S0:
-            for (l, l_next) in consecutive_scenarios(model, 1, k):
-                if l in model.S and l_next in model.S:
-                    idx.append((t, k, l, l_next))
-    return idx
-
-def NAC_rD_rule(m, t, k, l, l_next):
-    if (t, l) not in m.rD or (t, l_next) not in m.rD:
-        return pyo.Constraint.Skip
-    return m.rD[t, l] == m.rD[t, l_next]
-
-model.NAC_rD_index = pyo.Set(dimen=4, initialize=build_nac_rD_index)
-model.NAC_rD = pyo.Constraint(model.NAC_rD_index, rule=NAC_rD_rule)
-
-# NAC_rD_B
-def build_nac_rD_B_index(model):
-    idx = []
-    for t in model.T:
-        for k in model.S0:
-            for (l, l_next) in consecutive_scenarios(model, 1, k):
-                if l in model.S and l_next in model.S:
-                    idx.append((t, k, l, l_next))
-    return idx
-
-def NAC_rD_B_rule(m, t, k, l, l_next):
-    if (t, l) not in m.rD_B or (t, l_next) not in m.rD_B:
-        return pyo.Constraint.Skip
-    return m.rD_B[t, l] == m.rD_B[t, l_next]
-
-model.NAC_rD_B_index = pyo.Set(dimen=4, initialize=build_nac_rD_B_index)
-model.NAC_rD_B = pyo.Constraint(model.NAC_rD_B_index, rule=NAC_rD_B_rule)
-
-# NAC_rD_FD
-def build_nac_rD_FD_index(model):
-    idx = []
-    for t in model.T:
-        for k in model.S0:
-            for (l, l_next) in consecutive_scenarios(model, 1, k):
-                if l in model.S and l_next in model.S:
-                    idx.append((t, k, l, l_next))
-    return idx
-
-def NAC_rD_FD_rule(m, t, k, l, l_next):
-    if (t, l) not in m.rD_FD or (t, l_next) not in m.rD_FD:
-        return pyo.Constraint.Skip
-    return m.rD_FD[t, l] == m.rD_FD[t, l_next]
-
-model.NAC_rD_FD_index = pyo.Set(dimen=4, initialize=build_nac_rD_FD_index)
-model.NAC_rD_FD = pyo.Constraint(model.NAC_rD_FD_index, rule=NAC_rD_FD_rule)
+model.NAC_stage1_index = pyo.Set(dimen=5, initialize=build_stage1_nac_index)
+model.NAC_stage1 = pyo.Constraint(model.NAC_stage1_index, rule=stage1_nac_rule)
 
 # ---------------------------------------------------------
 # INTRADAY MARKETS: eIM referencing c[sgim[i]-1, k]
@@ -730,191 +572,68 @@ model.NAC_eIM_index = pyo.Set(dimen=5, initialize=build_nac_eIM_index)
 model.NAC_eIM = pyo.Constraint(model.NAC_eIM_index, rule=NAC_eIM_rule)
 
 
-# ---------------------------------------------------------
-# IMBALANCES, stage t+3 => c[sgpw[t], k]
-# pIB_p, pIB_m
-# ---------------------------------------------------------
-def build_nac_pIB_p_index(model):
+# ---------------------------------------------------------------------
+# 3) IMBALANCES: pIB_p, pIB_m referencing c[ sgpw[t], k ]
+# ---------------------------------------------------------------------
+def build_nac_imbal_index(model):
+    """
+    We'll unify pIB_p and pIB_m in one NAC set.
+    We'll store (var_name, t, k, l, l_next).
+    """
+    imbal_vars = ["pIB_p", "pIB_m"]
     idx = []
-    for t in model.T:
-        for k in model.S0:
-            sg_for_t = model.sgpw[t]  # c[sg_for_t, k]
-            if (sg_for_t, k) in model.c.index_set():  # Ensure (sg, k) exists
-                for (l, l_next) in consecutive_scenarios(model, sg_for_t, k):
-                    if l in model.S and l_next in model.S:  # Ensure valid indices
-                        idx.append((t, k, l, l_next))
-    return idx
-
-def NAC_pIB_p_rule(m, t, k, l, l_next):
-    if (t, l) not in m.pIB_p or (t, l_next) not in m.pIB_p:
-        return pyo.Constraint.Skip
-    return m.pIB_p[t, l] == m.pIB_p[t, l_next]
-
-model.NAC_pIB_p_index = pyo.Set(dimen=4, initialize=build_nac_pIB_p_index)
-model.NAC_pIB_p = pyo.Constraint(model.NAC_pIB_p_index, rule=NAC_pIB_p_rule)
-
-def build_nac_pIB_m_index(model):
-    idx = []
-    for t in model.T:
-        for k in model.S0:
+    for var_name in imbal_vars:
+        var_obj = getattr(model, var_name)
+        for t in model.T:
             sg_for_t = model.sgpw[t]
-            if (sg_for_t, k) in model.c.index_set():  # Ensure (sg, k) exists
-                for (l, l_next) in consecutive_scenarios(model, sg_for_t, k):
-                    if l in model.S and l_next in model.S:  # Ensure valid indices
-                        idx.append((t, k, l, l_next))
+            for k in model.S0:
+                if (sg_for_t, k) in model.c.index_set():
+                    for (l, l_next) in consecutive_scenarios(model, sg_for_t, k):
+                        if (t, l) in var_obj and (t, l_next) in var_obj:
+                            idx.append((var_name, t, k, l, l_next))
     return idx
 
-def NAC_pIB_m_rule(m, t, k, l, l_next):
-    if (t, l) not in m.pIB_m or (t, l_next) not in m.pIB_m:
-        return pyo.Constraint.Skip
-    return m.pIB_m[t, l] == m.pIB_m[t, l_next]
+def nac_imbal_rule(m, var_name, t, k, l, l_next):
+    var_obj = getattr(m, var_name)
+    return var_obj[t, l] == var_obj[t, l_next]
 
-model.NAC_pIB_m_index = pyo.Set(dimen=4, initialize=build_nac_pIB_m_index)
-model.NAC_pIB_m = pyo.Constraint(model.NAC_pIB_m_index, rule=NAC_pIB_m_rule)
+model.NAC_imbal_index = pyo.Set(dimen=5, initialize=build_nac_imbal_index)
+model.NAC_imbal = pyo.Constraint(model.NAC_imbal_index, rule=nac_imbal_rule)
 
-# ---------------------------------------------------------
-# FLEXIBLE DEMAND referencing c[sgpw[t]-1, k]
-# var_fd, var_afd_p, var_afd_m
-# ---------------------------------------------------------
-def build_nac_var_fd_index(model):
+
+# ---------------------------------------------------------------------
+# 4) FLEXIBLE DEMAND + BATTERY (stage = sgpw[t]-1)
+#    Variables: var_fd, var_afd_p, var_afd_m, dV, cV, idV, socV
+# ---------------------------------------------------------------------
+def build_nac_fd_battery_index(model):
+    """
+    We'll unify flexible demand + battery in one NAC set, referencing c[sgpw[t]-1, k].
+    We'll store (var_name, t, k, l, l_next).
+    """
+    fd_batt_vars = [
+        "var_fd", "var_afd_p", "var_afd_m",
+        "dV", "cV", "idV", "socV"
+    ]
     idx = []
-    for t in model.T:
-        for k in model.S0:
+    for var_name in fd_batt_vars:
+        var_obj = getattr(model, var_name)
+        for t in model.T:
             sg_for_t_minus1 = model.sgpw[t] - 1
             if sg_for_t_minus1 < 0:
                 continue
-            for (l, l_next) in consecutive_scenarios(model, sg_for_t_minus1, k):
-                idx.append((t, k, l, l_next))
+            if (sg_for_t_minus1, None) not in model.c.index_set():
+                # We'll handle the check inside the loop
+                pass
+            for k in model.S0:
+                if (sg_for_t_minus1, k) in model.c.index_set():
+                    for (l, l_next) in consecutive_scenarios(model, sg_for_t_minus1, k):
+                        if (t, l) in var_obj and (t, l_next) in var_obj:
+                            idx.append((var_name, t, k, l, l_next))
     return idx
 
-def NAC_var_fd_rule(m, t, k, l, l_next):
-    if (t, l) not in m.var_fd or (t, l_next) not in m.var_fd:
-        return pyo.Constraint.Skip
-    return m.var_fd[t, l] == m.var_fd[t, l_next]
+def nac_fd_battery_rule(m, var_name, t, k, l, l_next):
+    var_obj = getattr(m, var_name)
+    return var_obj[t, l] == var_obj[t, l_next]
 
-model.NAC_var_fd_index = pyo.Set(dimen=4, initialize=build_nac_var_fd_index)
-model.NAC_var_fd = pyo.Constraint(model.NAC_var_fd_index, rule=NAC_var_fd_rule)
-
-def build_nac_var_afd_p_index(model):
-    idx = []
-    for t in model.T:
-        for k in model.S0:
-            sg_for_t_minus1 = model.sgpw[t] - 1
-            if sg_for_t_minus1 < 0 or (sg_for_t_minus1, k) not in model.c.index_set():
-                continue
-            for (l, l_next) in consecutive_scenarios(model, sg_for_t_minus1, k):
-                if l in model.S and l_next in model.S:
-                    idx.append((t, k, l, l_next))
-    return idx
-
-def NAC_var_afd_p_rule(m, t, k, l, l_next):
-    if (t, l) not in m.var_afd_p or (t, l_next) not in m.var_afd_p:
-        return pyo.Constraint.Skip
-    return m.var_afd_p[t, l] == m.var_afd_p[t, l_next]
-
-model.NAC_var_afd_p_index = pyo.Set(dimen=4, initialize=build_nac_var_afd_p_index)
-model.NAC_var_afd_p = pyo.Constraint(model.NAC_var_afd_p_index, rule=NAC_var_afd_p_rule)
-
-def build_nac_var_afd_m_index(model):
-    idx = []
-    for t in model.T:
-        for k in model.S0:
-            sg_for_t_minus1 = model.sgpw[t] - 1
-            if sg_for_t_minus1 < 0 or (sg_for_t_minus1, k) not in model.c.index_set():
-                continue
-            for (l, l_next) in consecutive_scenarios(model, sg_for_t_minus1, k):
-                if l in model.S and l_next in model.S:
-                    idx.append((t, k, l, l_next))
-    return idx
-
-def NAC_var_afd_m_rule(m, t, k, l, l_next):
-    if (t, l) not in m.var_afd_m or (t, l_next) not in m.var_afd_m:
-        return pyo.Constraint.Skip
-    return m.var_afd_m[t, l] == m.var_afd_m[t, l_next]
-
-model.NAC_var_afd_m_index = pyo.Set(dimen=4, initialize=build_nac_var_afd_m_index)
-model.NAC_var_afd_m = pyo.Constraint(model.NAC_var_afd_m_index, rule=NAC_var_afd_m_rule)
-
-# ---------------------------------------------------------
-# BATTERY referencing c[sgpw[t]-1, k]
-# dV, cV, idV, socV
-# ---------------------------------------------------------
-def build_nac_dV_index(model):
-    idx = []
-    for t in model.T:
-        for k in model.S0:
-            sg_for_t_minus1 = model.sgpw[t] - 1
-            if sg_for_t_minus1 < 0 or (sg_for_t_minus1, k) not in model.c.index_set():
-                continue
-            for (l, l_next) in consecutive_scenarios(model, sg_for_t_minus1, k):
-                if l in model.S and l_next in model.S:
-                    idx.append((t, k, l, l_next))
-    return idx
-
-def NAC_dV_rule(m, t, k, l, l_next):
-    if (t, l) not in m.dV or (t, l_next) not in m.dV:
-        return pyo.Constraint.Skip
-    return m.dV[t, l] == m.dV[t, l_next]
-
-model.NAC_dV_index = pyo.Set(dimen=4, initialize=build_nac_dV_index)
-model.NAC_dV = pyo.Constraint(model.NAC_dV_index, rule=NAC_dV_rule)
-
-def build_nac_cV_index(model):
-    idx = []
-    for t in model.T:
-        for k in model.S0:
-            sg_for_t_minus1 = model.sgpw[t] - 1
-            if sg_for_t_minus1 < 0 or (sg_for_t_minus1, k) not in model.c.index_set():
-                continue
-            for (l, l_next) in consecutive_scenarios(model, sg_for_t_minus1, k):
-                if l in model.S and l_next in model.S:
-                    idx.append((t, k, l, l_next))
-    return idx
-
-def NAC_cV_rule(m, t, k, l, l_next):
-    if (t, l) not in m.cV or (t, l_next) not in m.cV:
-        return pyo.Constraint.Skip
-    return m.cV[t, l] == m.cV[t, l_next]
-
-model.NAC_cV_index = pyo.Set(dimen=4, initialize=build_nac_cV_index)
-model.NAC_cV = pyo.Constraint(model.NAC_cV_index, rule=NAC_cV_rule)
-
-def build_nac_idV_index(model):
-    idx = []
-    for t in model.T:
-        for k in model.S0:
-            sg_for_t_minus1 = model.sgpw[t] - 1
-            if sg_for_t_minus1 < 0 or (sg_for_t_minus1, k) not in model.c.index_set():
-                continue
-            for (l, l_next) in consecutive_scenarios(model, sg_for_t_minus1, k):
-                if l in model.S and l_next in model.S:
-                    idx.append((t, k, l, l_next))
-    return idx
-
-def NAC_idV_rule(m, t, k, l, l_next):
-    if (t, l) not in m.idV or (t, l_next) not in m.idV:
-        return pyo.Constraint.Skip
-    return m.idV[t, l] == m.idV[t, l_next]
-
-model.NAC_idV_index = pyo.Set(dimen=4, initialize=build_nac_idV_index)
-model.NAC_idV = pyo.Constraint(model.NAC_idV_index, rule=NAC_idV_rule)
-
-def build_nac_socV_index(model):
-    idx = []
-    for t in model.T:
-        for k in model.S0:
-            sg_for_t_minus1 = model.sgpw[t] - 1
-            if sg_for_t_minus1 < 0 or (sg_for_t_minus1, k) not in model.c.index_set():
-                continue
-            for (l, l_next) in consecutive_scenarios(model, sg_for_t_minus1, k):
-                if l in model.S and l_next in model.S:
-                    idx.append((t, k, l, l_next))
-    return idx
-
-def NAC_socV_rule(m, t, k, l, l_next):
-    if (t, l) not in m.socV or (t, l_next) not in m.socV:
-        return pyo.Constraint.Skip
-    return m.socV[t, l] == m.socV[t, l_next]
-
-model.NAC_socV_index = pyo.Set(dimen=4, initialize=build_nac_socV_index)
-model.NAC_socV = pyo.Constraint(model.NAC_socV_index, rule=NAC_socV_rule)
+model.NAC_fd_battery_index = pyo.Set(dimen=5, initialize=build_nac_fd_battery_index)
+model.NAC_fd_battery = pyo.Constraint(model.NAC_fd_battery_index, rule=nac_fd_battery_rule)
