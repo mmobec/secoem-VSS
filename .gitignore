@@ -1,4 +1,8 @@
 /results
+scenarios/
+data/demand/
+pre_process_AMPL_to_Pyomo_scenario_data/AMPL format scenario data/
+pre_process_AMPL_to_Pyomo_scenario_data/Python format scenario data/
 /model_formulation/ec_model_formulation.aux
 /model_formulation/ec_model_formulation.bcf
 /model_formulation/ec_model_formulation.log
