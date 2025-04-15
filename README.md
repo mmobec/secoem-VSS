@@ -6,7 +6,8 @@
 3. [Workflow](#workflow)
 4. [Running the Simulation](#running-the-simulation)
 5. [Output and Results](#output-and-results)
-6. [Notes](#notes)
+6. [Repository Structure](#repository-structure)
+7. [Notes](#notes)
 
 ---
 
