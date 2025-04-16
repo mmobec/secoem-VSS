@@ -9,15 +9,15 @@ import run_config
 
 class PrepareInstance:
 
-    def __init__(self, scenario_data):
+    def __init__(self, scenario_data, sim_ctx):
         self.scenario_data = scenario_data
         self.instance = self.create_instance()
         self.metrics = {}
-
+        self.sim_ctx = sim_ctx
 
     def create_instance(self):
         "self.instance creation"
-        self.instance = abstract_model.create_self.instance(self.scenario_data)
+        self.instance = abstract_model.create_instance(self.scenario_data)
         print(f"self.instance Variables: {len(list(self.instance.component_objects(pyo.Var)))}")
         print(f"self.instance Constraints: {len(list(self.instance.component_objects(pyo.Constraint)))}")
         if hasattr(self.instance, 'var_fd'):
@@ -99,7 +99,7 @@ class PrepareInstance:
         self.metrics["mean_pPV_avg"] = mean_pPV_avg
 
 
-        #with open(os.path.join("..", run_config.pathres, run_config.resfile), "a") as res_log:
+        #with open(os.path.join("..", self.sim_ctx.pathres, run_config.resfile), "a") as res_log:
         #    res_log.write(f"max_pW: {max_pW}, max_pPV: {max_pPV}\n")
         #    res_out.write(f"mean_pW_avg  = {mean_pW_avg:.6f}\n")
         #    res_out.write(f"mean_pPV_avg  = {mean_pW_avg:.6f}\n")
@@ -114,7 +114,7 @@ class PrepareInstance:
         self.metrics["\n Cardinality \n card(S0)"] = card_S0
         self.metrics["Cardinality card(S)"] = card_S
 
-        #with open(os.path.join("..", run_config.pathres, run_config.resfile), "a") as res_log:
+        #with open(os.path.join("..", self.sim_ctx.pathres, run_config.resfile), "a") as res_log:
         #    res_log.write("\n Cardinality of the problem:\n")
         #    res_log.write(f"card(S0): {card_S0}\n")
         #    res_log.write(f"card(S): {card_S}\n")
@@ -142,7 +142,7 @@ class PrepareInstance:
         self.metrics["min_dTO"] = min_dTO
 
 
-        #with open(os.path.join("..", run_config.pathres, run_config.resfile), "a") as res_log:
+        #with open(os.path.join("..", self.sim_ctx.pathres, run_config.resfile), "a") as res_log:
         #    res_log.write("\n Nearest Tree scenario, Observed data:\n")
         #    res_log.write(f"sOR: {sOR}\n")
         #    res_log.write(f"min_dTO: {min_dTO}\n")
@@ -272,7 +272,7 @@ class PrepareInstance:
         self.metrics['mean_lD_avg'] = mean_lD_avg
         self.metrics['mean_lR_avg'] = mean_lR_avg
         self.metrics['mean_lIB_avg'] = mean_lIB_avg
-        #with open(os.path.join("..", run_config.pathres, run_config.resfile), "a") as res_out:
+        #with open(os.path.join("..", self.sim_ctx.pathres, run_config.resfile), "a") as res_out:
         #    res_out.write("\nMean Values:\n")
         #    res_out.write(f"mean_lD_avg  = {mean_lD_avg:.6f}\n")
         #    res_out.write(f"mean_lR_avg  = {mean_lR_avg:.6f}\n")
@@ -349,12 +349,12 @@ class PrepareInstance:
                 lines.append(f"{key}: {val:.6f}")
         text = "\n".join(lines)
         print(text)
-        with open(os.path.join("..", run_config.pathres, run_config.resfile), "a") as f:
+        with open(os.path.join("..", self.sim_ctx.pathres, run_config.resfile), "a") as f:
             f.write(text + "\n")
 
     def _append_to_file(self, text):
         """Helper method to append text to the results file."""
-        with open(os.path.join("..", run_config.pathres, run_config.resfile), "a") as f:
+        with open(os.path.join("..", self.sim_ctx.pathres, run_config.resfile), "a") as f:
             f.write(text + "\n")
 
     def compute_instance(self):

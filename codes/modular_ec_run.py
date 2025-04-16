@@ -3,32 +3,25 @@ import math
 import time
 import pyomo.environ as pyo
 from pyomo.environ import DataPortal, value, SolverFactory
+
+from codes.results_analysis import ResultAnalysis
 from ec_model import model as abstract_model  # Your AbstractModel definition
 import run_config
 from instancecreator import PrepareInstance
+from simulation_summary_writer import SimulationSummaryWriter
+from simulation_context import SimulationContext
 
-def prepare_scenario_data():
+def prepare_scenario_data(sim_ctx):
     # Print messages like AMPL:
     print("\n########################")
-    print(f"#### Instance {run_config.probl}-{run_config.sim}")
+    print(f"#### Instance {run_config.probl}-{sim_ctx.sim}")
     print("########################\n")
 
-    pathres = f"results/{run_config.famscen}/{run_config.probl}/{run_config.sim}/"
-    pathmarketres = f"results/{run_config.famscen}/market/{run_config.sim}/"
+    print(f"scenfile path = {run_config.pathscen}{sim_ctx.scenfile}")
+    print(f"pathres        = {sim_ctx.pathres}")
 
-    # Ensure pathres and pathmarketres exist before writing files
-    os.makedirs(os.path.join("..", pathres), exist_ok=True)
-    os.makedirs(os.path.join("..", pathmarketres), exist_ok=True)
-
-    # let scenfile := famscen&"-"&sim&".dat";
-    scenfile = f"{run_config.famscen}-{run_config.sim}.dat"
-    print(f"scenfile path = {run_config.pathscen}{scenfile}")
-    print(f"pathres        = {pathres}")
-
-    # let demfile := "demand-"&sim&".dat";
-    demfile = f"demand-{run_config.sim}.dat"
-    print(f"demfile path   = {run_config.pathdem}{demfile}")
-    print(f"pathres        = {pathres}")
+    print(f"demfile path   = {sim_ctx.pathdem}{sim_ctx.demfile}")
+    print(f"pathres        = {sim_ctx.pathres}")
 
     scenario_data = DataPortal()
     # Load the "base" data
@@ -37,12 +30,12 @@ def prepare_scenario_data():
     scenario_data.load(filename=os.path.join("..", "data", run_config.wind_datfile), model=abstract_model)
 
     # Then load scenario & demand data
-    scenario_data.load(filename=os.path.join("..", run_config.pathscen, scenfile), model=abstract_model)
-    scenario_data.load(filename=os.path.join("..", run_config.pathdem, demfile), model=abstract_model)
+    scenario_data.load(filename=os.path.join("..", run_config.pathscen, sim_ctx.scenfile), model=abstract_model)
+    scenario_data.load(filename=os.path.join("..", run_config.pathdem, sim_ctx.demfile), model=abstract_model)
     print(f"\nT = {scenario_data['nT']}, nS = {scenario_data['nS']}, nIM = {scenario_data['nIM']}")
     return scenario_data
 
-def preprocess_data(scenario_data):
+def preprocess_data(scenario_data, sim_ctx):
     "Before creating the instance"
     # Some Data Preprocess needed before creating the instance because these values are used to build sets in model.py, so they must be defined before creating the instance
 
@@ -51,7 +44,7 @@ def preprocess_data(scenario_data):
     # Compute number of preserved scenarios BEFORE creating the instance
     S_preserved = [s for s in Prob0_raw if Prob0_raw[s] > 0]
     Prob_preserved = {s: Prob0_raw[s] for s in S_preserved}
-    print(f"Probabilities at Day {run_config.sim}: {Prob_preserved}")
+    print(f"Probabilities at Day {sim_ctx.sim}: {Prob_preserved}")
     print(f"Preserved Scenarios (S): {S_preserved}")
     print(f"Sum of Probabilities: {sum(Prob_preserved.values())}")
     # Inject `S_preserved` and `Prob_preserved` into `scenario_data`
@@ -79,9 +72,10 @@ def preprocess_data(scenario_data):
     return scenario_data
 
 
-def solve_model(instance):
+def solve_model(instance_prep, sim_ctx):
+    instance = instance_prep.instance
     print("\n\n#EC problem: \n\n")
-    with open(os.path.join("..", pathres, resfile), "a") as res_log:
+    with open(os.path.join("..", sim_ctx.pathres, run_config.resfile), "a") as res_log:
         res_log.write("\n\n#EC problem: \n\n")
 
     # Display initial conditions
@@ -89,7 +83,7 @@ def solve_model(instance):
     print(f"SOCini: {value(instance.SOCini)}")
     print(f"sOR: {value(instance.sOR)}")
 
-    with open(os.path.join("..", pathres, resfile), "a") as res_log:
+    with open(os.path.join("..", sim_ctx.pathres, run_config.resfile), "a") as res_log:
         res_log.write("\nInitial conditions:\n")
         res_log.write(f"SOCini: {value(instance.SOCini)}\n")
         res_log.write(f"sOR: {value(instance.sOR)}\n")
@@ -112,8 +106,9 @@ def solve_model(instance):
     results = solver.solve(instance, tee=True)  # Solve and print log
     end_time = time.time()
 
-    solve_elapsed_time = end_time - start_time  # Compute elapsed time
-    print(f"Solve elapsed time: {solve_elapsed_time:.2f} seconds")
+    sim_ctx.solve_time = end_time - start_time  # Compute elapsed time
+    sim_ctx.n_scenarios = len(instance_prep.instance.S)
+    print(f"Solve elapsed time: {sim_ctx.solve_time:.2f} seconds")
 
     print(
         f"DA Income: {sum(value(instance.Prob[s]) * value(instance.lD[t, s]) * (value(instance.eDA_p[t, s]) - value(instance.eDA_m[t, s])) for t in instance.T for s in instance.S)}")
@@ -127,13 +122,59 @@ def solve_model(instance):
         f"IB Costs: {sum(value(instance.Prob[s]) * value(instance.lNIB[t, s]) * value(instance.pIB_m[t, s]) for t in instance.T for s in instance.S)}")
     print(
         f"FD Costs: {sum(value(instance.Prob[s]) * value(instance.C_FD) * (value(instance.var_afd_p[t, s]) + value(instance.var_afd_m[t, s])) for t in instance.T for s in instance.S)}")
+    return results
+
+def next_initial_conditions(instance, sim_ctx):
+    # -------------------------------------------------
+    # Next Initial Conditions
+    # -------------------------------------------------
+
+    # Retrieve the results of the closest scenario as the next starting point
+    SOCini_next = value(instance.socV[max(instance.T0), int(value(instance.sOR))])
+
+    # Update the Pyomo model's initial SOC value
+    instance.SOCini = SOCini_next
+
+    # Log the new initial conditions
+    with open(os.path.join("..", sim_ctx.pathres, run_config.resfile), "a") as res_log:
+        res_log.write("\nNew initial conditions:\n")
+        res_log.write(f"SOCini: {SOCini_next}\n")
+        res_log.write(f"sOR: {value(instance.sOR)}\n")
+
+    # Print new initial conditions to console
+    print(f"New Initial Conditions:")
+    print(f"SOCini: {SOCini_next}, sOR: {value(instance.sOR)}")
 
 
 if __name__ == "__main__":
-    scenario_data = prepare_scenario_data()
-    scenario_data = preprocess_data(scenario_data)
-    instance = PrepareInstance(scenario_data)
-    instance.compute_instance()
-    #Now Solve the problem
-    solve_model(instance)
 
+    sim_data = []
+    for sim in run_config.SIMS:
+        sim_ctx = SimulationContext(
+            sim=sim,
+            famscen=run_config.famscen,
+            probl=run_config.probl,
+            pathscen=run_config.pathscen,
+            pathdem=run_config.pathdem,
+            profitfile=run_config.profitfile,
+            timefile=run_config.timefile,
+            numscenfile=run_config.numscenfile
+        )
+        scenario_data = prepare_scenario_data(sim_ctx)
+        scenario_data = preprocess_data(scenario_data, sim_ctx)
+        instance_prep = PrepareInstance(scenario_data, sim_ctx)
+        instance_prep.compute_instance()
+        #Now Solve the problem
+        result = solve_model(instance_prep, sim_ctx)
+        #results analysis
+        result_analysis = ResultAnalysis(result, instance_prep.instance, sim_ctx)
+        result_analysis.perform_nac_checks()
+        result_analysis.store_results()
+
+        next_initial_conditions(instance_prep.instance, sim_ctx)
+        sim_data.append(sim_ctx)
+
+
+summary_writer = SimulationSummaryWriter(sim_data)
+
+summary_writer.write_all()

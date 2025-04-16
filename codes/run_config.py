@@ -2,6 +2,10 @@
 # 1) Basic "AMPL param" equivalents
 # ---------------------------------------------------------------------
 
+"""
+All static parameters for a simulation
+"""
+
 BESS_datfile     = "ec_BESS.dat"
 wind_datfile     = "ec_wind.dat"
 market_datfile   = "market.dat"
@@ -32,7 +36,12 @@ timefile     = {p: f"time_{p}.txt"   for p in PROB}
 timefileFull = "time.txt"
 numscenfile  = "numscen.txt"
 
+"""
 obj_results = {key: {} for key in [
     "obj_fun", "obj_DA_income", "obj_RM_income", "obj_IM_income",
     "obj_IB_income", "obj_IB_costs", "obj_IB_net", "obj_FD_costs"
 ]}
+
+solve_time = {}
+n_scenarios = {}
+"""
