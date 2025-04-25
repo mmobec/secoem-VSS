@@ -92,6 +92,8 @@ def solve_model(instance_prep, sim_ctx):
     solver = SolverFactory("gurobi")  # Use gurobi solver
 
     # Set Gurobi options equivalent to CPLEX settings
+
+    #ToDo: these should go into the run_config
     solver.options["MIPGap"] = 0.0001  # Equivalent to mipgap in CPLEX
     solver.options["Threads"] = 4  # Use 4 threads
     solver.options["DisplayInterval"] = 2  # Similar to mipdisplay in CPLEX

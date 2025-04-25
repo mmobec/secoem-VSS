@@ -240,10 +240,10 @@ model.socV = pyo.Var(model.T0, model.S, within=pyo.NonNegativeReals, bounds = (m
 # 8. Market Participation
 
 # 8.1 Day Ahead Market
-model.eDA_p = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)   # sold energy
-model.eDA_m = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)   # bought energy
-model.ieDA_p = pyo.Param(model.T, model.S, within=pyo.Binary)            # binary for selling bid
-model.ieDA_m = pyo.Param(model.T, model.S, within=pyo.Binary)            # binary for buying bid
+model.eDA_p = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # sold energy
+model.eDA_m = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # bought energy
+model.ieDA_p = pyo.Var(model.T, model.S, within=pyo.Binary)            # binary for selling bid
+model.ieDA_m = pyo.Var(model.T, model.S, within=pyo.Binary)            # binary for buying bid
 
 # 8.2 Reserve Market
 model.rU = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # upward reserve
