@@ -1,48 +1,46 @@
+# simulation_context.py
+from pathlib import Path
 import os
-
-"""
-This contains all mutable variables for a simulation run that should not be in 
-run_config. Helper class to pass araound simulation parameters neatly between objects
-"""
-
-import os
-
+import config_definition as cfg   # your run_config module
 
 class SimulationContext:
+    """Holds all per-simulation data and runtime results."""
 
-    def __init__(self, sim, famscen, probl, pathscen, pathdem, profitfile, timefile, numscenfile):
+    __slots__ = (
+        "sim", "pathres", "pathmarketres",
+        "scenfile", "demfile",
+        "solve_time", "n_scenarios",
+        "obj_results", "scenario_data",
+    )
+
+    def __init__(self, sim: int):
         self.sim = sim
-        self.famscen = famscen
-        self.probl = probl
-        self.pathscen = pathscen
-        self.pathdem = pathdem
 
-        # File-specific paths
-        self.pathres = f"results/{famscen}/{probl}/{sim}/"
-        self.pathmarketres = f"results/{famscen}/market/{sim}/"
+        # -------- derive paths / filenames -------------------------
+        self.pathres       = Path("results") / cfg.famscen / cfg.probl  / str(sim)
+        self.pathmarketres = Path("results") / cfg.famscen / "market"   / str(sim)
+        self.scenfile      = f"{cfg.famscen}-{sim}.dat"
+        self.demfile       = f"demand-{sim}.dat"
 
-        self.scenfile = f"{famscen}-{sim}.dat"
-        self.demfile = f"demand-{sim}.dat"
+        # make sure result folders exist
+        for p in (self.pathres, self.pathmarketres):
+            p.mkdir(parents=True, exist_ok=True)
 
-        # Ensure directories exist
-        os.makedirs(os.path.join("..", self.pathres), exist_ok=True)
-        os.makedirs(os.path.join("..", self.pathmarketres), exist_ok=True)
-
-        # Mutable per-simulation data
-        self.solve_time = None
-        self.n_scenarios = None
-        self.obj_results = {
-            "obj_fun": {},
+        # -------- runtime-mutable fields ---------------------------
+        self.solve_time   = None
+        self.n_scenarios  = None
+        self.obj_results  = {
+            "obj_fun":       {},
             "obj_DA_income": {},
             "obj_RM_income": {},
             "obj_IM_income": {},
             "obj_IB_income": {},
-            "obj_IB_costs": {},
-            "obj_IB_net": {},
-            "obj_FD_costs": {},
+            "obj_IB_costs":  {},
+            "obj_IB_net":    {},
+            "obj_FD_costs":  {},
         }
+        self.scenario_data = None
 
-        self.profitfile = profitfile
-        self.timefile = timefile
-        self.numscenfile = numscenfile
-
+    # optional convenience --------------------------------------------------
+    def __repr__(self) -> str:            # nice printing
+        return f"SimulationContext(sim={self.sim}, pathres='{self.pathres}')"

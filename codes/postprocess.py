@@ -1,11 +1,11 @@
 from pyomo.environ import DataPortal, value, SolverFactory
 import os
-import run_config
+import config_definition as run_config
 
 
 
 
-class ResultAnalysis:
+class PostProcess:
 
     def __init__(self, results, instance, sim_ctx):
         self.results = results
@@ -550,6 +550,23 @@ class ResultAnalysis:
         self.sim_ctx.obj_results["obj_IB_costs"] = obj_IB_costs
         self.sim_ctx.obj_results["obj_IB_net"] = obj_IB_net
         self.sim_ctx.obj_results["obj_FD_costs"] = obj_FD_costs
+
+
+    def print_incomes(self):
+        instance = self.instance
+        print(
+            f"DA Income: {sum(value(instance.Prob[s]) * value(instance.lD[t, s]) * (value(instance.eDA_p[t, s]) - value(instance.eDA_m[t, s])) for t in instance.T for s in instance.S)}")
+        print(
+            f"RM Income: {sum(value(instance.Prob[s]) * (value(instance.rD[t, s]) + value(instance.rU[t, s])) * value(instance.lR[t, s]) for t in instance.T for s in instance.S)}")
+        print(
+            f"IM Income: {sum(value(instance.Prob[s]) * sum(value(instance.lI[i, t, s]) * value(instance.eIM[i, t, s]) for i in instance.IMT[t]) for t in instance.T for s in instance.S)}")
+        print(
+            f"IB Income: {sum(value(instance.Prob[s]) * value(instance.lPIB[t, s]) * value(instance.pIB_p[t, s]) for t in instance.T for s in instance.S)}")
+        print(
+            f"IB Costs: {sum(value(instance.Prob[s]) * value(instance.lNIB[t, s]) * value(instance.pIB_m[t, s]) for t in instance.T for s in instance.S)}")
+        print(
+            f"FD Costs: {sum(value(instance.Prob[s]) * value(instance.C_FD) * (value(instance.var_afd_p[t, s]) + value(instance.var_afd_m[t, s])) for t in instance.T for s in instance.S)}")
+
 
     def store_results(self):
         self.print_ampl_console_output()

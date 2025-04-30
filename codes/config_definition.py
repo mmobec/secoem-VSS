@@ -15,8 +15,8 @@ PROB  = ['ec']
 probl = 'ec'
 
 # These are placeholders for scenario file and demand file
-scenfile = None
-demfile  = None
+#scenfile = None
+#demfile  = None
 
 # Suppose we define a scenario family (famscen) & set of SIMS in Python:
 famscen = "FTC_10_2023_12"
@@ -26,8 +26,9 @@ SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days fo
 
 pathscen = f"scenarios/{famscen}/"
 pathdem  = "data/demand/"
-pathres  = None         # Will be set inside the loop
-pathmarketres = None
+
+#pathres  = None         # Will be set inside the loop
+#pathmarketres = None
 
 # Some log-file placeholders
 resfile      = "results_log.res"
@@ -35,6 +36,24 @@ profitfile   = {p: f"profit_{p}.txt" for p in PROB}
 timefile     = {p: f"time_{p}.txt"   for p in PROB}
 timefileFull = "time.txt"
 numscenfile  = "numscen.txt"
+
+### Solver options ###
+# config_definition.py  (or just config.py)
+
+SOLVER_OPTIONS = {
+    # --- MILP tolerances & strategy ---
+    "MIPGap":          1e-4,     # 0.0001
+    "Threads":         4,
+    "Presolve":        0,
+    "Method":          3,        # dual simplex
+
+    # --- Logging & run control ---
+    "DisplayInterval": 2,
+    "TimeLimit":       3600,     # seconds
+    "Seed":            2,
+}
+
+
 
 """
 obj_results = {key: {} for key in [

@@ -4,10 +4,10 @@ import time
 import pyomo.environ as pyo
 from pyomo.environ import DataPortal, value, SolverFactory
 from ec_model import model as abstract_model  # Your AbstractModel definition
-import run_config
+import config_definition as run_config
 
 
-class PrepareInstance:
+class InstanceManager:
 
     def __init__(self, scenario_data, sim_ctx):
         self.scenario_data = scenario_data
@@ -16,7 +16,7 @@ class PrepareInstance:
         self.sim_ctx = sim_ctx
 
     def create_instance(self):
-        "self.instance creation"
+        "instance creation"
         self.instance = abstract_model.create_instance(self.scenario_data)
         print(f"self.instance Variables: {len(list(self.instance.component_objects(pyo.Var)))}")
         print(f"self.instance Constraints: {len(list(self.instance.component_objects(pyo.Constraint)))}")
@@ -356,6 +356,28 @@ class PrepareInstance:
         """Helper method to append text to the results file."""
         with open(os.path.join("..", self.sim_ctx.pathres, run_config.resfile), "a") as f:
             f.write(text + "\n")
+
+    def next_initial_conditions(self):
+        # -------------------------------------------------
+        # Next Initial Conditions
+        # -------------------------------------------------
+        instance = self.instance
+        sc = self.sim_ctx
+        # Retrieve the results of the closest scenario as the next starting point
+        SOCini_next = value(instance.socV[max(instance.T0), int(value(instance.sOR))])
+
+        # Update the Pyomo model's initial SOC value
+        instance.SOCini = SOCini_next
+
+        # Log the new initial conditions
+        with open(os.path.join("..", sc.pathres, run_config.resfile), "a") as res_log:
+            res_log.write("\nNew initial conditions:\n")
+            res_log.write(f"SOCini: {SOCini_next}\n")
+            res_log.write(f"sOR: {value(instance.sOR)}\n")
+
+        # Print new initial conditions to console
+        print(f"New Initial Conditions:")
+        print(f"SOCini: {SOCini_next}, sOR: {value(instance.sOR)}")
 
     def compute_instance(self):
         self.compute_scenario_cluster()

@@ -1,5 +1,5 @@
 import os
-from run_config import probl, famscen, profitfile, timefile, numscenfile, resfile
+from config_definition import probl, famscen, profitfile, timefile, numscenfile, resfile
 
 
 class SimulationSummaryWriter:
