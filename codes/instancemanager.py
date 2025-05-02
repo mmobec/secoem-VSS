@@ -11,11 +11,11 @@ class InstanceManager:
 
     def __init__(self, scenario_data, sim_ctx):
         self.scenario_data = scenario_data
-        self.instance = self.create_instance()
+        self.instance = self.create_instance_wrapper()
         self.metrics = {}
         self.sim_ctx = sim_ctx
 
-    def create_instance(self):
+    def create_instance_wrapper(self):
         "instance creation"
         self.instance = abstract_model.create_instance(self.scenario_data)
         print(f"self.instance Variables: {len(list(self.instance.component_objects(pyo.Var)))}")

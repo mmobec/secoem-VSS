@@ -117,6 +117,27 @@ See Section *Convert AMPL Data to Pyomo Format* on converting the AMPL data file
 
 The code files are in the directory `codes/`:
 
+a. `codes/modular_ec_run.py` is the main file for running the simulation. It contains a for loop that runs a simulation for every period defined in the configuration file `config_definition.py`.
+For each simulation, a `SimulationContext` object is created, which will contain all mutable attributes of a simulation including paths and file names, solver time and the results of the objective function.
+Next, a `PreProcesor` object is created, which loads the corresponding scenaro data.
+Afterwards, an `InstanceManager` object is created, which handles everything related to the isntance of the abstract model. First, the `compute_instance()` method is called, which does a load of things to populate the instance with data.
+Then, a `Solver` object is createed, and the `solve()` method is called. This is a helper object that initialized the solver settings defined in the `config_definition.py` and solves the problem for the instance, and returns the results.
+The following step is the postprocessing, for which a `Postprocess` object is created. After performing the NAC checks, the `store_results()` method stores all important data of the simulation into the corresponding files and logs.
+The `next_initial_conditions()` method is called for teh InstanceManager object to prepare for the next run, and the SimulatoinContext object is appended to the list of simulations for further analysis after all simulations are done.
+
+After the for loop, the SimulationSummaryWriter object is created to do the afformentioned task of logging the final summary of all simulations.
+
+| Stage            | What Happens                                                                                                                                            | Key Class                                   |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- |
+| **Context**      | Create a `SimulationContext` → paths, filenames, KPI placeholders.                                                                                      | `simulation_context.py`                     |
+| **Pre‑process**  | Load deterministic data (market/BESS/wind), load the day’s scenario & demand, drop 0‑probability branches, build auxiliary sets (`S`, `Prob`, `lD`, …). | `PreProcessor`                              |
+| **Instance**     | Instantiate `ec_model.py` with the cleaned `DataPortal`, then compute scenario clusters, price vectors, power outputs and imbalance bounds.             | `InstanceManager`                           |
+| **Solve**        | Apply `SOLVER_OPTIONS`, run **Gurobi**, store wallclock time and scenario count.                                                                        | `Solver`                                    |
+| **Post‑process** | Non‑anticipativity checks; export every time‑series (FD, WP, PV, BESS, DAM, RM, IM, IB) plus objective components.                                      | `PostProcess`                               |
+| **Roll‑forward** | Pass terminal BESS SoC & selected scenario (`sOR`) as initial conditions for the next day.                                                              | `InstanceManager.next_initial_conditions()` |
+| **Summarise**    | After the loop a `SimulationSummaryWriter` writes human‑readable tables (`tables/`) and a single `ec_<family>_summary.out`.                             | `simulation_summary_writer.py`              |
+
+
 a. `codes/ec_model.py` contains the optimization model in a Pyomo Abstract Model format. It follows the mathematical formulation found in `model_formulation/ec_model_formulation.pdf`.
 
 b. `codes/ec_run.py` controls the execution of the model. It loads the optimization model in `codes/ec_model.py`, loads the required data in `data/` and `scenarios/`, executes the model in the specified days and stores the results in `results/`.
