@@ -150,6 +150,9 @@ After the for loop, the `SimulationSummaryWriter` object is created to do the af
         ▼
 SimulationSummaryWriter  ➜  tables + ec_<family>_summary.out
 
+```
+
+
 | File                                     | Main class / function           |  responsibility                                                                                                                                                                                                                |
 | ---------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **`codes/simulation_context.py`**        | `SimulationContext`       | *Data container* – econtain all mutable attributes of a simulation including paths and file names, solver time and the results of the objective function.filenames, solver time, objective breakdowns.                                                                                                              |
@@ -159,7 +162,7 @@ SimulationSummaryWriter  ➜  tables + ec_<family>_summary.out
 | **`codes/postprocess.py`**               | `PostProcess`             | After performing the NAC checks, the `store_results()` method stores all important data of the simulation into the corresponding files and logs.
 | **`codes/simulation_summary_writer.py`** | `SimulationSummaryWriter` | Logs final summary of all simulations                    |
 | **`codes/ec_model.py`**                  | Pyomo `AbstractModel`     | Mathematical formulation of the model                                                                                               |
-| **`codes/modular_ec_run.py`**            | —                         | Contains the main loop for the simulations
+| **`codes/modular_ec_run.py`**            | __main__                         | Contains the main loop for the simulations
 | **`codes/config_definition.py`**            | —                         | Static variables that do not change from sim to sim like solver options and file paths
 
 a. `codes/ec_model.py` contains the optimization model in a Pyomo Abstract Model format. It follows the mathematical formulation found in `model_formulation/ec_model_formulation.pdf`.
