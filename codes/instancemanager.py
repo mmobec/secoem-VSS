@@ -3,7 +3,7 @@ import math
 import time
 import pyomo.environ as pyo
 from pyomo.environ import DataPortal, value, SolverFactory
-from ec_model import model as abstract_model  # Your AbstractModel definition
+from ec_model_rm import model as abstract_model  # Your AbstractModel definition
 import config_definition as run_config
 
 
@@ -18,6 +18,7 @@ class InstanceManager:
     def create_instance_wrapper(self):
         "instance creation"
         self.instance = abstract_model.create_instance(self.scenario_data)
+        self.override_da_results()
         print(f"self.instance Variables: {len(list(self.instance.component_objects(pyo.Var)))}")
         print(f"self.instance Constraints: {len(list(self.instance.component_objects(pyo.Constraint)))}")
         if hasattr(self.instance, 'var_fd'):
@@ -25,6 +26,48 @@ class InstanceManager:
         print(f"T size: {len(list(self.instance.T))}")  # Should be 24
         print(f"S size: {len(list(self.instance.S))}")  # Should be 10
         return self.instance
+
+
+    def find_closest_dam_scenario(self):
+        rv0 = value(self.instance.fRVSG[1]) # first index of  random variables of stage 1
+        n = value(self.instance.nRVSG[1])   # amount of variables in first stage
+        rv_DA = range(rv0, rv0 + n)  # DA slice
+
+        best_s, best_d = None, 1e20
+        for s in self.instance.S:  # all surviving scenarios
+            d = math.sqrt(sum(
+                (value(self.instance.Scen[rv, s]) - run_config.DA_PRICE_OBS[rv - rv0 + 1]) ** 2
+                for rv in rv_DA))  # compare to real prices
+            if d < best_d:
+                best_s, best_d = s, d
+        self.instance.sDA = best_s # closest scenario to observed values
+
+        for k in self.instance.S0:  # loop over ALL leaf IDs
+            if best_s in self.instance.c[2, k]:
+                self.instance.kRM = k
+                break
+
+    def update_scenario_tree(self):
+        """
+        Set the probability of all scenarios that are not the closest one that was observed to 0
+        """
+        S_keep = [s for s in self.instance.c[2, self.instance.kRM] if s in self.instance.S]
+
+        for s in self.instance.S:
+            if s not in S_keep:
+                self.instance.Prob[s] = 0.0
+
+
+    #This is for RM
+    def override_da_results(self):
+        for s in self.instance.S:
+            for t, price in run_config.DA_PRICE_OBS.items():
+                self.instance.lD[t, s] = price
+
+            for t, energy in run_config.DA_E_P_OBS.items():
+                self.instance.eDA_p[t, s] = energy
+            for t, energy in run_config.DA_E_M_OBS.items():
+                self.instance.eDA_m[t, s] = energy
 
     def compute_scenario_cluster(self):
         "After creating the self.instance but before running the solver other parameters must be allocated"
@@ -380,6 +423,8 @@ class InstanceManager:
         print(f"SOCini: {SOCini_next}, sOR: {value(instance.sOR)}")
 
     def compute_instance(self):
+        self.find_closest_dam_scenario()
+        self.update_scenario_tree()
         self.compute_scenario_cluster()
         self.compute_expected_scenario_cluster()
         self.compute_power_outputs()
