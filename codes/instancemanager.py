@@ -428,7 +428,7 @@ class InstanceManager:
         print(f"SOCini: {SOCini_next}, sOR: {value(instance.sOR)}")
 
     def compute_instance(self):
-        self.find_closest_dam_scenario()
+        #self.find_closest_dam_scenario()
         self.update_scenario_tree()
         self.compute_scenario_cluster()
         self.compute_expected_scenario_cluster()

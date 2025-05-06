@@ -5,7 +5,7 @@ import pyomo.environ as pyo
 from pyomo.environ import DataPortal, value, SolverFactory
 
 
-from ec_model import model as abstract_model  # Your AbstractModel definition
+from ec_model_rm import model as abstract_model  # Your AbstractModel definition
 import config_definition as run_config
 from instancemanager import InstanceManager
 from simulation_summary_writer import SimulationSummaryWriter

@@ -541,7 +541,7 @@ def build_stage1_nac_index(model):
     We'll store tuples: (var_name, t, k, l, l_next).
     """
     day_ahead_reserve_vars = [
-        "eDA_p", "eDA_m", "ieDA_p", "ieDA_m",
+        #"eDA_p", "eDA_m", "ieDA_p", "ieDA_m", commented out for RM model
         "rU", "rU_B", "rU_FD",
         "rD", "rD_B", "rD_FD"
     ]
