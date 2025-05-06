@@ -33,6 +33,8 @@ class PreProcessor:
         # Then load scenario & demand data
         self.scenario_data.load(filename=os.path.join("..", config.pathscen, sc.scenfile), model=abstract_model)
         self.scenario_data.load(filename=os.path.join("..", config.pathdem, sc.demfile), model=abstract_model)
+
+
         print(f"\nT = {self.scenario_data['nT']}, nS = {self.scenario_data['nS']}, nIM = {self.scenario_data['nIM']}")
 
 
@@ -54,6 +56,7 @@ class PreProcessor:
         self.scenario_data.data()["S"] = {None: S_preserved}  # Ensure correct S
         self.scenario_data.data()["Prob"] = Prob_preserved  # Assign Probabilities correctly
 
+
         ### lD allocation (necessary to define Ssd set in ec_model.py which is necessary to build bidding curves)
         # Scen values are needed to define lD values
         Scen0_raw = self.scenario_data.data().get("Scen0", {})  # Extract full scenario data
@@ -74,6 +77,22 @@ class PreProcessor:
                                                                                 0.0)  # Default to 0.0 if missing
         self.scenario_data.data()["lD"] = lD_preserved  # Assign `lD` values
 
+        #same thing for lR:
+        # --- figure out the first RV of stage‑2 -----------------------------
+        nRVSG1_dict = self.scenario_data.data().get("nRVSG", {})
+        nRVSG1 = nRVSG1_dict.get(1, 0)  # RVs in stage‑1
+        rv0_RM = 1 + int(nRVSG1)  # first RM RV index
+
+        # --- copy 24 reserve‑market prices to lR ----------------------------
+        lR_preserved = {}
+        nT = int(self.scenario_data["nT"])
+        for t in range(1, nT + 1):
+            rv = rv0_RM + (t - 1)  # row that holds RM price for hour t
+            for s in S_preserved:  # or self.scenario_data["S0"]
+                price = self.scenario_data.data()["Scen"].get((rv, s), 0.0)
+                lR_preserved[(t, s)] = float(price)
+
+        self.scenario_data.data()["lR"] = lR_preserved
 
 
 

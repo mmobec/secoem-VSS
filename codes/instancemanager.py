@@ -226,14 +226,19 @@ class InstanceManager:
 
     def compute_market_prices(self):
         # Compute market prices (Day-Ahead prices already defined before creating the self.instance)
-        lR_dict = {}
+
+        """
+        Commented Out RM because it is defined similarly to DAM in preprocessing
+        """
+
+        #lR_dict = {}
         lI_dict = {}
         lIB_dict = {}
         # Assign values to dictionaries
         for t in self.instance.T:
             for s in self.instance.S:
                 # Reserve market prices
-                lR_dict[t, s] = value(self.instance.Scen[value(self.instance.nT) + t, s])
+                #lR_dict[t, s] = value(self.instance.Scen[value(self.instance.nT) + t, s])
                 # System imbalance prices
                 lIB_dict[t, s] = value(self.instance.Scen[value(self.instance.fRVSG[value(self.instance.nSG)]) + (t - 1), s])
         # Assign Intraday Market prices
@@ -243,8 +248,8 @@ class InstanceManager:
                     lI_dict[i, t, s] = value(
                         self.instance.Scen[value(self.instance.fRVSG[value(self.instance.sgim[i])]) + t - min(self.instance.TIM[i]), s])
         # Store values in Pyomo self.instance
-        for (t, s), val in lR_dict.items():
-            self.instance.lR[t, s] = val
+        #for (t, s), val in lR_dict.items():
+            #self.instance.lR[t, s] = val
         for (i, t, s), val in lI_dict.items():
             self.instance.lI[i, t, s] = val
         for (t, s), val in lIB_dict.items():
