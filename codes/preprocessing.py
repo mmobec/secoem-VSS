@@ -60,6 +60,8 @@ class PreProcessor:
         self.scenario_data.data()["Prob"] = Prob_preserved  # Assign Probabilities correctly
 
 
+    def allocate_lr_and_ld(self):
+
         ### lD allocation (necessary to define Ssd set in ec_model.py which is necessary to build bidding curves)
         # Scen values are needed to define lD values
         Scen0_raw = self.scenario_data.data().get("Scen0", {})  # Extract full scenario data
@@ -102,7 +104,7 @@ class PreProcessor:
 
 
         #ToDo: replace hardcoded scenarios
-        for s in [1,2,4,5,6,8,9,10]:   # in self.scenario_data.data()["Prob0"].keys():    #self.S_preserved:
+        for s in self.S_preserved:
             d = math.sqrt(sum((self.scenario_data.data()["lD"][rv, s] - config.DA_PRICE_OBS[rv] )**2 for rv in
                           range(1, int(self.scenario_data["nT"]) +1 )))
 
@@ -110,28 +112,59 @@ class PreProcessor:
                 best_s, best_d = s, d
 
         c_dict = self.scenario_data.data()["c"]  # {(sg,k): [leaf IDs]}
+        x=2
 
         kRM = None
         for (sg, k), cluster in c_dict.items():
-            if sg == 2 and best_s in cluster:  # stage‑2 node whose cluster contains s*
+            if sg == 1 and best_s in cluster:  # stage‑2 node whose cluster contains best_s
                 kRM = k
                 break
+        self.scenario_data.data()["kRM"] = kRM
 
-        #ToDo:  Filter the clusters c
-        x=1
 
-    def update_scenario_tree(self):
+    def update_proabilities(self):
         """
-        Set the probability of all scenarios that are not the closest one that was observed to 0
-        """
-        S_keep = [s for s in self.instance.c[2, self.instance.kRM] if s in self.instance.S]
+         Considering that we now found the cluster that contains the scenarios,
+         that are descendents of the closest DAM scenario, we can set the probabilities
+         of the other ones to 0
+         """
 
-        for s in self.instance.S:
-            if s not in S_keep:
-                self.instance.Prob[s] = 0.0
+        c_dict = self.scenario_data.data()["c"]
+        kRM = self.scenario_data.data()["kRM"]
+        cluster_closest_to_real_dam = c_dict[(1, kRM)]
+
+        self.scenario_data.data()["S"] = {None: cluster_closest_to_real_dam}
+        self.S_preserved = cluster_closest_to_real_dam
+
+        """
+        for s in self.scenario_data.data()["S"][None]:
+            if s not in cluster_closest_to_real_dam:
+                self.scenario_data.data()["Prob"][s]= 0
+        """
+        for s, P in self.scenario_data.data()["Prob"].items():
+            if s not in cluster_closest_to_real_dam:
+                self.scenario_data.data()["Prob"][s] = 0
+
+
+
+        # Now, Rescale the probabilities
+        sum_prob = sum(self.scenario_data.data()["Prob"].values())
+        for s in self.scenario_data.data()["Prob"]:
+            self.scenario_data.data()["Prob"][s] /= sum_prob
+
+
+    def update_clusters(self):
+        trimmed = {}
+        for (sg, k), cluster in self.scenario_data.data()["c"].items():
+            # cluster was a Python list of leaf IDs
+            trimmed[(sg, k)] = [leaf for leaf in cluster if leaf in self.scenario_data.data()["S"][None]]
+        self.scenario_data.data()["c"] = trimmed
 
     def run_preprocessing(self):
         self.prepare_scenario_data()
         self.preprocess_data()
+        self.allocate_lr_and_ld()
         self.find_closest_dam_scenario()
+        self.update_proabilities()
+        self.update_clusters()
         return self.scenario_data

@@ -28,36 +28,6 @@ class InstanceManager:
         return self.instance
 
 
-    def find_closest_dam_scenario(self):
-        rv0 = value(self.instance.fRVSG[1]) # first index of  random variables of stage 1
-        n = value(self.instance.nRVSG[1])   # amount of variables in first stage
-        rv_DA = range(rv0, rv0 + n)  # DA slice
-
-        best_s, best_d = None, 1e20
-        for s in self.instance.S:  # all surviving scenarios
-            d = math.sqrt(sum(
-                (value(self.instance.Scen[rv, s]) - run_config.DA_PRICE_OBS[rv - rv0 + 1]) ** 2
-                for rv in rv_DA))  # compare to real prices
-            if d < best_d:
-                best_s, best_d = s, d
-        self.instance.sDA = best_s # closest scenario to observed values
-
-        for k in self.instance.S0:  # loop over ALL leaf IDs
-            if best_s in self.instance.c[2, k]:
-                self.instance.kRM = k
-                break
-
-    def update_scenario_tree(self):
-        """
-        Set the probability of all scenarios that are not the closest one that was observed to 0
-        """
-        S_keep = [s for s in self.instance.c[2, self.instance.kRM] if s in self.instance.S]
-
-        for s in self.instance.S:
-            if s not in S_keep:
-                self.instance.Prob[s] = 0.0
-
-
     #This is for RM
     def override_da_results(self):
         for s in self.instance.S:
@@ -429,7 +399,6 @@ class InstanceManager:
 
     def compute_instance(self):
         #self.find_closest_dam_scenario()
-        self.update_scenario_tree()
         self.compute_scenario_cluster()
         self.compute_expected_scenario_cluster()
         self.compute_power_outputs()
