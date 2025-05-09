@@ -78,7 +78,7 @@ cd ../codes
 Run the optimization model:
 
 ```sh
-python ec_run.py
+python modular_ec_run.py
 ```
 
 This will:
