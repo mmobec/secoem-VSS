@@ -131,10 +131,13 @@ class PreProcessor:
 
         c_dict = self.scenario_data.data()["c"]
         kRM = self.scenario_data.data()["kRM"]
+        probs = self.scenario_data.data()["Prob"]
         cluster_closest_to_real_dam = c_dict[(1, kRM)]
 
-        self.scenario_data.data()["S"] = {None: cluster_closest_to_real_dam}
-        self.S_preserved = cluster_closest_to_real_dam
+        filtered_cluster_closest_to_real_dam = [s for s in cluster_closest_to_real_dam if s in probs.keys()]
+
+        self.scenario_data.data()["S"] = {None: filtered_cluster_closest_to_real_dam}
+        self.S_preserved = filtered_cluster_closest_to_real_dam
 
         """
         for s in self.scenario_data.data()["S"][None]:
