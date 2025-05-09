@@ -102,8 +102,6 @@ class PreProcessor:
     def find_closest_dam_scenario(self):
         best_s, best_d = None, 1e20
 
-
-        #ToDo: replace hardcoded scenarios
         for s in self.S_preserved:
             d = math.sqrt(sum((self.scenario_data.data()["lD"][rv, s] - config.DA_PRICE_OBS[rv] )**2 for rv in
                           range(1, int(self.scenario_data["nT"]) +1 )))
@@ -119,10 +117,12 @@ class PreProcessor:
             if sg == 1 and best_s in cluster:  # stage‑2 node whose cluster contains best_s
                 kRM = k
                 break
+
+        # Filter the cluster to only contain scenarios that exist in S_preserved
+
         self.scenario_data.data()["kRM"] = kRM
 
-
-    def update_proabilities(self):
+    def update_probabilities_and_scenarios(self):
         """
          Considering that we now found the cluster that contains the scenarios,
          that are descendents of the closest DAM scenario, we can set the probabilities
@@ -141,11 +141,12 @@ class PreProcessor:
             if s not in cluster_closest_to_real_dam:
                 self.scenario_data.data()["Prob"][s]= 0
         """
-        for s, P in self.scenario_data.data()["Prob"].items():
+        # Instead of setting the probability to 0, now the elements are removed so that S_preserved and Prob are in line
+        prob = self.scenario_data.data()["Prob"]
+        for s in list(prob.keys()):  # list(...) makes a snapshot
             if s not in cluster_closest_to_real_dam:
-                self.scenario_data.data()["Prob"][s] = 0
-
-
+                del prob[s]
+        self.scenario_data.data()["Prob"] = prob
 
         # Now, Rescale the probabilities
         sum_prob = sum(self.scenario_data.data()["Prob"].values())
@@ -160,11 +161,53 @@ class PreProcessor:
             trimmed[(sg, k)] = [leaf for leaf in cluster if leaf in self.scenario_data.data()["S"][None]]
         self.scenario_data.data()["c"] = trimmed
 
+    def truncate_remaining_vars(self):
+        # 1) grab the raw Scen0 table
+        Scen0_raw = self.scenario_data.data()["Scen0"]
+        # total # of random variables (over *all* stages)
+        nRV_total = sum(self.scenario_data.data()["nRVSG"].values())
+
+        # 2) trim to only those scenarios we kept after DAM
+        Scen_trim = {
+            (rv, s): Scen0_raw.get((rv, s), 0.0)
+            for rv in range(1, nRV_total + 1)
+            for s in self.S_preserved
+        }
+        self.scenario_data.data()["Scen"] = Scen_trim
+
+        # 3) figure out where the DA block lives:
+        rv0_DA = 1  # by convention Pyomo stages start RV 1 at DA
+        n_DA = int(self.scenario_data.data()["nRVSG"][1])
+        # 4) build lD from that slice of Scen_trim
+        lD = {}
+        for t in range(1, int(self.scenario_data["nT"]) + 1):
+            rv = rv0_DA + (t - 1)
+            for s in self.S_preserved:
+                lD[(t, s)] = float(Scen_trim.get((rv, s), 0.0))
+        self.scenario_data.data()["lD"] = lD
+
+        # 5) and the RM block immediately follows DA in RV‐space
+        rv0_RM = rv0_DA + n_DA
+        lR = {}
+        for t in range(1, int(self.scenario_data["nT"]) + 1):
+            rv = rv0_RM + (t - 1)
+            for s in self.S_preserved:
+                lR[(t, s)] = float(Scen_trim.get((rv, s), 0.0))
+        self.scenario_data.data()["lR"] = lR
+
     def run_preprocessing(self):
+
+
+        """
+        Should we redo the clusters so that the scenarios that are no longer in S_preserved are removed?
+        """
+
+
         self.prepare_scenario_data()
         self.preprocess_data()
         self.allocate_lr_and_ld()
         self.find_closest_dam_scenario()
-        self.update_proabilities()
+        self.update_probabilities_and_scenarios()
         self.update_clusters()
+        self.truncate_remaining_vars()
         return self.scenario_data
