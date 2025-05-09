@@ -171,6 +171,7 @@ class PreProcessor:
         nRV_total = sum(self.scenario_data.data()["nRVSG"].values())
 
         # 2) trim to only those scenarios we kept after DAM
+
         Scen_trim = {
             (rv, s): Scen0_raw.get((rv, s), 0.0)
             for rv in range(1, nRV_total + 1)
@@ -211,6 +212,6 @@ class PreProcessor:
         self.allocate_lr_and_ld()
         self.find_closest_dam_scenario()
         self.update_probabilities_and_scenarios()
-        self.update_clusters()
+        #self.update_clusters()  I think this is already done in instancemanager
         self.truncate_remaining_vars()
         return self.scenario_data
