@@ -22,9 +22,10 @@ class SimulationContext:
         self.scenfile      = f"{cfg.famscen}-{sim}.dat"
         self.demfile       = f"demand-{sim}.dat"
 
-        # make sure result folders exist
+        # make sure resultfolders exist (relative to parent directory)
         for p in (self.pathres, self.pathmarketres):
-            p.mkdir(parents=True, exist_ok=True)
+            full_path = os.path.join("..", str(p))  # adjust path relative to parent dir
+            os.makedirs(full_path, exist_ok=True)
 
         # -------- runtime-mutable fields ---------------------------
         self.solve_time   = None
