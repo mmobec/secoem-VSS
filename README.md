@@ -88,6 +88,13 @@ This will:
 
 ---
 
+To configure the scenario and simulation duration:
+
+- Open the `config_definition.py` file
+- Set the scenario family using the `famscen` parameter
+- Set the number of simulation days using the `n_days` parameter
+---
+
 ## Output and Results
 
 - The results of the optimization will be stored in the `results/` directory.
