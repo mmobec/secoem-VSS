@@ -17,8 +17,9 @@ class InstanceManager:
 
     def create_instance_wrapper(self):
         "instance creation"
-        self.instance = abstract_model.create_instance(self.scenario_data)
         self.override_da_results()
+        self.instance = abstract_model.create_instance(self.scenario_data)
+
         print(f"self.instance Variables: {len(list(self.instance.component_objects(pyo.Var)))}")
         print(f"self.instance Constraints: {len(list(self.instance.component_objects(pyo.Constraint)))}")
         if hasattr(self.instance, 'var_fd'):
@@ -30,15 +31,31 @@ class InstanceManager:
 
     #This is for RM
     def override_da_results(self):
-        for s in self.instance.S:
+
+        scenarios = self.scenario_data.data()["S"][None]
+
+        for s in scenarios:
             for t, price in run_config.DA_PRICE_OBS.items():
-                self.instance.lD[t, s] = price
+                self.scenario_data["lD"][t, s] = price
 
+        self.scenario_data.data()["eDA_p"] = {}
+        self.scenario_data.data()["eDA_m"] = {}
+        for t in range(1, 25):
+            for s in scenarios:
+                self.scenario_data.data()["eDA_p"][t,s] = run_config.DA_E_P_OBS[t]
+                self.scenario_data.data()["eDA_m"][t,s] = run_config.DA_E_M_OBS[t,s]
+            """
+            self.scenario_data.data()["eDA_p"] = {} # since these are not initialized in the scenario_data
             for t, energy in run_config.DA_E_P_OBS.items():
-                self.instance.eDA_p[t, s] = energy
-            for t, energy in run_config.DA_E_M_OBS.items():
-                self.instance.eDA_m[t, s] = energy
+                for s in scenarios:
+                    self.scenario_data.data()["eDA_p"][t, s] = energy
 
+            self.scenario_data.data()["eDA_m"] = {}
+            for t, energy in run_config.DA_E_M_OBS.items():
+                for s in scenarios:
+                    self.scenario_data.data()["eDA_m"][t, s] = energy
+            """
+        x=1
     def compute_scenario_cluster(self):
         "After creating the self.instance but before running the solver other parameters must be allocated"
         # Compute scenario cluster (c)

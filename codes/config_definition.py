@@ -23,7 +23,7 @@ probl = 'ec'
 # Suppose we define a scenario family (famscen) & set of SIMS in Python:
 famscen = "FTC_10_2023_12"
 # Suppose we have SIMS = [001..031]
-n_days = 2
+n_days = 1
 SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days for brevity
 
 pathscen = f"scenarios/{famscen}/"
@@ -69,7 +69,7 @@ DA_PRICE_OBS = {
 DA_E_P_OBS = {t: 0.0 for t in range(1, 25)}          # all zeros
 
 # --- Day‑Ahead accepted PURCHASES (eDA_m)  –‑ scenario 1 ----------
-
+"""
 DA_E_M_OBS = {
      1: 19.203390000000002,
      2: 19.605060833333336,
@@ -96,7 +96,33 @@ DA_E_M_OBS = {
     23: 27.614839166666663,
     24: 35.75,
 }
+"""
 
+def load_dam_prices(file_path):
+    """
+    Reads DAM prices from a text file and returns a dictionary indexed by (t, s).
+
+    Returns:
+        dict: {(t, s): price}
+    """
+    DA_E_M_OBS = {}
+
+    with open("market_quant.txt", 'r') as f:
+        for line in f:
+            parts = line.strip().split()
+            if len(parts) < 26:
+                continue  # skip malformed lines
+
+            s = int(parts[0])  # scenario number
+            # parts[1] is probability, which we skip for this
+            prices = list(map(float, parts[2:]))
+
+            for t, price in enumerate(prices, start=1):  # t from 1 to 24
+                DA_E_M_OBS[(t, s)] = price
+
+    return DA_E_M_OBS
+
+DA_E_M_OBS = load_dam_prices("zxc")
 """
 obj_results = {key: {} for key in [
     "obj_fun", "obj_DA_income", "obj_RM_income", "obj_IM_income",

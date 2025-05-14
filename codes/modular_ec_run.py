@@ -4,7 +4,6 @@ import time
 import pyomo.environ as pyo
 from pyomo.environ import DataPortal, value, SolverFactory
 
-
 from ec_model_rm import model as abstract_model  # Your AbstractModel definition
 import config_definition as run_config
 from instancemanager import InstanceManager
@@ -18,8 +17,6 @@ from postprocess import PostProcess
 if __name__ == "__main__":
 
     sim_data = []
-
-
     for sim in run_config.SIMS:
 
         #Create Simulationcontext object to store data of each sim

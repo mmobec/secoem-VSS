@@ -303,8 +303,8 @@ class PostProcess:
             ("lD.txt", self.instance.lD),
             ("eDA_p.txt", self.instance.eDA_p),
             ("eDA_m.txt", self.instance.eDA_m),
-            ("ieDA_p.txt", self.instance.ieDA_p),
-            ("ieDA_m.txt", self.instance.ieDA_m),
+            #("ieDA_p.txt", self.instance.ieDA_p),
+            #("ieDA_m.txt", self.instance.ieDA_m),
         ]
         self.save_ts_variable_group(da_path, da_vars)
         open(os.path.join(da_path, "DA_params.txt"), "w").close()
@@ -582,8 +582,26 @@ class PostProcess:
         self.store_ib()
         self.store_scenarios()
         self.store_objective_function()
+        curves = self.get_RM_bid_curves()
+        x=1
 
     def perform_nac_checks(self):
         # Perform Non-Anticipativity Constraint (NAC) checks
         self.nac_DAM_and_RM()
         self.nac_demand_and_battery()
+
+    def get_RM_bid_curves(self):
+        curves = {}
+        for t in self.instance.T:
+            up = sorted(
+                [(value(self.instance.lR[t, s]), value(self.instance.rU[t, s]))
+                 for s in self.instance.S],
+                key=lambda x: x[0]
+            )
+            down = sorted(
+                [(value(self.instance.lR[t, s]), value(self.instance.rD[t, s]))
+                 for s in self.instance.S],
+                key=lambda x: x[0]
+            )
+            curves[t] = {"up": up, "down": down}
+        return curves
