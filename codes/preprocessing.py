@@ -114,7 +114,7 @@ class PreProcessor:
 
         kRM = None
         for (sg, k), cluster in c_dict.items():
-            if sg == 1 and best_s in cluster:  # stage‑2 node whose cluster contains best_s
+            if sg == 1 and best_s in cluster:  # stage‑1 node whose cluster contains best_s
                 kRM = k
                 break
 
