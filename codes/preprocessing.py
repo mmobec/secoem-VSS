@@ -2,6 +2,7 @@ import os
 import math
 import time
 import pyomo.environ as pyo
+from numpy.ma.core import indices
 from pyomo.environ import DataPortal, value, SolverFactory
 #from codes.ec_run import lD_preserved
 from ec_model import model as abstract_model
@@ -59,6 +60,79 @@ class PreProcessor:
         self.scenario_data.data()["S"] = {None: self.S_preserved}  # Ensure correct S
         self.scenario_data.data()["Prob"] = Prob_preserved  # Assign Probabilities correctly
 
+    @staticmethod
+    def read_from_txt(filename):
+        """
+        This function is used to read in the results of the DAM run of the DAM model
+        """
+        # initialize empty structure
+        data = {}#{t: {} for t in range(1, 25)}
+
+        with open(f'{filename}.txt') as f:
+            for lineno, line in enumerate(f, start=1):
+                parts = line.strip().split()
+                if not parts:
+                    continue  # skip empty lines
+                s = int(parts[0])  # scenario index
+                values = list(map(float, parts[2:]))  # drop parts[1]=probability
+                if len(values) != 24:
+                    raise ValueError(
+                        f"Line {lineno}: expected 24 values after the probability, "
+                        f"but got {len(values)} for scenario {s}"
+                    )
+                for t, v in enumerate(values, start=1):
+                    data[(t, s)] = v
+
+        return data
+
+    @staticmethod
+    def get_sorted_bid_curve(ld,S, t):
+        price_scen_pairs = [(value(ld[t, s]), s) for s in S]
+        return sorted(price_scen_pairs, key=lambda x: x[0])
+
+    def get_dam_quantities(self):
+
+        """
+        This function loads the DAM results, meaning the bid pairs of energy and price, and using those calculates
+        the matched energy of the DAM. For each hour, the point at the bid curve
+        """
+
+        #ToDo: MAJOR PROBLEM: this assumes that lD is the prices ordered in ascending order which they are  not!
+
+        path = "/Users/janjettmann/temp/ftc_10_2023_results"
+
+        e_da_m = self.read_from_txt(path+"/eDA_m")
+        e_da_p = self.read_from_txt(path+"/eDA_p")
+        ld = self.read_from_txt(path+"/lD")
+        x=1
+        S = [1,2,4,5,6,8,9,10] #ToDo: for now this is hardcoded but it should obv not be
+
+        e_da_m_matched = {}
+        e_da_p_matched = {}
+        for t in range(1, self.scenario_data["nT"] + 1):
+            real_price = self.scenario_data["lD"][t,1] # scenario doesn't matter
+            diff =  10**5
+            counter = 0 #first element
+            sorted_bid_prices = self.get_sorted_bid_curve(ld,S,t)
+
+            while sorted_bid_prices[counter][0] <= real_price:
+                if counter == len(S) - 1:
+                    break
+                counter = counter+1
+                closest_scenario_index = sorted_bid_prices[counter][1]
+            e_da_m_matched[t] = e_da_m[t,closest_scenario_index]
+            e_da_p_matched[t] = e_da_p[t,closest_scenario_index]
+
+        e_da_m = {}
+        e_da_p = {}
+        for t in range(1, self.scenario_data["nT"] + 1):
+            for s in self.S_preserved:
+                e_da_m[t,s] = e_da_m_matched[t]
+                e_da_p[t, s] = e_da_p_matched[t]
+        self.scenario_data["eDA_p"] = e_da_p
+        self.scenario_data["eDA_m"] = e_da_m
+
+    ToDo: debug this  - check if the interception points are actually the right ones!!
 
     def allocate_lr_and_ld(self):
 
@@ -206,12 +280,12 @@ class PreProcessor:
         Should we redo the clusters so that the scenarios that are no longer in S_preserved are removed?
         """
 
-
         self.prepare_scenario_data()
         self.preprocess_data()
         self.allocate_lr_and_ld()
-        self.find_closest_dam_scenario()
-        self.update_probabilities_and_scenarios()
+        self.get_dam_quantities()
+        #self.find_closest_dam_scenario() These two are also commented out bc hopefully not needed bc of Cristian
+        #self.update_probabilities_and_scenarios()
         #self.update_clusters()  I think this is already done in instancemanager
-        self.truncate_remaining_vars()
+        #self.truncate_remaining_vars()
         return self.scenario_data
