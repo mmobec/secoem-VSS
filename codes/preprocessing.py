@@ -129,7 +129,6 @@ class PreProcessor:
         self.scenario_data["eDA_p"] = e_da_p
         self.scenario_data["eDA_m"] = e_da_m
 
-    #ToDo: debug this  - check if the interception points are actually the right ones!!
 
     def allocate_lr_and_ld(self):
 
