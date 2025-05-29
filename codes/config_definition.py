@@ -21,7 +21,8 @@ probl = 'ec'
 #demfile  = None
 
 # Suppose we define a scenario family (famscen) & set of SIMS in Python:
-famscen = "FTC_10_2023_12"
+#famscen = "FTC_10_2023_12"
+famscen = "FTC_100_2023_v2"
 # Suppose we have SIMS = [001..031]
 n_days = 1
 SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days for brevity
@@ -38,6 +39,9 @@ profitfile   = {p: f"profit_{p}.txt" for p in PROB}
 timefile     = {p: f"time_{p}.txt"   for p in PROB}
 timefileFull = "time.txt"
 numscenfile  = "numscen.txt"
+
+# location of the DAM run results folder (to extract the matched energy)
+dam_results_folder = "data/DAM_sim_results"
 
 ### Solver options ###
 # config_definition.py  (or just config.py)
@@ -107,7 +111,7 @@ def load_dam_prices(file_path):
     """
     DA_E_M_OBS = {}
 
-    with open("market_quant.txt", 'r') as f:
+    with open("/Users/janjettmann/PycharmProjects/mmobec-pyomo/results/Cristian_testing/market/001/DA/eDA_m.txt", 'r') as f:
         for line in f:
             parts = line.strip().split()
             if len(parts) < 26:

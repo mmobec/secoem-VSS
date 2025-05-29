@@ -87,22 +87,48 @@ class PreProcessor:
         return data, scenarios
 
     @staticmethod
-    def get_sorted_bid_curve(ld,S, t):
+    def get_sorted_bid_curve(ld,S, t, ascending = True):
         price_scen_pairs = [(value(ld[t, s]), s) for s in S]
-        return sorted(price_scen_pairs, key=lambda x: x[0])
+        return sorted(price_scen_pairs, key=lambda x: x[0], reverse=not ascending)
+
+
+    @staticmethod
+    def get_interseption(lD, eDA, real_price, buying, S):
+        closest_scenario = None
+        if buying:
+            counter = 0
+            while lD[counter][0] >= real_price:
+                if counter == len(S) - 1:
+                    break
+                counter = counter+1
+                closest_scenario = lD[counter][1]
+        else: #selling
+            counter = 0
+            while lD[counter][0] <= real_price:
+                if counter == len(S) - 1:
+                    break
+                counter = counter+1
+                closest_scenario = lD[counter][1]
+
+        if closest_scenario == None:
+            pass
+        return  closest_scenario
 
     def get_dam_quantities(self):
 
         """
         This function loads the DAM results, meaning the bid pairs of energy and price, and using those, calculates
         the matched energy of the DAM. For each hour, the point at the bid curve
+        The two scenarios of weather the buying or the selling bid is accepted need to be considered.
+        #also perhaps this should be it's own class and not bloat the Preprocessor class
         """
-
-        path = "/Users/janjettmann/temp/ftc_10_2023_results"
-
-        e_da_m_from_DAM_run, S = self.read_from_txt(path+"/eDA_m")
-        e_da_p_from_DAM_run, _ = self.read_from_txt(path+"/eDA_p")
-        ld_from_DAM_run, _ = self.read_from_txt(path+"/lD")
+        parent_path = f'{config.dam_results_folder}/market/{self.sim_ctx.sim}/DA'
+        parent_path = os.path.join("..", parent_path)
+        e_da_m_from_DAM_run, S = self.read_from_txt(parent_path+"/eDA_m")
+        e_da_p_from_DAM_run, _ = self.read_from_txt(parent_path+"/eDA_p")
+        ld_from_DAM_run, _ = self.read_from_txt(parent_path+"/lD")
+        ieDA_m_from_DAM_run, _ = self.read_from_txt(parent_path+"/ieDA_m")
+        ieDA_p_from_DAM_run, _ = self.read_from_txt(parent_path+"/ieDA_p")
         x=1
 
         e_da_m_matched = {}
@@ -110,16 +136,55 @@ class PreProcessor:
         for t in range(1, self.scenario_data["nT"] + 1):
             real_price = self.scenario_data["lD"][t,1] # scenario doesn't matter
             counter = 0 #first element
-            sorted_bid_prices = self.get_sorted_bid_curve(ld_from_DAM_run,S,t)
+
+            # We need to see if there is an intersection with the buying or the selling bid:
+            sorted_bid_prices_selling = self.get_sorted_bid_curve(ld_from_DAM_run,S,t)
+            sorted_bid_prices_buying = self.get_sorted_bid_curve(ld_from_DAM_run,S,t,ascending=False)
+            
+            selling_bid_interception = self.get_interseption(sorted_bid_prices_selling, e_da_p_from_DAM_run, real_price,
+                                                             False, S)
+            buying_bid_interception = self.get_interseption(sorted_bid_prices_buying, e_da_p_from_DAM_run, real_price,
+                                                            True, S)
+
+            if buying_bid_interception == None:
+                closest_scenario = selling_bid_interception
+            elif selling_bid_interception == None:
+                closest_scenario = buying_bid_interception
+            else:
+                # Edge case: exact match, use binary vars to determine actual accepted bid
+                pass
+
+
+            e_da_m_matched[t] = e_da_m_from_DAM_run[t,closest_scenario]
+            e_da_p_matched[t] = e_da_p_from_DAM_run[t,closest_scenario]
+
+        e_da_m = {}
+        e_da_p = {}
+        for t in range(1, self.scenario_data["nT"] + 1):
+            for s in self.S_preserved:
+                e_da_m[t, s] = e_da_m_matched[t]
+                e_da_p[t, s] = e_da_p_matched[t]
+        self.scenario_data["eDA_p"] = e_da_p
+        self.scenario_data["eDA_m"] = e_da_m
+        """
+            if sorted_bid_prices[0][0] > real_price:
+                closest_scenario = sorted_bid_prices[0][1]
 
             while sorted_bid_prices[counter][0] <= real_price:
                 if counter == len(S) - 1:
                     break
                 counter = counter+1
                 closest_scenario = sorted_bid_prices[counter][1]
+
+            if sorted_bid_prices[counter-1][0] == real_price:       #ToDo change this to be the middle one
+                closest_scenario = sorted_bid_prices[counter-1][1]
+
+            is_buying = ieDA_m_from_DAM_run[t,closest_scenario]
+
             e_da_m_matched[t] = e_da_m_from_DAM_run[t,closest_scenario]
             e_da_p_matched[t] = e_da_p_from_DAM_run[t,closest_scenario]
-
+            #ToDo: if the price is equal to one of the bids, take the middle energy bid bc it will be unknown
+            #ToDo: For eDA_m,p and lD make runs for every day and save them in a separate folder
         e_da_m = {}
         e_da_p = {}
         for t in range(1, self.scenario_data["nT"] + 1):
@@ -128,6 +193,7 @@ class PreProcessor:
                 e_da_p[t, s] = e_da_p_matched[t]
         self.scenario_data["eDA_p"] = e_da_p
         self.scenario_data["eDA_m"] = e_da_m
+        """
 
 
     def allocate_lr_and_ld(self):
