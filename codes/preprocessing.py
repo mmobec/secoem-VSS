@@ -93,7 +93,7 @@ class PreProcessor:
 
 
     @staticmethod
-    def get_interseption(lD, eDA, real_price, buying, S):
+    def get_interseption(lD, real_price, buying, S):
         closest_scenario = None
         if buying:
             counter = 0
@@ -134,29 +134,39 @@ class PreProcessor:
         e_da_m_matched = {}
         e_da_p_matched = {}
         for t in range(1, self.scenario_data["nT"] + 1):
-            real_price = self.scenario_data["lD"][t,1] # scenario doesn't matter
+            real_price = self.scenario_data["lD"][t,self.S_preserved[0]] # scenario doesn't matter
             counter = 0 #first element
 
             # We need to see if there is an intersection with the buying or the selling bid:
             sorted_bid_prices_selling = self.get_sorted_bid_curve(ld_from_DAM_run,S,t)
             sorted_bid_prices_buying = self.get_sorted_bid_curve(ld_from_DAM_run,S,t,ascending=False)
             
-            selling_bid_interception = self.get_interseption(sorted_bid_prices_selling, e_da_p_from_DAM_run, real_price,
+            selling_bid_interception = self.get_interseption(sorted_bid_prices_selling, real_price,
                                                              False, S)
-            buying_bid_interception = self.get_interseption(sorted_bid_prices_buying, e_da_p_from_DAM_run, real_price,
+            buying_bid_interception = self.get_interseption(sorted_bid_prices_buying, real_price,
                                                             True, S)
 
+            """
             if buying_bid_interception == None:
                 closest_scenario = selling_bid_interception
             elif selling_bid_interception == None:
                 closest_scenario = buying_bid_interception
             else:
                 # Edge case: exact match, use binary vars to determine actual accepted bid
+                #ToDo: Implement what we talked about with Cristian and Albert to take a random energy amount
+                # or the middle perhaps as the bid
                 pass
-
-
-            e_da_m_matched[t] = e_da_m_from_DAM_run[t,closest_scenario]
-            e_da_p_matched[t] = e_da_p_from_DAM_run[t,closest_scenario]
+            """
+            if buying_bid_interception:
+                e_da_m_matched[t] = (e_da_m_from_DAM_run[t,buying_bid_interception] *
+                                     ieDA_m_from_DAM_run[t,buying_bid_interception])
+            else:
+                e_da_m_matched[t] = 0
+            if selling_bid_interception:
+                e_da_p_matched[t] = (e_da_p_from_DAM_run[t,selling_bid_interception] *
+                                     ieDA_p_from_DAM_run[t,selling_bid_interception])
+            else:
+                e_da_p_matched[t] = 0
 
         e_da_m = {}
         e_da_p = {}
@@ -166,34 +176,7 @@ class PreProcessor:
                 e_da_p[t, s] = e_da_p_matched[t]
         self.scenario_data["eDA_p"] = e_da_p
         self.scenario_data["eDA_m"] = e_da_m
-        """
-            if sorted_bid_prices[0][0] > real_price:
-                closest_scenario = sorted_bid_prices[0][1]
 
-            while sorted_bid_prices[counter][0] <= real_price:
-                if counter == len(S) - 1:
-                    break
-                counter = counter+1
-                closest_scenario = sorted_bid_prices[counter][1]
-
-            if sorted_bid_prices[counter-1][0] == real_price:       #ToDo change this to be the middle one
-                closest_scenario = sorted_bid_prices[counter-1][1]
-
-            is_buying = ieDA_m_from_DAM_run[t,closest_scenario]
-
-            e_da_m_matched[t] = e_da_m_from_DAM_run[t,closest_scenario]
-            e_da_p_matched[t] = e_da_p_from_DAM_run[t,closest_scenario]
-            #ToDo: if the price is equal to one of the bids, take the middle energy bid bc it will be unknown
-            #ToDo: For eDA_m,p and lD make runs for every day and save them in a separate folder
-        e_da_m = {}
-        e_da_p = {}
-        for t in range(1, self.scenario_data["nT"] + 1):
-            for s in self.S_preserved:
-                e_da_m[t,s] = e_da_m_matched[t]
-                e_da_p[t, s] = e_da_p_matched[t]
-        self.scenario_data["eDA_p"] = e_da_p
-        self.scenario_data["eDA_m"] = e_da_m
-        """
 
 
     def allocate_lr_and_ld(self):

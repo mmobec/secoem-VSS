@@ -22,21 +22,14 @@ class Solver:
     def _populate_solver_options(self):
         for k, v in config.SOLVER_OPTIONS.items():
             self.solver.options[k] = v
-        self.solver.options['PreSolve'] = 0
-        self.solver.options['Aggregate'] = 0
+        #self.solver.options['PreSolve'] = 0
+        #self.solver.options['Aggregate'] = 0
         # Ask Gurobi to compute an IIS if it finds infeasibility
-        self.solver.options['InfUnbdInfo'] = 1
+        #self.solver.options['InfUnbdInfo'] = 1
         # Choose a method (1 is more thorough but slower)
-        self.solver.options['IISMethod'] = 1
+        #self.solver.options['IISMethod'] = 1
 
-    import logging
-    from pyomo.environ import Var, value
-    from pyomo.util.infeasible import (
-        log_infeasible_constraints,
-        log_infeasible_bounds,
-        find_infeasible_constraints,
-    )
-    from pyomo.core.expr.visitor import identify_variables
+
 
     def debug_infeasibility(self, init_values=True, tol=1e-6):
         """
@@ -108,7 +101,7 @@ class Solver:
         start_time = time.time()
 
         self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
-        self.debug_infeasibility()
+        #self.debug_infeasibility()
 
         end_time = time.time()
 

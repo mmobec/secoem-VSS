@@ -591,6 +591,7 @@ class PostProcess:
         self.nac_demand_and_battery()
 
     def get_RM_bid_curves(self):
+
         curves = {}
         for t in self.instance.T:
             up = sorted(

@@ -17,7 +17,8 @@ class InstanceManager:
 
     def create_instance_wrapper(self):
         "instance creation"
-        self.override_da_results()  # It is important that this is done before the instance creation
+        #self.override_da_results()  # It is important that this is done before the instance creation
+        # !! Commented out now since hopefully with Cristian's new file it is not needed anymore
         self.instance = abstract_model.create_instance(self.scenario_data)
 
         print(f"self.instance Variables: {len(list(self.instance.component_objects(pyo.Var)))}")

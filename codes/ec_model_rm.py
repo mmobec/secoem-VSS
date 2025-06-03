@@ -551,7 +551,7 @@ def build_stage1_nac_index(model):
         for t in model.T:
             for k in model.S0:
                 # stage=1 for these
-                for (l, l_next) in consecutive_scenarios(model, 2, k): #Question:
+                for (l, l_next) in consecutive_scenarios(model, 2, k):
                     # skip if not in domain
                     if (t, l) in var_obj and (t, l_next) in var_obj:
                         idx.append((var_name, t, k, l, l_next))
