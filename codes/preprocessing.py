@@ -158,13 +158,13 @@ class PreProcessor:
                 pass
             """
             if buying_bid_interception:
-                e_da_m_matched[t] = (e_da_m_from_DAM_run[t,buying_bid_interception] *
-                                     ieDA_m_from_DAM_run[t,buying_bid_interception])
+                e_da_m_matched[t] = e_da_m_from_DAM_run[t,buying_bid_interception] #*
+                                     #ieDA_m_from_DAM_run[t,buying_bid_interception]
             else:
                 e_da_m_matched[t] = 0
             if selling_bid_interception:
-                e_da_p_matched[t] = (e_da_p_from_DAM_run[t,selling_bid_interception] *
-                                     ieDA_p_from_DAM_run[t,selling_bid_interception])
+                e_da_p_matched[t] = e_da_p_from_DAM_run[t,selling_bid_interception] #*
+                                     #ieDA_p_from_DAM_run[t,selling_bid_interception]
             else:
                 e_da_p_matched[t] = 0
 

@@ -65,13 +65,14 @@ class Solver:
         print("\n🔧 Checking infeasible variable bounds:")
         log_infeasible_bounds(model, tol=tol)
 
+        """
         print("\n🧪 Manually inspecting undefined constraint variables:")
         for c, val, flag in find_infeasible_constraints(model, tol=tol):
             if val is None:
                 print(f"⚠️ Constraint {c.name} has unevaluable body")
                 for v in identify_variables(c.body, include_fixed=True):
                     print(f"  - Variable {v.name}: value={v.value}")
-
+        """
         print("\n✅ Done. Review the above output for violated constraints or variables.")
 
     def _solve_model(self):
@@ -101,7 +102,7 @@ class Solver:
         start_time = time.time()
 
         self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
-        #self.debug_infeasibility()
+        self.debug_infeasibility()
 
         end_time = time.time()
 

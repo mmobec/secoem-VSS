@@ -28,7 +28,7 @@ n_days = 1
 SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days for brevity
 
 pathscen = f"scenarios/{famscen}/"
-pathdem  = "data/demand/"
+pathdem  = "data/demand_cristian/"
 
 #pathres  = None         # Will be set inside the loop
 #pathmarketres = None
