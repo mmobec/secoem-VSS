@@ -13,40 +13,42 @@ from preprocessing import PreProcessor
 from solver import Solver
 from postprocess import PostProcess
 
-
-if __name__ == "__main__":
-
+def rm_main():
     sim_data = []
     for sim in run_config.SIMS:
-
-        #Create Simulationcontext object to store data of each sim
+        # Create Simulationcontext object to store data of each sim
         sim_ctx = SimulationContext(sim=sim)
 
-        #Preprocessing
+        # Preprocessing
         preprocessing = PreProcessor(sim_ctx)
         scenario_data = preprocessing.run_preprocessing()
-
-        #Create Instance
+        # Create Instance
         instance_wrapper = InstanceManager(scenario_data, sim_ctx)
         instance_wrapper.compute_instance()
 
-        #Now Solve the problem
+        # Now Solve the problem
         results = Solver(instance_wrapper, sim_ctx).solve()
 
-        #ToDo: create bool for battery, pv, wind etc. meaning that if it is False, all variables related should not be
-        #created. -> this means adjustment in the model file as well
+        # ToDo: create bool for battery, pv, wind etc. meaning that if it is False, all variables related should not be
+        # created. -> this means adjustment in the model file as well
 
-        #Postprocessing
+        # Postprocessing
         postprocess = PostProcess(results, instance_wrapper.instance, sim_ctx)
         postprocess.perform_nac_checks()
         postprocess.store_results()
 
-        #Update initial conditions for next scenario
+        # Update initial conditions for next scenario
         instance_wrapper.next_initial_conditions()
 
         sim_data.append(sim_ctx)
 
+    # Final Summary of all Simulation Runs
 
-#Final Summary of all Simulation Runs
-summary_writer = SimulationSummaryWriter(sim_data)
-summary_writer.write_all()
+
+    summary_writer = SimulationSummaryWriter(sim_data)
+    summary_writer.write_all()
+
+
+if __name__ == "__main__":
+    rm_main()
+

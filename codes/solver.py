@@ -102,7 +102,7 @@ class Solver:
         start_time = time.time()
 
         self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
-        self.debug_infeasibility()
+        #self.debug_infeasibility()
 
         end_time = time.time()
 
