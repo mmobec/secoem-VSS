@@ -3,22 +3,27 @@ import math
 import time
 import pyomo.environ as pyo
 from pyomo.environ import DataPortal, value, SolverFactory
-from ec_model_rm import model as abstract_model  # Your AbstractModel definition
 import config_definition as run_config
-
+import importlib
 
 class InstanceManager:
 
     def __init__(self, scenario_data, sim_ctx):
-        self.scenario_data = scenario_data
-        self.instance = self.create_instance_wrapper()
-        self.metrics = {}
+        self.scenario_data = scenario_data   # now a DataPortal, not a method
         self.sim_ctx = sim_ctx
+        self.instance = self.create_instance_wrapper()
+        self.metrics  = {}
+
+    def load_model(self):
+        module_name = f"models.ec_{self.sim_ctx.market}_model"
+        mdl = importlib.import_module(module_name)
+        return mdl.model
 
     def create_instance_wrapper(self):
         "instance creation"
         #self.override_da_results()  # It is important that this is done before the instance creation
         # !! Commented out now since hopefully with Cristian's new file it is not needed anymore
+        abstract_model = self.load_model()
         self.instance = abstract_model.create_instance(self.scenario_data)
 
         print(f"self.instance Variables: {len(list(self.instance.component_objects(pyo.Var)))}")

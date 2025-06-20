@@ -13,11 +13,12 @@ from preprocessing import PreProcessor
 from solver import Solver
 from postprocess import PostProcess
 
-def rm_main():
+def main(market):
     sim_data = []
     for sim in run_config.SIMS:
         # Create Simulationcontext object to store data of each sim
-        sim_ctx = SimulationContext(sim=sim)
+        sim_ctx = SimulationContext(sim=sim, market=market) # market parameter is used in preprocessing to confirm which
+                                                          # results are loaded into the model
 
         # Preprocessing
         preprocessing = PreProcessor(sim_ctx)
@@ -28,9 +29,6 @@ def rm_main():
 
         # Now Solve the problem
         results = Solver(instance_wrapper, sim_ctx).solve()
-
-        # ToDo: create bool for battery, pv, wind etc. meaning that if it is False, all variables related should not be
-        # created. -> this means adjustment in the model file as well
 
         # Postprocessing
         postprocess = PostProcess(results, instance_wrapper.instance, sim_ctx)
@@ -50,5 +48,7 @@ def rm_main():
 
 
 if __name__ == "__main__":
-    rm_main()
+    main("DA")
+    main("RM")
+
 

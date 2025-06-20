@@ -303,8 +303,8 @@ class PostProcess:
             ("lD.txt", self.instance.lD),
             ("eDA_p.txt", self.instance.eDA_p),
             ("eDA_m.txt", self.instance.eDA_m),
-            #("ieDA_p.txt", self.instance.ieDA_p),
-            #("ieDA_m.txt", self.instance.ieDA_m),
+            ("ieDA_p.txt", self.instance.ieDA_p),
+            ("ieDA_m.txt", self.instance.ieDA_m),
         ]
         self.save_ts_variable_group(da_path, da_vars)
         open(os.path.join(da_path, "DA_params.txt"), "w").close()

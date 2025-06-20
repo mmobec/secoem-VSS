@@ -499,13 +499,13 @@ model.Imbalances = pyo.Constraint(model.T, model.S, rule=Imbalances_rule)
 
 # pIB_p[t,s] <= PIB_p[t,s];
 def IB_pos_UB_rule(m, t, s):
-    return m.pIB_p[t, s] <= m.PIB_p[t, s]
-model.IB_pos_UB = pyo.Constraint(model.T, model.S, rule=IB_pos_UB_rule)
+    return m.pIB_p[t, s] <= 50000000000#m.PIB_p[t, s]
+#model.IB_pos_UB = pyo.Constraint(model.T, model.S, rule=IB_pos_UB_rule)
 
 # pIB_m[t,s] <= PIB_m[t,s];
 def IB_neg_UB_rule(m, t, s):
-    return m.pIB_m[t, s] <= m.PIB_m[t, s]
-model.IB_neg_UB = pyo.Constraint(model.T, model.S, rule=IB_neg_UB_rule)
+    return m.pIB_m[t, s] <= 50000000000 #m.PIB_m[t, s]
+#model.IB_neg_UB = pyo.Constraint(model.T, model.S, rule=IB_neg_UB_rule)
 
 
 # =============================================================================

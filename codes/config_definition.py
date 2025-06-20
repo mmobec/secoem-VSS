@@ -1,12 +1,12 @@
 # ---------------------------------------------------------------------
 # 1) Basic "AMPL param" equivalents
 # ---------------------------------------------------------------------
-
+from pathlib import Path
 """
 All static parameters for a simulation
 """
 
-RUN_MODE = "RM"   #specify if we are solving DAM or RM (or IM in the future)
+MARKET_CHAIN = ["DA", "RM", "IM1", "IM2", "IM3", "IB"]
 
 BESS_datfile     = "ec_BESS.dat"
 wind_datfile     = "ec_wind.dat"
@@ -22,14 +22,14 @@ probl = 'ec'
 
 # Suppose we define a scenario family (famscen) & set of SIMS in Python:
 #famscen = "FTC_10_2023_12"
-famscen = "FTC_100_2023_v2"
+famscen_all = "FTC_100_2023_v2"
 # Suppose we have SIMS = [001..031]
 n_days = 1
 SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days for brevity
 
-pathscen = f"scenarios/{famscen}/"
-pathdem  = "data/demand_cristian/"
-
+pathscen_all = f"scenarios/{famscen_all}"
+pathdem  = "data/demand/"
+base_result_dir = Path("results")
 #pathres  = None         # Will be set inside the loop
 #pathmarketres = None
 
@@ -41,7 +41,7 @@ timefileFull = "time.txt"
 numscenfile  = "numscen.txt"
 
 # location of the DAM run results folder (to extract the matched energy)
-dam_results_folder = "data/DAM_sim_results"
+#dam_results_folder = "data/DAM_sim_results"
 
 ### Solver options ###
 # config_definition.py  (or just config.py)

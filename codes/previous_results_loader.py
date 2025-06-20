@@ -2,7 +2,7 @@ from pyomo.environ import value
 import config_definition as config
 import os
 
-class DAMResultLoader:
+class PreviousMarketResultsLoader:
     """
     Loading the results of the previous run
     The path for where the results are stored is already in config_definiton
@@ -67,7 +67,7 @@ class DAMResultLoader:
             pass
         return  closest_scenario
 
-    def load_results(self):
+    def load_dam_results(self):
 
         """
         This function loads the DAM results, meaning the bid pairs of energy and price, and using those, calculates
@@ -75,7 +75,7 @@ class DAMResultLoader:
         buying or selling, picks the conservative scenario.
         """
 
-        parent_path = f'{config.dam_results_folder}/market/{self.sim_ctx.sim}/DA'
+        parent_path = self.sim_ctx.previous_results_path  #f'{config.dam_results_folder}/market/{self.sim_ctx.sim}/DA'
         parent_path = os.path.join("..", parent_path)
         e_da_m_from_DAM_run, S = self.read_from_txt(parent_path+"/eDA_m")
         e_da_p_from_DAM_run, _ = self.read_from_txt(parent_path+"/eDA_p")
@@ -85,12 +85,14 @@ class DAMResultLoader:
 
         e_da_m_matched = {}
         e_da_p_matched = {}
+        ieDA_m = {}
+        ieDA_p = {}
         for t in range(1, self.scenario_data["nT"] + 1):
             real_price = self.scenario_data["lD"][t,self.S_preserved[0]] # scenario doesn't matter
 
             sorted_bid_curve = self.get_sorted_bid_curve(ld_from_DAM_run, S, t)
 
-            # Edge case: price is exactly equal to one of the bids )highly unlikely)
+            # Edge case: price is exactly equal to one of the bids (highly unlikely)
             if real_price in [i[0] for i in sorted_bid_curve]:
                 s = [i[1] for i in sorted_bid_curve if i[0] == real_price][0]
                 e_da_m_matched[t] = e_da_m_from_DAM_run[t,s]
@@ -154,6 +156,19 @@ class DAMResultLoader:
             for s in self.S_preserved:
                 e_da_m[t, s] = e_da_m_matched[t]
                 e_da_p[t, s] = e_da_p_matched[t]
+                ieDA_p[t,s] = ieDA_p_from_DAM_run[t,S[0]] # Because the values are the same for all scenarios of DA in the RM data
+                ieDA_m[t,s] = ieDA_m_from_DAM_run[t,S[0]]
         self.scenario_data["eDA_p"] = e_da_p
         self.scenario_data["eDA_m"] = e_da_m
+        self.scenario_data["ieDA_p"] = ieDA_p
+        self.scenario_data["ieDA_m"] = ieDA_m
+        #return self.scenario_data
+
+
+    def load_results(self):
+        if self.sim_ctx.market == "DA":
+            pass
+        if self.sim_ctx.market == "RM":
+            self.load_dam_results()
         return self.scenario_data
+

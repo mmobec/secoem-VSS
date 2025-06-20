@@ -7,7 +7,7 @@ from pyomo.environ import DataPortal, value, SolverFactory
 #from codes.ec_run import lD_preserved
 from ec_model import model as abstract_model
 import config_definition as config
-from dam_result_loader import DAMResultLoader
+from previous_results_loader import PreviousMarketResultsLoader
 
 
 class PreProcessor:
@@ -24,7 +24,7 @@ class PreProcessor:
         print(f"#### Instance {config.probl}-{sc.sim}")
         print("########################\n")
 
-        print(f"scenfile path = {config.pathscen}{sc.scenfile}")
+        print(f"scenfile path = {self.sim_ctx.pathscen}{sc.scenfile}")
         print(f"pathres        = {sc.pathres}")
 
         print(f"demfile path   = {config.pathdem}{sc.demfile}")
@@ -37,7 +37,7 @@ class PreProcessor:
         self.scenario_data.load(filename=os.path.join("..", "data", config.wind_datfile), model=abstract_model)
 
         # Then load scenario & demand data
-        self.scenario_data.load(filename=os.path.join("..", config.pathscen, sc.scenfile), model=abstract_model)
+        self.scenario_data.load(filename=os.path.join("..", self.sim_ctx.pathscen, sc.scenfile), model=abstract_model)
         self.scenario_data.load(filename=os.path.join("..", config.pathdem, sc.demfile), model=abstract_model)
 
 
@@ -50,7 +50,7 @@ class PreProcessor:
 
         sc = self.sim_ctx
 
-        ### S and Prob allocation (S is used in a lot of sets definition in ec_model.py, so it must be known before creating the instance, prob is used in the objective function)
+        ### S and Prob allocation (S is used in a lot of sets definition in ec_DA_model.py, so it must be known before creating the instance, prob is used in the objective function)
         Prob0_raw = self.scenario_data.data().get("Prob0", {})  # Extract raw probabilities
         # Compute number of preserved scenarios BEFORE creating the instance
         self.S_preserved = [s for s in Prob0_raw if Prob0_raw[s] > 0]
@@ -65,7 +65,7 @@ class PreProcessor:
 
     def allocate_ld(self):
 
-        ### lD allocation (necessary to define Ssd set in ec_model.py which is necessary to build bidding curves)
+        ### lD allocation (necessary to define Ssd set in ec_DA_model.py which is necessary to build bidding curves)
         # Scen values are needed to define lD values
         Scen0_raw = self.scenario_data.data().get("Scen0", {})  # Extract full scenario data
         # Compute preserved scenarios BEFORE creating the instance
@@ -212,8 +212,10 @@ class PreProcessor:
 
         self.prepare_scenario_data()
         self.preprocess_data()
-        self.allocate_lr_and_ld()
-        self.scenario_data = DAMResultLoader(self.sim_ctx, self.scenario_data)
+        #self.allocate_lr_and_ld()
+        self.allocate_ld()
+        self.allocate_lr()
+        self.scenario_data = PreviousMarketResultsLoader(self.sim_ctx, self.scenario_data).load_results()
         #self.find_closest_dam_scenario() These two are also commented out bc hopefully not needed bc of Cristian
         #self.update_probabilities_and_scenarios()
         #self.update_clusters()  I think this is already done in instancemanager
