@@ -1,10 +1,3 @@
-import os
-import math
-import time
-import pyomo.environ as pyo
-from pyomo.environ import DataPortal, value, SolverFactory
-
-from ec_model_rm import model as abstract_model  # Your AbstractModel definition
 import config_definition as run_config
 from instancemanager import InstanceManager
 from simulation_summary_writer import SimulationSummaryWriter
@@ -22,9 +15,9 @@ def main(market):
 
         # Preprocessing
         preprocessing = PreProcessor(sim_ctx)
-        scenario_data = preprocessing.run_preprocessing()
+        scenario_data, model = preprocessing.run_preprocessing()
         # Create Instance
-        instance_wrapper = InstanceManager(scenario_data, sim_ctx)
+        instance_wrapper = InstanceManager(scenario_data, sim_ctx, model)
         instance_wrapper.compute_instance()
 
         # Now Solve the problem
@@ -50,5 +43,5 @@ def main(market):
 if __name__ == "__main__":
     main("DA")
     main("RM")
-
+    #ToDo: Copare the results of this with the models separate and see if they are the same
 

@@ -34,18 +34,9 @@ class Solver:
     def debug_infeasibility(self, init_values=True, tol=1e-6):
         """
         Diagnose infeasibility in a Pyomo model after a failed solve.
-
-        Parameters
-        ----------
-        model : Pyomo ConcreteModel or Block
-            Your model instance.
-        init_values : bool
-            Whether to assign 0 to all uninitialized variables before checking.
-        tol : float
-            Feasibility tolerance (default: 1e-6)
         """
         model = self.instance_prep.instance
-        print("🔍 Starting infeasibility diagnostics...")
+        print("Starting infeasibility diagnostics...")
 
         # Ensure logging is set up
         log = logging.getLogger('pyomo.util.infeasible')
@@ -57,23 +48,23 @@ class Solver:
                 if v.value is None:
                     v.set_value(0)
 
-        print("\n🔧 Checking infeasible constraints:")
+        print("\n Checking infeasible constraints:")
         log_infeasible_constraints(
             model, tol=tol, log_expression=True, log_variables=True
         )
 
-        print("\n🔧 Checking infeasible variable bounds:")
+        print("\n Checking infeasible variable bounds:")
         log_infeasible_bounds(model, tol=tol)
 
         """
-        print("\n🧪 Manually inspecting undefined constraint variables:")
+        print("\n Manually inspecting undefined constraint variables:")
         for c, val, flag in find_infeasible_constraints(model, tol=tol):
             if val is None:
-                print(f"⚠️ Constraint {c.name} has unevaluable body")
+                print(f"️ Constraint {c.name} has unevaluable body")
                 for v in identify_variables(c.body, include_fixed=True):
                     print(f"  - Variable {v.name}: value={v.value}")
         """
-        print("\n✅ Done. Review the above output for violated constraints or variables.")
+        print("\n Done. Review the above output for violated constraints or variables.")
 
     def _solve_model(self):
         instance = self.instance_prep.instance

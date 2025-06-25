@@ -4,27 +4,22 @@ import time
 import pyomo.environ as pyo
 from pyomo.environ import DataPortal, value, SolverFactory
 import config_definition as run_config
-import importlib
 
 class InstanceManager:
 
-    def __init__(self, scenario_data, sim_ctx):
+    def __init__(self, scenario_data, sim_ctx, model):
         self.scenario_data = scenario_data   # now a DataPortal, not a method
+        self.abstract_model = model
         self.sim_ctx = sim_ctx
         self.instance = self.create_instance_wrapper()
         self.metrics  = {}
 
-    def load_model(self):
-        module_name = f"models.ec_{self.sim_ctx.market}_model"
-        mdl = importlib.import_module(module_name)
-        return mdl.model
 
     def create_instance_wrapper(self):
         "instance creation"
         #self.override_da_results()  # It is important that this is done before the instance creation
         # !! Commented out now since hopefully with Cristian's new file it is not needed anymore
-        abstract_model = self.load_model()
-        self.instance = abstract_model.create_instance(self.scenario_data)
+        self.instance = self.abstract_model.create_instance(self.scenario_data)
 
         print(f"self.instance Variables: {len(list(self.instance.component_objects(pyo.Var)))}")
         print(f"self.instance Constraints: {len(list(self.instance.component_objects(pyo.Constraint)))}")
@@ -35,33 +30,6 @@ class InstanceManager:
         return self.instance
 
 
-    #This is for RM
-    def override_da_results(self):
-
-        scenarios = self.scenario_data.data()["S"][None]
-
-        for s in scenarios:
-            for t, price in run_config.DA_PRICE_OBS.items():
-                self.scenario_data["lD"][t, s] = price
-
-        self.scenario_data.data()["eDA_p"] = {}
-        self.scenario_data.data()["eDA_m"] = {}
-        for t in range(1, 25):
-            for s in scenarios:
-                self.scenario_data.data()["eDA_p"][t,s] = run_config.DA_E_P_OBS[t]
-                self.scenario_data.data()["eDA_m"][t,s] = run_config.DA_E_M_OBS[t,s]
-            """
-            self.scenario_data.data()["eDA_p"] = {} # since these are not initialized in the scenario_data
-            for t, energy in run_config.DA_E_P_OBS.items():
-                for s in scenarios:
-                    self.scenario_data.data()["eDA_p"][t, s] = energy
-
-            self.scenario_data.data()["eDA_m"] = {}
-            for t, energy in run_config.DA_E_M_OBS.items():
-                for s in scenarios:
-                    self.scenario_data.data()["eDA_m"][t, s] = energy
-            """
-        x=1
     def compute_scenario_cluster(self):
         "After creating the self.instance but before running the solver other parameters must be allocated"
         # Compute scenario cluster (c)
@@ -223,7 +191,7 @@ class InstanceManager:
         """
         Commented Out RM because it is defined similarly to DAM in preprocessing
         """
-
+        #ToDo: Perhaps do all of them like lR and lD are done?
         #lR_dict = {}
         lI_dict = {}
         lIB_dict = {}
@@ -421,7 +389,6 @@ class InstanceManager:
         print(f"SOCini: {SOCini_next}, sOR: {value(instance.sOR)}")
 
     def compute_instance(self):
-        #self.find_closest_dam_scenario()
         self.compute_scenario_cluster()
         self.compute_expected_scenario_cluster()
         self.compute_power_outputs()

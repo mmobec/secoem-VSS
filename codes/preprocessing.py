@@ -1,21 +1,21 @@
 import os
 import math
-import time
-import pyomo.environ as pyo
-from numpy.ma.core import indices
 from pyomo.environ import DataPortal, value, SolverFactory
-#from codes.ec_run import lD_preserved
-from ec_model import model as abstract_model
 import config_definition as config
 from previous_results_loader import PreviousMarketResultsLoader
-
+import importlib
 
 class PreProcessor:
     def __init__(self, sim_ctx):
         self.sim_ctx = sim_ctx
         self.scenario_data = DataPortal()
-
+        self.abstract_model = self.load_model()
         self.S_preserved = None
+
+    def load_model(self):
+        module_name = f"models.ec_{self.sim_ctx.market}_model"
+        mdl = importlib.import_module(module_name)
+        return mdl.model
 
     def prepare_scenario_data(self):
         sc = self.sim_ctx
@@ -30,14 +30,16 @@ class PreProcessor:
         print(f"demfile path   = {config.pathdem}{sc.demfile}")
         print(f"pathres        = {sc.pathres}")
 
-
+        abstract_model = self.abstract_model
         # Load the "base" data
+        #ToDo: Should these be loaded according to market?
         self.scenario_data.load(filename=os.path.join("..", "data", config.market_datfile), model=abstract_model)
         self.scenario_data.load(filename=os.path.join("..", "data", config.BESS_datfile), model=abstract_model)
         self.scenario_data.load(filename=os.path.join("..", "data", config.wind_datfile), model=abstract_model)
 
         # Then load scenario & demand data
         self.scenario_data.load(filename=os.path.join("..", self.sim_ctx.pathscen, sc.scenfile), model=abstract_model)
+        #ToDo: demand data should also be loaded according  to  market?
         self.scenario_data.load(filename=os.path.join("..", config.pathdem, sc.demfile), model=abstract_model)
 
 
@@ -220,4 +222,4 @@ class PreProcessor:
         #self.update_probabilities_and_scenarios()
         #self.update_clusters()  I think this is already done in instancemanager
         #self.truncate_remaining_vars()
-        return self.scenario_data
+        return self.scenario_data, self.abstract_model

@@ -537,7 +537,7 @@ def consecutive_scenarios(model, sg, k):
 def build_stage1_nac_index(model):
     """
     Builds a single index set for all day-ahead & reserve variables that share
-    the same stage=1 logic and indexing (t, s).
+    the same stage logic and indexing (t, s).
     We'll store tuples: (var_name, t, k, l, l_next).
     """
     day_ahead_reserve_vars = [
