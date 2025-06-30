@@ -8,6 +8,19 @@ All static parameters for a simulation
 
 MARKET_CHAIN = ["DA", "RM", "IM1", "IM2", "IM3", "IB"]
 
+# For PreviousResultsLoader:
+
+DA_PARAMS = {
+    "e_da_m_from_DAM_run": "eDA_m",
+    "e_da_p_from_DAM_run": "eDA_p",
+    "ld_from_DAM_run": "lD",
+    "ieDA_m_from_DAM_run": "ieDA_m",
+    "ieDA_p_from_DAM_run": "ieDA_p"
+}
+
+RM_PARAMS = ["lR", "rU", "rD", "rU_B", "rD_B", "rU_FD", "rD_FD" ]
+
+
 BESS_datfile     = "ec_BESS.dat"
 wind_datfile     = "ec_wind.dat"
 market_datfile   = "market.dat"
@@ -22,7 +35,7 @@ famscen_all = "FTC_100_202410_202012"
 #famscen_all = "FTC_100_202410_202012_all_random_DA"
 
 # Suppose we have SIMS = [001..031]
-n_days = 1
+n_days = 5
 SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days for brevity
 
 pathscen_all = f"scenarios/{famscen_all}"

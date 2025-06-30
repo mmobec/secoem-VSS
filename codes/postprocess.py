@@ -1,7 +1,8 @@
 from pyomo.environ import DataPortal, value, SolverFactory
 import os
 import config_definition as run_config
-
+import matplotlib.pyplot as plt
+from numpy import cumsum, array
 
 
 
@@ -23,24 +24,25 @@ class PostProcess:
 
     def nac_DAM_and_RM(self):
         # List of all variables in non-anticipativity constraints
-        nac_variables = [
-            "eDA_p", "eDA_m", "ieDA_p",  # Day-Ahead Market
+        nac_variables = {
+            "DA": ["eDA_p", "eDA_m", "ieDA_p",  # Day-Ahead Market
             "rU", "rU_B", "rU_FD",  # Reserve Market Upward
-            "rD", "rD_B", "rD_FD",  # Reserve Market Downward
-        ]
-
+            "rD", "rD_B", "rD_FD"],  # Reserve Market Downward
+            "RM": ["rU", "rU_B", "rU_FD",
+            "rD", "rD_B", "rD_FD"]  #ToDo: for IM: IM1: ..
+        }
         # Iterate over all variables
-        for var_name in nac_variables:
+        for var_name in nac_variables.get(self.sim_ctx.market.upper(), []):
             if not hasattr(self.instance, var_name):  # Skip if variable not in model
                 print(f"Skipping {var_name} (not found in model)")
                 continue
 
-            print(f"Checking NAC for {var_name}:")
+            print(f"Checking NAC for {var_name} at market {self.sim_ctx.market}:")
             var = getattr(self.instance, var_name)  # Get the variable dynamically
 
             for t in self.instance.T:
                 for k in self.instance.S0:
-                    for (l, l_next) in self.consecutive_scenarios(self.instance, 1, k):
+                    for (l, l_next) in self.consecutive_scenarios(self.instance, 1, k): #ToDo: sg needs to change depending on the market run
                         try:
                             diff = abs(value(var[t, l]) - value(var[t, l_next]))
                             if diff > 1e-6:
@@ -588,7 +590,7 @@ class PostProcess:
 
     def perform_nac_checks(self):
         # Perform Non-Anticipativity Constraint (NAC) checks
-        #self.nac_DAM_and_RM()
+        self.nac_DAM_and_RM()
         self.nac_demand_and_battery()
 
     def get_RM_bid_curves(self):
@@ -607,3 +609,61 @@ class PostProcess:
             )
             curves[t] = {"up": up, "down": down}
         return curves
+
+def plot_rm_bid_curve(curves, t, *, cumulate=True, show=True, ax=None):
+    """
+    Plot the RM upward & downward bid curves for hour *t*.
+
+    Parameters
+    ----------
+    curves : dict
+        What `get_RM_bid_curves()` (your function) returns, i.e.
+        {t: {"up": [(price, MW), …], "down": [(price, MW), …]}, …}.
+    t : int
+        Hour to plot.
+    cumulate : bool, default True
+        If True the curve is drawn as the cumulative MW staircase,
+        which is how market-clearing supply curves are usually shown.
+        If False, raw MW values are plotted.
+    show : bool, default True
+        Whether to immediately display the figure (handy in notebooks).
+    ax : matplotlib.axes.Axes, default None
+        Pass an existing axes if you want to embed the plot elsewhere.
+
+    Returns
+    -------
+    matplotlib.axes.Axes
+        The axes that contains the plot (so you can further style or save).
+    """
+    if t not in curves:
+        raise KeyError(f"Hour {t} not found in curves dict")
+
+    # --- pull the data ---------------------------------------------------
+    up_pairs   = curves[t]["up"]
+    down_pairs = curves[t]["down"]
+
+    if cumulate:
+        # convert tuples to two arrays & build cumulative MW
+        p_up,   q_up   = array([p for p, _ in up_pairs]),   cumsum([q for _, q in up_pairs])
+        p_down, q_down = array([p for p, _ in down_pairs]), cumsum([q for _, q in down_pairs])
+    else:
+        p_up,   q_up   = zip(*up_pairs)   if up_pairs   else ([], [])
+        p_down, q_down = zip(*down_pairs) if down_pairs else ([], [])
+
+    # --- plotting --------------------------------------------------------
+    if ax is None:
+        fig, ax = plt.subplots(figsize=(6, 4))
+
+    ax.step(q_up,   p_up,   where="post", label="Up reserve")
+    ax.step(q_down, p_down, where="post", linestyle="--", label="Down reserve")
+
+    ax.set_xlabel("Cumulative MW" if cumulate else "MW (per scenario)")
+    ax.set_ylabel("Price (€/MW h)")
+    ax.set_title(f"Reserve-market bid curves – hour {t}")
+    ax.grid(True, which="both", alpha=0.3)
+    ax.legend()
+
+    if show:
+        plt.show()
+
+    return ax

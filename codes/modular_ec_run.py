@@ -41,7 +41,10 @@ def main(market):
 
 
 if __name__ == "__main__":
-    main("DA")
+    #main("DA")
     main("RM")
+    #main("IM1")
+    #main("IM2")
+    #main("IM3")
     #ToDo: Copare the results of this with the models separate and see if they are the same
 

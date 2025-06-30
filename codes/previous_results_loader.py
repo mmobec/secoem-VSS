@@ -1,7 +1,7 @@
 from pyomo.environ import value
 import config_definition as config
 import os
-
+import bisect
 class PreviousMarketResultsLoader:
     """
     Loading the results of the previous run
@@ -13,7 +13,7 @@ class PreviousMarketResultsLoader:
         self.sim_ctx = sim_ctx
         self.scenario_data = scen_data
         self.S_preserved = self.scenario_data.data()["S"][None]  #This is kept for naming convention
-
+        self.previous_vars = None
     @staticmethod
     def read_from_txt(filename):
         """
@@ -77,12 +77,25 @@ class PreviousMarketResultsLoader:
 
         parent_path = self.sim_ctx.previous_results_path  #f'{config.dam_results_folder}/market/{self.sim_ctx.sim}/DA'
         parent_path = os.path.join("..", parent_path)
+
+
         e_da_m_from_DAM_run, S = self.read_from_txt(parent_path+"/eDA_m")
         e_da_p_from_DAM_run, _ = self.read_from_txt(parent_path+"/eDA_p")
         ld_from_DAM_run, _ = self.read_from_txt(parent_path+"/lD")
         ieDA_m_from_DAM_run, _ = self.read_from_txt(parent_path+"/ieDA_m")
         ieDA_p_from_DAM_run, _ = self.read_from_txt(parent_path+"/ieDA_p")
 
+        # ToDo: Discuss if we want to go with the simple approach above or use what I am sketching out below so the
+        # variables for each market are defined in the config and read into a dictionary instead of being defined here
+        """
+        dam_results = {}
+        # Read and store values
+        for var_name, file_suffix in self.previous_vars.items():
+            dam_results[var_name], _ = self.read_from_txt(parent_path + "/" + file_suffix)
+
+        # Special handling if one of them also returns a second value you need:
+        dam_results["e_da_m_from_DAM_run"], S = self.read_from_txt(parent_path + "/eDA_m")
+        """
         e_da_m_matched = {}
         e_da_p_matched = {}
         ieDA_m = {}
@@ -164,11 +177,53 @@ class PreviousMarketResultsLoader:
         self.scenario_data["ieDA_m"] = ieDA_m
         #return self.scenario_data
 
+    def load_rm_results(self):
+        """
+        Function to load the RM results for the IM1 model to run
+        """
+        parent_path = self.sim_ctx.previous_results_path  #f'{config.dam_results_folder}/market/{self.sim_ctx.sim}/DA'
+        parent_path = os.path.join("..", parent_path)
+        rU_from_rm_run, S = self.read_from_txt(parent_path+"/rU")
+        rD_from_rm_run, _ = self.read_from_txt(parent_path+"/rD")
+        lR_from_rm_run, _ = self.read_from_txt(parent_path+"/lR")
+        rU_B_from_rm_run, _  = self.read_from_txt(parent_path+"/rU_B")
+        rD_B_from_rm_run, _  = self.read_from_txt(parent_path+"/rD_B")
+        rU_FD_from_rm_run, _  = self.read_from_txt(parent_path+"/rU_FD")
+        rD_FD_from_rm_run, _  = self.read_from_txt(parent_path+"/rD_FD")
+
+        matched_rU = {}
+        matched_rD = {}
+        for t in range(1, self.scenario_data["nT"] + 1):
+
+            real_price = self.scenario_data["lR"][t,self.S_preserved[0]] # scenario doesn't matter
+            # There is a single price for up and down reserve
+            sorted_bid_curve = self.get_sorted_bid_curve(lR_from_rm_run, S, t)
+            sorted_bid_curve_prices_only = [i[0] for i in sorted_bid_curve]
+            idx = bisect.bisect_right(sorted_bid_curve_prices_only, real_price) - 1  # last price ≤ real
+            if idx >= 0:
+                scenario = sorted_bid_curve[idx][1]
+                if scenario != 100:
+                    x=1
+                matched_rU[t] = rU_from_rm_run[t, scenario]
+                matched_rD[t] = rD_from_rm_run[t, scenario]
+            else:
+                matched_rU[t] = 0
+                matched_rD[t] = 0
+
+
+        x=1
+    def load_im_results(self):
+        pass
 
     def load_results(self):
         if self.sim_ctx.market == "DA":
             pass
         if self.sim_ctx.market == "RM":
+            self.previous_vars = config.DA_PARAMS
             self.load_dam_results()
+        if self.sim_ctx.market == "IM1":
+            self.previous_vars = config.RM_PARAMS
+            self.load_rm_results()
+
         return self.scenario_data
 
