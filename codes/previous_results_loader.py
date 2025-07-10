@@ -2,6 +2,9 @@ from pyomo.environ import value
 import config_definition as config
 import os
 import bisect
+from pathlib import Path
+from simulation_context import prev_market
+
 class PreviousMarketResultsLoader:
     """
     Loading the results of the previous run
@@ -41,6 +44,18 @@ class PreviousMarketResultsLoader:
         return data, scenarios
 
     @staticmethod
+    def read_fd_files(filename):
+        data = {}#{t: {} for t in range(1, 25)}
+        with open(f'{filename}.txt') as f:
+            for lineno, line in enumerate(f, start=1):
+                parts = line.strip().split()
+                s = int(parts[0])
+                t = int(parts[2])
+                data[(t,s)] = float(parts[3])
+                x=1
+        return data
+
+    @staticmethod
     def get_sorted_bid_curve(ld,S, t, ascending = True):
         price_scen_pairs = [(value(ld[t, s]), s) for s in S]
         return sorted(price_scen_pairs, key=lambda x: x[0], reverse=not ascending)
@@ -67,7 +82,7 @@ class PreviousMarketResultsLoader:
             pass
         return  closest_scenario
 
-    def load_dam_results(self):
+    def load_dam_results(self, market="RM"):
 
         """
         This function loads the DAM results, meaning the bid pairs of energy and price, and using those, calculates
@@ -75,15 +90,17 @@ class PreviousMarketResultsLoader:
         buying or selling, picks the conservative scenario.
         """
 
-        parent_path = self.sim_ctx.previous_results_path  #f'{config.dam_results_folder}/market/{self.sim_ctx.sim}/DA'
-        parent_path = os.path.join("..", parent_path)
+        #parent_path = self.sim_ctx.previous_results_path
+        #parent_path = os.path.join("..", parent_path)
 
 
-        e_da_m_from_DAM_run, S = self.read_from_txt(parent_path+"/eDA_m")
-        e_da_p_from_DAM_run, _ = self.read_from_txt(parent_path+"/eDA_p")
-        ld_from_DAM_run, _ = self.read_from_txt(parent_path+"/lD")
-        ieDA_m_from_DAM_run, _ = self.read_from_txt(parent_path+"/ieDA_m")
-        ieDA_p_from_DAM_run, _ = self.read_from_txt(parent_path+"/ieDA_p")
+        parent_path = Path("..") / config.base_result_dir / config.famscen_all / "DA" / "market" / self.sim_ctx.sim / "DA"
+
+        e_da_m_from_DAM_run, S = self.read_from_txt(parent_path / "eDA_m")
+        e_da_p_from_DAM_run, _ = self.read_from_txt(parent_path / "eDA_p")
+        ld_from_DAM_run, _ = self.read_from_txt(parent_path / "lD")
+        ieDA_m_from_DAM_run, _ = self.read_from_txt(parent_path / "ieDA_m")
+        ieDA_p_from_DAM_run, _ = self.read_from_txt(parent_path / "ieDA_p")
 
         # ToDo: Discuss if we want to go with the simple approach above or use what I am sketching out below so the
         # variables for each market are defined in the config and read into a dictionary instead of being defined here
@@ -191,8 +208,21 @@ class PreviousMarketResultsLoader:
         rU_FD_from_rm_run, _  = self.read_from_txt(parent_path+"/rU_FD")
         rD_FD_from_rm_run, _  = self.read_from_txt(parent_path+"/rD_FD")
 
+        fd_parent_path = Path("..") / config.base_result_dir / config.famscen_all / "RM" / "ec" / self.sim_ctx.sim / "FD"
+        var_fd_from_rm_run = self.read_fd_files(fd_parent_path / "var_fd")
+        var_afd_p_from_rm_run = self.read_fd_files(fd_parent_path / "var_afd_p")
+        var_afd_m_from_rm_run = self.read_fd_files(fd_parent_path / "var_afd_m")
+
         matched_rU = {}
         matched_rD = {}
+        matched_rU_B = {}
+        matched_rD_B = {}
+        matched_rU_FD = {}
+        matched_rD_FD = {}
+        matched_var_fd = {}
+        matched_var_afd_p = {}
+        matched_var_afd_m = {}
+
         for t in range(1, self.scenario_data["nT"] + 1):
 
             real_price = self.scenario_data["lR"][t,self.S_preserved[0]] # scenario doesn't matter
@@ -206,23 +236,100 @@ class PreviousMarketResultsLoader:
                     x=1
                 matched_rU[t] = rU_from_rm_run[t, scenario]
                 matched_rD[t] = rD_from_rm_run[t, scenario]
+                matched_rU_B[t] = rU_B_from_rm_run[t, scenario]
+                matched_rD_B[t] = rD_B_from_rm_run[t, scenario]
+                matched_rU_FD[t] = rU_FD_from_rm_run[t, scenario]
+                matched_rD_FD[t] = rD_FD_from_rm_run[t, scenario]
+                matched_var_fd[t] = var_fd_from_rm_run[t, scenario]
+                matched_var_afd_p[t] = var_afd_p_from_rm_run[t, scenario]
+                matched_var_afd_m[t] = var_afd_m_from_rm_run[t, scenario]
             else:
                 matched_rU[t] = 0
                 matched_rD[t] = 0
+                matched_rU_B[t] = 0
+                matched_rD_B[t] = 0
+                matched_rU_FD[t] = 0
+                matched_rD_FD[t] = 0
+                matched_var_fd[t] = var_fd_from_rm_run[t, 1]
+                matched_var_afd_p[t] = var_afd_p_from_rm_run[t, 1]
+                matched_var_afd_m[t] = var_afd_m_from_rm_run[t, 1]
+        rU = {}
+        rD = {}
+        rU_B = {}
+        rD_B = {}
+        rU_FD = {}
+        rD_FD = {}
+        var_fd = {}
+        var_afd_p = {}
+        var_afd_m = {}
+        lR_penalty = {}
+        for t in range(1, self.scenario_data["nT"] + 1):
+            for s in self.S_preserved:
+                rU[t,s] = matched_rU[t]
+                rD[t,s] = matched_rD[t]
+                rU_B[t,s] = matched_rU_B[t]
+                rD_B[t,s] = matched_rD_B[t]
+                rU_FD[t,s] = matched_rU_FD[t]
+                rD_FD[t,s] = matched_rD_FD[t]
+
+                var_fd[t,s] = matched_var_fd[t]
+                var_afd_p[t,s] = matched_var_afd_p[t]
+                var_afd_m[t,s] = matched_var_afd_m[t]
+                lR_penalty[(t,s)] = 42 # filler value just to check
+
+
+        self.scenario_data["rU"] = rU
+        self.scenario_data["rD"] = rD
+        #self.scenario_data["rU_B"] = rU_B
+        #self.scenario_data["rD_B"] = rD_B
+        #self.scenario_data["rU_FD"] = rU_FD
+        #self.scenario_data["rD_FD"] = rD_FD
+        self.scenario_data["var_fd"] = var_fd
+        self.scenario_data["var_afd_p"] = var_afd_p
+        self.scenario_data["var_afd_m"] = var_afd_m
+
+        self.scenario_data["lR_penalty"] = lR_penalty
 
 
         x=1
     def load_im_results(self):
-        pass
+        # Because eIM is a single constraint for 3 different markets, we need to load in the data into the variable,
+        # and then, after creating the instance, fix the previous IM ones for IM2 and IM3
+        parent_path = self.sim_ctx.previous_results_path
+        parent_path = os.path.join("..", parent_path)
+        eIM, S = self.read_from_txt(parent_path+"/eIM")
+
+    def load_market_vars(self, market):
+        """
+        this function is used to load the results of the markets that came even beore the previous one;
+        e.g. to run IM1, you also need DAM results
+        """
+        parent_path = self.sim_ctx.previous_results_path
+        parent_path = os.path.join("..", parent_path)
+
+        files = config.VAR_FILES.get(market, {})
+        for var, file_name in files.items():
+            path = parent_path+"/"+file_name
+            var_from_file, _ = self.read_from_txt(path)
+            self.scenario_data[var] = var_from_file
+
+
 
     def load_results(self):
         if self.sim_ctx.market == "DA":
-            pass
+            return self.scenario_data
+
+        #for mkt in config.MARKET_CHAIN:
+         #   if mkt == self.sim_ctx.market:
+          #      break
+           # self.load_market_vars(mkt)
+
         if self.sim_ctx.market == "RM":
-            self.previous_vars = config.DA_PARAMS
+            #self.previous_vars = config.DA_PARAMS
             self.load_dam_results()
         if self.sim_ctx.market == "IM1":
-            self.previous_vars = config.RM_PARAMS
+            #self.previous_vars = config.RM_PARAMS
+            self.load_dam_results(market="IM1")
             self.load_rm_results()
 
         return self.scenario_data
