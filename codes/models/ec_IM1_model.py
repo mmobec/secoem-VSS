@@ -133,8 +133,10 @@ model.Ssd = pyo.Set(
 model.PDA_LB = pyo.Param(within=pyo.NonNegativeReals)  # Minimum bid size [MWh]
 
 # 8.2 Reserve Market
-model.lR = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)  # secondary reserve price
+model.lR = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)  # secondary reserve price
 model.TSR = pyo.Param(within=pyo.NonNegativeReals)        # time response of SR
+
+model.lR_penalty = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)  # penalty price for undelivered reserve
 
 model.SsR = pyo.Set(
     initialize=lambda m: [
@@ -155,14 +157,12 @@ model.lNIB = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=Tr
 model.PIB_p = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)            # upper bound on positive imbalance
 model.PIB_m = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)            # upper bound on negative imbalance
 
-model.lR = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)  # secondary reserve price
-model.TSR = pyo.Param(within=pyo.NonNegativeReals)        # time response of SR
 
 model.SsI = pyo.Set(
     initialize=lambda m: [
-        (t, l, j)
-        for i in m.nIM
-        for t in m.T
+        (i, t, l, j)
+        for i in m.IM
+        for t in m.TIM[i]
         for l in m.S
         for j in m.S
         if (pyo.value(m.lI[i,t, l]) <= pyo.value(m.lI[i,t, j]) and j != l)
@@ -249,9 +249,9 @@ model.obj_FD_costs = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0
 # =========================================================
 
 # 2. Flexible Demand
-model.var_fd = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # Flexible Demand [MW]
-model.var_afd_p = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # Positive displacement
-model.var_afd_m = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # Negative displacement
+model.var_fd = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable= True)      # Flexible Demand [MW]
+model.var_afd_p = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable= True)   # Positive displacement
+model.var_afd_m = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable= True)   # Negative displacement
 
 # 6. Battery Energy Storage System
 model.dV = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)          # Discharge rate [MW]
@@ -269,11 +269,13 @@ model.ieDA_m = pyo.Param(model.T, model.S, within=pyo.Binary)            # binar
 
 # 8.2 Reserve Market
 model.rU = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)      # upward reserve
+model.rU_penalty = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals) #, bounds = (0,5000) penalty term for reserve that cannot be delivered
 model.rD = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)      # downward reserve
-model.rU_B = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)    # BESS upward reserve
-model.rD_B = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)    # BESS downward reserve
-model.rU_FD = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)   # FD upward reserve
-model.rD_FD = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)   # FD downward reserve
+model.rD_penalty = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)  #, bounds = (0,5000) penalty term for reserve that cannot be delivered
+model.rU_B = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)    # BESS upward reserve
+model.rD_B = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)    # BESS downward reserve
+model.rU_FD = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # FD upward reserve
+model.rD_FD = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # FD downward reserve
 
 # 8.3 Intraday Markets
 # "model.IM" is intraday markets, "model.TIM[i]" is the set of times for each market i
@@ -294,7 +296,7 @@ model.pIB_m = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # negativ
 def EECSW_rule(m):
     return sum(
         sum( m.Prob[s] * m.lD[t, s] * (m.eDA_p[t, s] - m.eDA_m[t, s]) for s in m.S ) +
-        sum( m.Prob[s] * m.lR[t, s] * (m.rD[t, s] + m.rU[t, s]) for s in m.S ) +
+        sum(m.Prob[s] * (m.lR[t, s] * (m.rD[t, s] + m.rU[t, s]) + m.lR_penalty[t,s] * (m.rU_penalty[t,s] + m.rU_penalty[t,s])) for s in m.S) +
         sum( m.Prob[s] * m.lI[i, t, s] * m.eIM[i, t, s] for s in m.S for i in m.IMT[t] ) +
         sum( m.Prob[s] * m.lPIB[t, s] * m.pIB_p[t, s] for s in m.S ) -
         sum( m.Prob[s] * m.lNIB[t, s] * m.pIB_m[t, s] for s in m.S ) -
@@ -314,39 +316,39 @@ model.EECSW = pyo.Objective(rule=EECSW_rule, sense=pyo.maximize)
 # FD_L[t] <= var_fd[t, s] - TSR * rU_FD[t, s];
 def FlexDem_LB_rule(m, t, s):
     return m.FD_L[t] <= m.var_fd[t, s] - m.TSR * m.rU_FD[t, s]
-model.FlexDem_LB = pyo.Constraint(model.T, model.S, rule=FlexDem_LB_rule)
+#model.FlexDem_LB = pyo.Constraint(model.T, model.S, rule=FlexDem_LB_rule)
 
 # var_fd[t, s] + TSR * rD_FD[t, s] <= FD_U[t];
 def FlexDem_UB_rule(m, t, s):
     return m.var_fd[t, s] + m.TSR * m.rD_FD[t, s] <= m.FD_U[t]
-model.FlexDem_UB = pyo.Constraint(model.T, model.S, rule=FlexDem_UB_rule)
+#model.FlexDem_UB = pyo.Constraint(model.T, model.S, rule=FlexDem_UB_rule)
 
 # rD_FD[t, s] <= RDFD[t];
 def FlexDemP_DReserve_rule(m, t, s):
     return m.rD_FD[t, s] <= m.RDFD[t]
-model.FlexDemP_DReserve = pyo.Constraint(model.T, model.S, rule=FlexDemP_DReserve_rule)
+#model.FlexDemP_DReserve = pyo.Constraint(model.T, model.S, rule=FlexDemP_DReserve_rule)
 
 # rU_FD[t, s] <= RUFD[t];
 def FlexDemP_UReserve_rule(m, t, s):
     return m.rU_FD[t, s] <= m.RUFD[t]
-model.FlexDemP_UReserve = pyo.Constraint(model.T, model.S, rule=FlexDemP_UReserve_rule)
+#model.FlexDemP_UReserve = pyo.Constraint(model.T, model.S, rule=FlexDemP_UReserve_rule)
 
 # DailyDem: sum{t in T} var_fd[t, s] = sum{t in T} FD[t];
 def DailyDem_rule(m, s):
     return sum(m.var_fd[t, s] for t in m.T) == sum(m.FD[t] for t in m.T)
-model.DailyDem = pyo.Constraint(model.S, rule=DailyDem_rule)
+#model.DailyDem = pyo.Constraint(model.S, rule=DailyDem_rule)
 
 # InterDem: sum_{t=TF_L[f]..TF_U[f]} var_fd[t, s] >= coef_FD[f]* sum_{t=TF_L[f]..TF_U[f]} FD[t];
 def InterDem_rule(m, f, s):
     # gather time steps t in [TF_L[f], TF_U[f]]
     t_in_range = [t for t in m.T if m.TF_L[f] <= t <= m.TF_U[f]]
     return sum(m.var_fd[t, s] for t in t_in_range) >= m.coef_FD[f] * sum(m.FD[t] for t in t_in_range)
-model.InterDem = pyo.Constraint(model.FI, model.S, rule=InterDem_rule)
+#model.InterDem = pyo.Constraint(model.FI, model.S, rule=InterDem_rule)
 
 # FD[t] - var_fd[t, s] = var_afd_p[t, s] - var_afd_m[t, s];
 def FlexDemDisplace_rule(m, t, s):
     return m.FD[t] - m.var_fd[t, s] == m.var_afd_p[t, s] - m.var_afd_m[t, s]
-model.FlexDemDisplace = pyo.Constraint(model.T, model.S, rule=FlexDemDisplace_rule)
+#model.FlexDemDisplace = pyo.Constraint(model.T,VPP_RU_SOCV model.S, rule=FlexDemDisplace_rule)
 
 # -------------------
 # 5. Battery System
@@ -443,16 +445,18 @@ model.DA_bid_mono_2 = pyo.Constraint(model.Ssd, rule=DA_bid_mono_2_rule)
 # 8.2 Reserve Market
 # -------------------------------------------------------
 
-# rU[t,s] = rU_B[t,s] + rU_FD[t,s];
+
+#rU[t,s] = rU_B[t,s] + rU_FD[t,s];
 def RM_components_U_rule(m, t, s):
-    return m.rU[t, s] == m.rU_B[t, s] + m.rU_FD[t, s]
+    return m.rU[t, s] == m.rU_B[t, s] + m.rU_FD[t, s] + m.rU_penalty[t, s]
 model.RM_components_U = pyo.Constraint(model.T, model.S, rule=RM_components_U_rule)
 
 # rD[t,s] = rD_B[t,s] + rD_FD[t,s];
 def RM_components_D_rule(m, t, s):
-    return m.rD[t, s] == m.rD_B[t, s] + m.rD_FD[t, s]
+    return m.rD[t, s] == m.rD_B[t, s] + m.rD_FD[t, s] + m.rD_penalty[t, s]
 model.RM_components_D = pyo.Constraint(model.T, model.S, rule=RM_components_D_rule)
 
+"""
 # (Optional) Monotonicity constraints for Reserve Market are commented out in ec.mod
 # If you decide to activate them, replicate similarly to DA monotonicity.
 def RM_bid_mono_1_rule(m, t, l, k):
@@ -462,6 +466,7 @@ model.RM_bid_mono_1 = pyo.Constraint(model.SsR, rule=RM_bid_mono_1_rule)
 def RM_bid_mono_2_rule(m, t, l, k):
     return m.rD[t, l] >= m.rD[t, k]
 model.RM_bid_mono_2 = pyo.Constraint(model.SsR, rule=RM_bid_mono_2_rule)
+"""
 # -------------------------------------------------------
 # 8.3 Intraday Markets
 # -------------------------------------------------------
@@ -577,30 +582,32 @@ def stage1_nac_rule(m, var_name, t, k, l, l_next):
     var_obj = getattr(m, var_name)
     return var_obj[t, l] == var_obj[t, l_next]
 
-model.NAC_stage1_index = pyo.Set(dimen=5, initialize=build_stage1_nac_index)
-model.NAC_stage1 = pyo.Constraint(model.NAC_stage1_index, rule=stage1_nac_rule)
+#model.NAC_stage1_index = pyo.Set(dimen=5, initialize=build_stage1_nac_index)
+#model.NAC_stage1 = pyo.Constraint(model.NAC_stage1_index, rule=stage1_nac_rule)
 
 # ---------------------------------------------------------
 # INTRADAY MARKETS: eIM referencing c[sgim[i]-1, k]
 # ---------------------------------------------------------
+i_current = 1  #   'IM1', hard-coded
+#stage_cur = model.sgim[i_current]     # numeric stage
+stage_cur = 3
+
 def build_nac_eIM_index(model):
     idx = []
-    for i in model.IM:
-        for t in model.TIM[i]:
-            for k in model.S0:
-                sg_for_i = model.sgim[i] - 1
-                if (sg_for_i, k) in model.c.index_set():  # Ensure (sg, k) exists
-                    for (l, l_next) in consecutive_scenarios(model, sg_for_i, k):
-                        if l in model.S and l_next in model.S:  # Ensure valid indices
-                            idx.append((i, t, k, l, l_next))
+    for t in model.TIM[i_current]:
+        for k in model.S0:
+            if (stage_cur, k) in model.c.index_set():  # Ensure (sg, k) exists
+                for (l, l_next) in consecutive_scenarios(model, stage_cur, k):
+                    if l in model.S and l_next in model.S:  # Ensure valid indices
+                        idx.append((t, k, l, l_next))
     return idx
 
-def NAC_eIM_rule(m, i, t, k, l, l_next):
-    if (i, t, l) not in m.eIM or (i, t, l_next) not in m.eIM:
+def NAC_eIM_rule(m, t, k, l, l_next):
+    if (i_current, t, l) not in m.eIM or (i_current, t, l_next) not in m.eIM:
         return pyo.Constraint.Skip
-    return m.eIM[i, t, l] == m.eIM[i, t, l_next]
+    return m.eIM[i_current, t, l] == m.eIM[i_current, t, l_next]
 
-model.NAC_eIM_index = pyo.Set(dimen=5, initialize=build_nac_eIM_index)
+model.NAC_eIM_index = pyo.Set(dimen=4, initialize=build_nac_eIM_index)
 model.NAC_eIM = pyo.Constraint(model.NAC_eIM_index, rule=NAC_eIM_rule)
 
 
@@ -643,7 +650,7 @@ def build_nac_fd_battery_index(model):
     We'll store (var_name, t, k, l, l_next).
     """
     fd_batt_vars = [
-        "var_fd", "var_afd_p", "var_afd_m",
+        #"var_fd", "var_afd_p", "var_afd_m",
         "dV", "cV", "idV", "socV"
     ]
     idx = []
