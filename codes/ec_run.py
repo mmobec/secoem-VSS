@@ -797,7 +797,7 @@ for sim in SIMS:
     export_diff(instance.cV, instance.dV, os.path.join(bess_path, "cV-dV.txt"), instance.T)
     
     # Similarly for DA variables:
-    da_path = os.path.join(pathmarketres, "DA/")
+    da_path = os.path.join("..", pathmarketres, "DA/")
     os.makedirs(da_path, exist_ok=True)
     
     export_variable(instance.lD, os.path.join(da_path, "lD.txt"), instance.T)
