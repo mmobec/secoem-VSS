@@ -53,8 +53,8 @@ class Solver:
             model, tol=tol, log_expression=True, log_variables=True
         )
 
-        print("\n Checking infeasible variable bounds:")
-        log_infeasible_bounds(model, tol=tol)
+        #print("\n Checking infeasible variable bounds:")
+        #log_infeasible_bounds(model, tol=tol)
 
         """
         print("\n Manually inspecting undefined constraint variables:")

@@ -9,9 +9,9 @@ Created on Mon Jan 27 11:06:23 2025
 # Pyomo translation of ec_run.py
 # 
 # A Python script replicating ec.run
-# when using a Pyomo AbstractModel defined in ec_model.py.
+# when using a Pyomo AbstractModel defined in ec_DA_model.py.
 # 
-# NOTE: We assume 'ec_model.py' is in the same folder, containing:
+# NOTE: We assume 'ec_DA_model.py' is in the same folder, containing:
 #   import pyomo.environ as pyo
 #   model = pyo.AbstractModel()
 #   # [ sets, params, variables, constraints, etc. ]
@@ -111,7 +111,7 @@ for sim in SIMS:
     "Before creating the instance"
     # Some Data Preprocess needed before creating the instance because these values are used to build sets in model.py, so they must be defined before creating the instance
     
-    ### S and Prob allocation (S is used in a lot of sets definition in ec_model.py, so it must be known before creating the instance, prob is used in the objective function)
+    ### S and Prob allocation (S is used in a lot of sets definition in ec_DA_model.py, so it must be known before creating the instance, prob is used in the objective function)
     Prob0_raw = scenario_data.data().get("Prob0", {})  # Extract raw probabilities
     # Compute number of preserved scenarios BEFORE creating the instance
     S_preserved = [s for s in Prob0_raw if Prob0_raw[s] > 0]
@@ -123,7 +123,7 @@ for sim in SIMS:
     scenario_data.data()["S"] = {None: S_preserved}  # Ensure correct S
     scenario_data.data()["Prob"] = Prob_preserved  # Assign Probabilities correctly
     
-    ### lD allocation (necessary to define Ssd set in ec_model.py which is necessary to build bidding curves)
+    ### lD allocation (necessary to define Ssd set in ec_DA_model.py which is necessary to build bidding curves)
     # Scen values are needed to define lD values
     Scen0_raw = scenario_data.data().get("Scen0", {})  # Extract full scenario data
     # Compute preserved scenarios BEFORE creating the instance
