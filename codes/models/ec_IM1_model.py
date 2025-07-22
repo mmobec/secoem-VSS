@@ -160,12 +160,11 @@ model.PIB_m = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, defaul
 
 model.SsI = pyo.Set(
     initialize=lambda m: [
-        (i, t, l, j)
-        for i in m.IM
-        for t in m.TIM[i]
+        (t, l, j)
+        for t in m.TIM[1]
         for l in m.S
         for j in m.S
-        if (pyo.value(m.lI[i,t, l]) <= pyo.value(m.lI[i,t, j]) and j != l)
+        if (pyo.value(m.lI[1,t, l]) <= pyo.value(m.lI[1,t, j]) and j != l)
     ]
 )
 # =============================================================================
@@ -296,7 +295,7 @@ model.pIB_m = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # negativ
 def EECSW_rule(m):
     return sum(
         sum( m.Prob[s] * m.lD[t, s] * (m.eDA_p[t, s] - m.eDA_m[t, s]) for s in m.S ) +
-        sum(m.Prob[s] * (m.lR[t, s] * (m.rD[t, s] + m.rU[t, s]) + m.lR_penalty[t,s] * (m.rU_penalty[t,s] + m.rU_penalty[t,s])) for s in m.S) +
+        sum(m.Prob[s] * (m.lR[t, s] * (m.rD[t, s] + m.rU[t, s]) - m.lR_penalty[t,s] * (m.rU_penalty[t,s] + m.rD_penalty[t,s])) for s in m.S) +
         sum( m.Prob[s] * m.lI[i, t, s] * m.eIM[i, t, s] for s in m.S for i in m.IMT[t] ) +
         sum( m.Prob[s] * m.lPIB[t, s] * m.pIB_p[t, s] for s in m.S ) -
         sum( m.Prob[s] * m.lNIB[t, s] * m.pIB_m[t, s] for s in m.S ) -
@@ -492,8 +491,8 @@ def IM_bounds_4_rule(m, i, t, s):
 model.IM_bounds_4 = pyo.Constraint(model.IM, model.T, model.S, rule=IM_bounds_4_rule)
 
 # (Optional) lI_bid monotonicity constraints for IM are commented out in ec.mod
-def IM_bid_mono_1_rule(m,i, t, l, k):
-    return m.eIM[i,t, l] <= m.eIM[i,t, k]
+def IM_bid_mono_1_rule(m, t, l, k):
+    return m.eIM[1,t, l] <= m.eIM[1,t, k]
 model.RM_bid_mono_1 = pyo.Constraint(model.SsI, rule=IM_bid_mono_1_rule)
 
 # -------------------------------------------------------
@@ -521,12 +520,12 @@ model.Imbalances = pyo.Constraint(model.T, model.S, rule=Imbalances_rule)
 # pIB_p[t,s] <= PIB_p[t,s];
 def IB_pos_UB_rule(m, t, s):
     return m.pIB_p[t, s] <= 500#m.PIB_p[t, s]
-#model.IB_pos_UB = pyo.Constraint(model.T, model.S, rule=IB_pos_UB_rule)
+model.IB_pos_UB = pyo.Constraint(model.T, model.S, rule=IB_pos_UB_rule)
 
 # pIB_m[t,s] <= PIB_m[t,s];
 def IB_neg_UB_rule(m, t, s):
     return m.pIB_m[t, s] <= 500 #m.PIB_m[t, s]
-#model.IB_neg_UB = pyo.Constraint(model.T, model.S, rule=IB_neg_UB_rule)
+model.IB_neg_UB = pyo.Constraint(model.T, model.S, rule=IB_neg_UB_rule)
 
 
 # =============================================================================
