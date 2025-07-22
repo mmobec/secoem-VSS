@@ -272,10 +272,10 @@ model.rU = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)      # upwar
 model.rU_penalty = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals) #, bounds = (0,5000) penalty term for reserve that cannot be delivered
 model.rD = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)      # downward reserve
 model.rD_penalty = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)  #, bounds = (0,5000) penalty term for reserve that cannot be delivered
-model.rU_B = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)    # BESS upward reserve
-model.rD_B = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)    # BESS downward reserve
-model.rU_FD = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # FD upward reserve
-model.rD_FD = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # FD downward reserve
+model.rU_B = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)    # BESS upward reserve
+model.rD_B = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)    # BESS downward reserve
+model.rU_FD = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)   # FD upward reserve
+model.rD_FD = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)   # FD downward reserve
 
 # 8.3 Intraday Markets
 # "model.IM" is intraday markets, "model.TIM[i]" is the set of times for each market i

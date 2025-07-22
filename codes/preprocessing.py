@@ -87,7 +87,7 @@ class PreProcessor:
                                                                                 0.0)  # Default to 0.0 if missing
         self.scenario_data.data()["lD"] = lD_preserved  # Assign `lD` values
 
-    def allocate_lr(self):
+    #def allocate_lr(self):
         #same thing for lR:
         # --- figure out the first RV of stage‑2 -----------------------------
         nRVSG1_dict = self.scenario_data.data().get("nRVSG", {})
@@ -216,7 +216,7 @@ class PreProcessor:
         self.preprocess_data()
         #self.allocate_lr_and_ld()
         self.allocate_ld()
-        self.allocate_lr()
+        #self.allocate_lr()
         self.scenario_data = PreviousMarketResultsLoader(self.sim_ctx, self.scenario_data).load_results()
         #self.find_closest_dam_scenario() These two are also commented out bc hopefully not needed bc of Cristian
         #self.update_probabilities_and_scenarios()

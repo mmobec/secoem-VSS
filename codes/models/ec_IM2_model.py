@@ -41,14 +41,14 @@ model.nSG = pyo.Param(within=pyo.NonNegativeIntegers)    # num. of stages
 
 # Full scenario set and preserved set
 model.S0 = pyo.RangeSet(1, model.nS)                 # complete set of scenarios
-model.S = pyo.Set(within=model.S0, ordered=True)      # preserved scenario (Prob>0) 
+model.S = pyo.Set(within=model.S0, ordered=True)      # preserved scenario (Prob>0)
 # We could have put mutable = True and define it after creating the instance but it would have been uncorrect as S is then used to define other sets
 
 # Stage sets
 model.SG = pyo.RangeSet(1, model.nSG)
 model.SG0 = pyo.Set(initialize=lambda m: [0] + list(range(1, pyo.value(m.nSG)+1)), ordered=True)
 
-# Scenario clusters c {SG0, S0}: # In Pyomo, we can define this as a two-dimensional set: 
+# Scenario clusters c {SG0, S0}: # In Pyomo, we can define this as a two-dimensional set:
 def c_init(model, sg, s): # Then I will modify this cluster after creating the instance in ec_run.py
     return sorted(set())
 model.c = pyo.Set(model.SG0, model.S0, initialize=c_init, within=model.S0)
@@ -59,7 +59,7 @@ model.fRVSG = pyo.Param(model.SG, initialize=lambda model, i: 1 + sum(model.nRVS
 
 # Probabilities and random variables
 model.Prob0 = pyo.Param(model.S0)       # scenario's probabilities (including zero values)
-model.Prob  = pyo.Param(model.S)        # preserved scenario probabilities
+model.Prob  = pyo.Param(model.S, mutable=True)        # preserved scenario probabilities
 
 # Complete and preserved scenario sets
 model.Scen0 = pyo.Param(pyo.RangeSet(1, model.nRV), model.S0, within=pyo.Reals, default=0.0)
@@ -98,7 +98,7 @@ model.max_pW = pyo.Param(within=pyo.NonNegativeReals, mutable=True)             
 # ----------------------------------------------------------
 
 model.Pavg_PV  = pyo.Param(within=pyo.Reals)    # PV nominal power [MW]
-model.pPV = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True) 
+model.pPV = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True)
 model.max_pPV = pyo.Param(within=pyo.NonNegativeReals, mutable=True)
 
 # ----------------------------------------------------------
@@ -117,7 +117,7 @@ model.SOCfin = pyo.Param(within=pyo.NonNegativeReals)  # BESS final SOC
 # 8. Market Participation
 # ----------------------------------------------------------
 
-# 8.1 Day Ahead Market 
+# 8.1 Day Ahead Market
 model.lD = pyo.Param(model.T, model.S, within=pyo.Reals, mutable = True)    # !!! Day-ahead prices TO BE DEFINED BEFORE CREATING INSTANCE because they re used to create Ssd set
 
 model.Ssd = pyo.Set(
@@ -133,19 +133,42 @@ model.Ssd = pyo.Set(
 model.PDA_LB = pyo.Param(within=pyo.NonNegativeReals)  # Minimum bid size [MWh]
 
 # 8.2 Reserve Market
-model.lR = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)  # secondary reserve price
+model.lR = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)  # secondary reserve price
 model.TSR = pyo.Param(within=pyo.NonNegativeReals)        # time response of SR
 
+model.SsR = pyo.Set(
+    initialize=lambda m: [
+        (t, l, j)
+        for t in m.T
+        for l in m.S
+        for j in m.S
+        if (pyo.value(m.lR[t, l]) <= pyo.value(m.lR[t, j]) and j != l)
+    ]
+)
 # 8.3 Intraday Market
-model.lI = pyo.Param(model.IM, model.T, model.S, default=0.0, within=pyo.Reals, mutable=True)  
+model.lI = pyo.Param(model.IM, model.T, model.S, default=0.0, within=pyo.Reals, mutable=True)
 model.maxTIM = pyo.Param(within=pyo.Reals, default=0.2)
 
 # 8.4 System Imbalances
-model.lPIB = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True)  # positive imbalance price
-model.lNIB = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True)  # negative imbalance price
-model.PIB_p = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)            # upper bound on positive imbalance
-model.PIB_m = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)            # upper bound on negative imbalance
+model.lPIB = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True, default=0.0)  # positive imbalance price
+model.lNIB = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True, default=0.0)  # negative imbalance price
+model.PIB_p = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)            # upper bound on positive imbalance
+model.PIB_m = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)            # upper bound on negative imbalance
 
+model.lR = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)  # secondary reserve price
+model.TSR = pyo.Param(within=pyo.NonNegativeReals)        # time response of SR
+
+model.SsI = pyo.Set(
+    initialize=lambda m: [
+        (t, l, j)
+        for i in m.nIM[1:]
+        for t in m.T
+        for l in m.S
+        for j in m.S
+        if (pyo.value(m.lI[i,t, l]) <= pyo.value(m.lI[i,t, j]) and j != l)
+    ]
+)
+# ToDo: 3 differnt SsI?
 # =============================================================================
 # Parameters not used in the model but useful for Post-Processing in ec_run.py
 # =============================================================================
@@ -240,18 +263,18 @@ model.socV = pyo.Var(model.T0, model.S, within=pyo.NonNegativeReals, bounds = (m
 # 8. Market Participation
 
 # 8.1 Day Ahead Market
-model.eDA_p = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # sold energy
-model.eDA_m = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # bought energy
-model.ieDA_p = pyo.Var(model.T, model.S, within=pyo.Binary)            # binary for selling bid
-model.ieDA_m = pyo.Var(model.T, model.S, within=pyo.Binary)            # binary for buying bid
+model.eDA_p = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True)   # sold energy #Set to Mutable!
+model.eDA_m = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True)   # bought energy #Set to Mutable!
+model.ieDA_p = pyo.Param(model.T, model.S, within=pyo.Binary)            # binary for selling bid
+model.ieDA_m = pyo.Param(model.T, model.S, within=pyo.Binary)            # binary for buying bid
 
 # 8.2 Reserve Market
-model.rU = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # upward reserve
-model.rD = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # downward reserve
-model.rU_B = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)    # BESS upward reserve
-model.rD_B = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)    # BESS downward reserve
-model.rU_FD = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # FD upward reserve
-model.rD_FD = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # FD downward reserve
+model.rU = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)      # upward reserve
+model.rD = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)      # downward reserve
+model.rU_B = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)    # BESS upward reserve
+model.rD_B = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)    # BESS downward reserve
+model.rU_FD = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)   # FD upward reserve
+model.rD_FD = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)   # FD downward reserve
 
 # 8.3 Intraday Markets
 # "model.IM" is intraday markets, "model.TIM[i]" is the set of times for each market i
@@ -386,6 +409,7 @@ model.VPP_RD_SOCV = pyo.Constraint(model.T, model.S, rule=VPP_RD_SOCV_rule)
 # -------------------------------------------------------
 
 # Lower & Upper Bounds on DA Sell & Buy Energy
+"""
 def DA_sell_bid_LB_rule(m, t, s):
     return m.PDA_LB * m.ieDA_p[t, s] <= m.eDA_p[t, s]
 model.DA_sell_bid_LB = pyo.Constraint(model.T, model.S, rule=DA_sell_bid_LB_rule)
@@ -415,10 +439,11 @@ model.DA_bid_mono_1 = pyo.Constraint(model.Ssd, rule=DA_bid_mono_1_rule)
 def DA_bid_mono_2_rule(m, t, l, k):
     return m.eDA_m[t, l] >= m.eDA_m[t, k]
 model.DA_bid_mono_2 = pyo.Constraint(model.Ssd, rule=DA_bid_mono_2_rule)
-
+"""
 # -------------------------------------------------------
 # 8.2 Reserve Market
 # -------------------------------------------------------
+"""
 
 # rU[t,s] = rU_B[t,s] + rU_FD[t,s];
 def RM_components_U_rule(m, t, s):
@@ -432,7 +457,14 @@ model.RM_components_D = pyo.Constraint(model.T, model.S, rule=RM_components_D_ru
 
 # (Optional) Monotonicity constraints for Reserve Market are commented out in ec.mod
 # If you decide to activate them, replicate similarly to DA monotonicity.
+def RM_bid_mono_1_rule(m, t, l, k):
+    return m.rU[t, l] <= m.rU[t, k]
+model.RM_bid_mono_1 = pyo.Constraint(model.SsR, rule=RM_bid_mono_1_rule)
 
+def RM_bid_mono_2_rule(m, t, l, k):
+    return m.rD[t, l] >= m.rD[t, k]
+model.RM_bid_mono_2 = pyo.Constraint(model.SsR, rule=RM_bid_mono_2_rule)
+"""
 # -------------------------------------------------------
 # 8.3 Intraday Markets
 # -------------------------------------------------------
@@ -458,6 +490,9 @@ def IM_bounds_4_rule(m, i, t, s):
 model.IM_bounds_4 = pyo.Constraint(model.IM, model.T, model.S, rule=IM_bounds_4_rule)
 
 # (Optional) lI_bid monotonicity constraints for IM are commented out in ec.mod
+def IM_bid_mono_1_rule(m,i, t, l, k):
+    return m.eIM[i,t, l] <= m.eIM[i,t, k]
+model.RM_bid_mono_1 = pyo.Constraint(model.SsI, rule=IM_bid_mono_1_rule)
 
 # -------------------------------------------------------
 # 8.4 System Imbalances
@@ -483,13 +518,13 @@ model.Imbalances = pyo.Constraint(model.T, model.S, rule=Imbalances_rule)
 
 # pIB_p[t,s] <= PIB_p[t,s];
 def IB_pos_UB_rule(m, t, s):
-    return m.pIB_p[t, s] <= m.PIB_p[t, s]
-model.IB_pos_UB = pyo.Constraint(model.T, model.S, rule=IB_pos_UB_rule)
+    return m.pIB_p[t, s] <= 500#m.PIB_p[t, s]
+#model.IB_pos_UB = pyo.Constraint(model.T, model.S, rule=IB_pos_UB_rule)
 
 # pIB_m[t,s] <= PIB_m[t,s];
 def IB_neg_UB_rule(m, t, s):
-    return m.pIB_m[t, s] <= m.PIB_m[t, s]
-model.IB_neg_UB = pyo.Constraint(model.T, model.S, rule=IB_neg_UB_rule)
+    return m.pIB_m[t, s] <= 500 #m.PIB_m[t, s]
+#model.IB_neg_UB = pyo.Constraint(model.T, model.S, rule=IB_neg_UB_rule)
 
 
 # =============================================================================
@@ -521,11 +556,11 @@ def consecutive_scenarios(model, sg, k):
 def build_stage1_nac_index(model):
     """
     Builds a single index set for all day-ahead & reserve variables that share
-    the same stage=1 logic and indexing (t, s).
+    the same stage logic and indexing (t, s).
     We'll store tuples: (var_name, t, k, l, l_next).
     """
     day_ahead_reserve_vars = [
-        "eDA_p", "eDA_m", "ieDA_p", "ieDA_m",
+        #"eDA_p", "eDA_m", "ieDA_p", "ieDA_m", commented out for RM model
         "rU", "rU_B", "rU_FD",
         "rD", "rD_B", "rD_FD"
     ]
@@ -535,7 +570,7 @@ def build_stage1_nac_index(model):
         for t in model.T:
             for k in model.S0:
                 # stage=1 for these
-                for (l, l_next) in consecutive_scenarios(model, 1, k):
+                for (l, l_next) in consecutive_scenarios(model, 2, k):
                     # skip if not in domain
                     if (t, l) in var_obj and (t, l_next) in var_obj:
                         idx.append((var_name, t, k, l, l_next))
@@ -551,24 +586,25 @@ model.NAC_stage1 = pyo.Constraint(model.NAC_stage1_index, rule=stage1_nac_rule)
 # ---------------------------------------------------------
 # INTRADAY MARKETS: eIM referencing c[sgim[i]-1, k]
 # ---------------------------------------------------------
+i_current = 'IM2'                     # hard-coded
+stage_cur = model.sgim[i_current]     # numeric stage
+
 def build_nac_eIM_index(model):
     idx = []
-    for i in model.IM:
-        for t in model.TIM[i]:
-            for k in model.S0:
-                sg_for_i = model.sgim[i] - 1
-                if (sg_for_i, k) in model.c.index_set():  # Ensure (sg, k) exists
-                    for (l, l_next) in consecutive_scenarios(model, sg_for_i, k):
-                        if l in model.S and l_next in model.S:  # Ensure valid indices
-                            idx.append((i, t, k, l, l_next))
+    for t in model.TIM[i_current]:
+        for k in model.S0:
+            if (stage_cur, k) in model.c.index_set():  # Ensure (sg, k) exists
+                for (l, l_next) in consecutive_scenarios(model, stage_cur, k):
+                    if l in model.S and l_next in model.S:  # Ensure valid indices
+                        idx.append((t, k, l, l_next))
     return idx
 
-def NAC_eIM_rule(m, i, t, k, l, l_next):
-    if (i, t, l) not in m.eIM or (i, t, l_next) not in m.eIM:
+def NAC_eIM_rule(m, t, k, l, l_next):
+    if (i_current, t, l) not in m.eIM or (i_current, t, l_next) not in m.eIM:
         return pyo.Constraint.Skip
-    return m.eIM[i, t, l] == m.eIM[i, t, l_next]
+    return m.eIM[i_current, t, l] == m.eIM[i_current, t, l_next]
 
-model.NAC_eIM_index = pyo.Set(dimen=5, initialize=build_nac_eIM_index)
+model.NAC_eIM_index = pyo.Set(dimen=4, initialize=build_nac_eIM_index)
 model.NAC_eIM = pyo.Constraint(model.NAC_eIM_index, rule=NAC_eIM_rule)
 
 

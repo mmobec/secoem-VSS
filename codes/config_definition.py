@@ -10,16 +10,23 @@ MARKET_CHAIN = ["DA", "RM", "IM1", "IM2", "IM3", "IB"]
 
 # For PreviousResultsLoader:
 
-DA_PARAMS = {
-    "e_da_m_from_DAM_run": "eDA_m",
-    "e_da_p_from_DAM_run": "eDA_p",
-    "ld_from_DAM_run": "lD",
-    "ieDA_m_from_DAM_run": "ieDA_m",
-    "ieDA_p_from_DAM_run": "ieDA_p"
+VAR_FILES = {
+    "DA":  {"eDA_p": "eDA_p.txt",
+            "eDA_m": "eDA_m.txt",
+            "ieDA_p": "ieDA_p.txt",
+            "ieDA_m": "ieDA_m.txt",
+            "lD": "lD.txt"
+            },
+    "RM":  {"rU":    "rU.txt",
+            "rD":    "rD.txt",
+            "lR": "lR.txt",
+            "rU_B": "rU_B.txt",
+            "rD_B": "rD_B.txt",
+            "rU_FD": "rU_FD.txt",
+            "rD_FD": "rD_FD.txt",
+            }
+    #IM: ..
 }
-
-RM_PARAMS = ["lR", "rU", "rD", "rU_B", "rD_B", "rU_FD", "rD_FD" ]
-
 
 BESS_datfile     = "ec_BESS.dat"
 wind_datfile     = "ec_wind.dat"
@@ -35,7 +42,7 @@ famscen_all = "FTC_100_202410_202012"
 #famscen_all = "FTC_100_202410_202012_all_random_DA"
 
 # Suppose we have SIMS = [001..031]
-n_days = 5
+n_days = 1
 SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days for brevity
 
 pathscen_all = f"scenarios/{famscen_all}"

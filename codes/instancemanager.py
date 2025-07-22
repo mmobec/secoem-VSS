@@ -388,6 +388,22 @@ class InstanceManager:
         print(f"New Initial Conditions:")
         print(f"SOCini: {SOCini_next}, sOR: {value(instance.sOR)}")
 
+
+    def fix_eIM(self):
+        """
+        This needs to be done after the instance is created
+        """
+        if self.sim_ctx.market == "IM2":
+            for t in self.instance.T:
+                for s in self.instance.S:
+                    self.instance.eIM[1, t, s].fix()
+
+        if self.sim_ctx.market == "IM3":
+            for i in [1,2]:
+                for t in self.instance.T:
+                    for s in self.instance.S:
+                        self.instance.eIM[i, t, s].fix()
+
     def compute_instance(self):
         self.compute_scenario_cluster()
         self.compute_expected_scenario_cluster()
@@ -399,6 +415,7 @@ class InstanceManager:
         self.compute_market_prices()
         self.compute_mean_market_prices()
         self.compute_imbalance_prices()
+        self.fix_eIM()
         self.log_metrics()
 
 
