@@ -275,15 +275,14 @@ class PreviousMarketResultsLoader:
                 var_fd[t,s] = matched_var_fd[t]
                 var_afd_p[t,s] = matched_var_afd_p[t]
                 var_afd_m[t,s] = matched_var_afd_m[t]
-                lR_penalty[(t,s)] = 42 # filler value just to check
-
+                lR_penalty[(t,s)] = 1.5 * self.scenario_data["lR"][t,self.S_preserved[0]] # scenario doesn't matter
 
         self.scenario_data["rU"] = rU
         self.scenario_data["rD"] = rD
-        #self.scenario_data["rU_B"] = rU_B
-        #self.scenario_data["rD_B"] = rD_B
-        #self.scenario_data["rU_FD"] = rU_FD
-        #self.scenario_data["rD_FD"] = rD_FD
+        self.scenario_data["rU_B"] = rU_B
+        self.scenario_data["rD_B"] = rD_B
+        self.scenario_data["rU_FD"] = rU_FD
+        self.scenario_data["rD_FD"] = rD_FD
         self.scenario_data["var_fd"] = var_fd
         self.scenario_data["var_afd_p"] = var_afd_p
         self.scenario_data["var_afd_m"] = var_afd_m
