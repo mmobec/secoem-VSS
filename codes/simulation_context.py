@@ -23,6 +23,7 @@ class SimulationContext:
         "obj_results", "scenario_data",
         "market", "famscen","pathscen",
         "previous_results_path",
+        "eIM_prev"
     )
 
     def __init__(self, sim: int, market):
@@ -56,6 +57,11 @@ class SimulationContext:
             "obj_FD_costs":  {},
         }
         self.scenario_data = None
+
+        # previous IM results here, because they need to be fixed after the instance is created because eIM for all
+        # IM are in the same variable, so first create the var, then load the previous ones (for Im2 and 3) and then
+        # fix those
+        self.eIM_prev = None
 
     def get_previous_results_dir(self):
         if self.market != "DA":

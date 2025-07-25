@@ -248,9 +248,9 @@ model.obj_FD_costs = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0
 # =========================================================
 
 # 2. Flexible Demand
-model.var_fd = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable= True)      # Flexible Demand [MW]
-model.var_afd_p = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable= True)   # Positive displacement
-model.var_afd_m = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable= True)   # Negative displacement
+model.var_fd = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # Flexible Demand [MW]
+model.var_afd_p = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # Positive displacement
+model.var_afd_m = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # Negative displacement
 
 # 6. Battery Energy Storage System
 model.dV = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)          # Discharge rate [MW]
@@ -271,10 +271,10 @@ model.rU = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)      # upwar
 model.rU_penalty = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals) #, bounds = (0,5000) penalty term for reserve that cannot be delivered
 model.rD = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)      # downward reserve
 model.rD_penalty = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)  #, bounds = (0,5000) penalty term for reserve that cannot be delivered
-model.rU_B = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)    # BESS upward reserve
-model.rD_B = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)    # BESS downward reserve
-model.rU_FD = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)   # FD upward reserve
-model.rD_FD = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)   # FD downward reserve
+model.rU_B = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)    # BESS upward reserve
+model.rD_B = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)    # BESS downward reserve
+model.rU_FD = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # FD upward reserve
+model.rD_FD = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # FD downward reserve
 
 # 8.3 Intraday Markets
 # "model.IM" is intraday markets, "model.TIM[i]" is the set of times for each market i

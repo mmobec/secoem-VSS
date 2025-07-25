@@ -4,7 +4,7 @@ import os
 import bisect
 from pathlib import Path
 from simulation_context import prev_market
-
+import re
 class PreviousMarketResultsLoader:
     """
     Loading the results of the previous run
@@ -121,7 +121,7 @@ class PreviousMarketResultsLoader:
             real_price = self.scenario_data["lD"][t,self.S_preserved[0]] # scenario doesn't matter
 
             sorted_bid_curve = self.get_sorted_bid_curve(ld_from_DAM_run, S, t)
-
+            # There are 5 cases that can occur:
             # Edge case: price is exactly equal to one of the bids (highly unlikely)
             if real_price in [i[0] for i in sorted_bid_curve]:
                 s = [i[1] for i in sorted_bid_curve if i[0] == real_price][0]
@@ -132,7 +132,7 @@ class PreviousMarketResultsLoader:
             closest_lambda_plus = None
             closest_lambda_minus = None
 
-            # There are 5 cases that can occur:
+
             # 1: the real price is below the lowest price of the bid curve -> buy everything
             if sorted_bid_curve[0][0] > real_price:
                 closest_lambda_minus = sorted_bid_curve[0][1]
@@ -194,34 +194,20 @@ class PreviousMarketResultsLoader:
         self.scenario_data["ieDA_m"] = ieDA_m
         #return self.scenario_data
 
+
     def load_rm_results(self):
         """
         Function to load the RM results for the IM1 model to run
         """
-        parent_path = self.sim_ctx.previous_results_path  #f'{config.dam_results_folder}/market/{self.sim_ctx.sim}/DA'
-        parent_path = os.path.join("..", parent_path)
-        rU_from_rm_run, S = self.read_from_txt(parent_path+"/rU")
-        rD_from_rm_run, _ = self.read_from_txt(parent_path+"/rD")
-        lR_from_rm_run, _ = self.read_from_txt(parent_path+"/lR")
-        rU_B_from_rm_run, _  = self.read_from_txt(parent_path+"/rU_B")
-        rD_B_from_rm_run, _  = self.read_from_txt(parent_path+"/rD_B")
-        rU_FD_from_rm_run, _  = self.read_from_txt(parent_path+"/rU_FD")
-        rD_FD_from_rm_run, _  = self.read_from_txt(parent_path+"/rD_FD")
-
-        fd_parent_path = Path("..") / config.base_result_dir / config.famscen_all / "RM" / "ec" / self.sim_ctx.sim / "FD"
-        var_fd_from_rm_run = self.read_fd_files(fd_parent_path / "var_fd")
-        var_afd_p_from_rm_run = self.read_fd_files(fd_parent_path / "var_afd_p")
-        var_afd_m_from_rm_run = self.read_fd_files(fd_parent_path / "var_afd_m")
+        #parent_path = self.sim_ctx.previous_results_path  #f'{config.dam_results_folder}/market/{self.sim_ctx.sim}/DA'
+        #parent_path = os.path.join("..", parent_path)
+        parent_path = Path("..") / config.base_result_dir / config.famscen_all / "RM" / "market" / self.sim_ctx.sim / "RM"
+        rU_from_rm_run, S = self.read_from_txt(parent_path / "rU")
+        rD_from_rm_run, _ = self.read_from_txt(parent_path/ "rD")
+        lR_from_rm_run, _ = self.read_from_txt(parent_path / "lR")
 
         matched_rU = {}
         matched_rD = {}
-        matched_rU_B = {}
-        matched_rD_B = {}
-        matched_rU_FD = {}
-        matched_rD_FD = {}
-        matched_var_fd = {}
-        matched_var_afd_p = {}
-        matched_var_afd_m = {}
 
         for t in range(1, self.scenario_data["nT"] + 1):
 
@@ -232,71 +218,77 @@ class PreviousMarketResultsLoader:
             idx = bisect.bisect_right(sorted_bid_curve_prices_only, real_price) - 1  # last price ≤ real
             if idx >= 0:
                 scenario = sorted_bid_curve[idx][1]
-                if scenario != 100:
-                    x=1
                 matched_rU[t] = rU_from_rm_run[t, scenario]
                 matched_rD[t] = rD_from_rm_run[t, scenario]
-                matched_rU_B[t] = rU_B_from_rm_run[t, scenario]
-                matched_rD_B[t] = rD_B_from_rm_run[t, scenario]
-                matched_rU_FD[t] = rU_FD_from_rm_run[t, scenario]
-                matched_rD_FD[t] = rD_FD_from_rm_run[t, scenario]
-                matched_var_fd[t] = var_fd_from_rm_run[t, scenario]
-                matched_var_afd_p[t] = var_afd_p_from_rm_run[t, scenario]
-                matched_var_afd_m[t] = var_afd_m_from_rm_run[t, scenario]
+
             else:
                 matched_rU[t] = 0
                 matched_rD[t] = 0
-                matched_rU_B[t] = 0
-                matched_rD_B[t] = 0
-                matched_rU_FD[t] = 0
-                matched_rD_FD[t] = 0
-                matched_var_fd[t] = var_fd_from_rm_run[t, 1]
-                matched_var_afd_p[t] = var_afd_p_from_rm_run[t, 1]
-                matched_var_afd_m[t] = var_afd_m_from_rm_run[t, 1]
         rU = {}
         rD = {}
-        rU_B = {}
-        rD_B = {}
-        rU_FD = {}
-        rD_FD = {}
-        var_fd = {}
-        var_afd_p = {}
-        var_afd_m = {}
         lR_penalty = {}
         for t in range(1, self.scenario_data["nT"] + 1):
             for s in self.S_preserved:
                 rU[t,s] = matched_rU[t]
                 rD[t,s] = matched_rD[t]
-                rU_B[t,s] = matched_rU_B[t]
-                rD_B[t,s] = matched_rD_B[t]
-                rU_FD[t,s] = matched_rU_FD[t]
-                rD_FD[t,s] = matched_rD_FD[t]
-
-                var_fd[t,s] = matched_var_fd[t]
-                var_afd_p[t,s] = matched_var_afd_p[t]
-                var_afd_m[t,s] = matched_var_afd_m[t]
                 lR_penalty[(t,s)] = 1.5 * self.scenario_data["lR"][t,self.S_preserved[0]] # scenario doesn't matter
 
         self.scenario_data["rU"] = rU
         self.scenario_data["rD"] = rD
-        self.scenario_data["rU_B"] = rU_B
-        self.scenario_data["rD_B"] = rD_B
-        self.scenario_data["rU_FD"] = rU_FD
-        self.scenario_data["rD_FD"] = rD_FD
-        self.scenario_data["var_fd"] = var_fd
-        self.scenario_data["var_afd_p"] = var_afd_p
-        self.scenario_data["var_afd_m"] = var_afd_m
-
         self.scenario_data["lR_penalty"] = lR_penalty
 
+    @staticmethod
+    def matched_volume(one_hour_curve, real_price):
 
-        x=1
+        sells = [(p, sid, v) for p, sid, v in one_hour_curve if v > 0]
+        buys = [(p, sid, v) for p, sid, v in one_hour_curve if v < 0]
+
+        # --- SELL side -------------------------------------------------
+        if sells and real_price >= sells[0][0]:  # price high enough
+            # bids are sorted ↑ so the last one ≤ P_star is the marginal
+            idx = bisect.bisect_right([p for p, _, _ in sells], real_price) - 1
+            return sells[idx][2], sells[idx][1]  # (volume, scen)
+
+        # --- BUY side --------------------------------------------------
+        if buys and real_price <= buys[0][0]:  # price low enough
+            # buy list is sorted ↓ (highest price first)
+            idx = bisect.bisect_left([p for p, _, _ in buys], real_price)
+            return buys[idx][2], buys[idx][1]  # negative volume
+
+        # --- no block accepted ----------------------------------------
+        return 0.0, None
+
+
     def load_im_results(self):
         # Because eIM is a single constraint for 3 different markets, we need to load in the data into the variable,
         # and then, after creating the instance, fix the previous IM ones for IM2 and IM3
-        parent_path = self.sim_ctx.previous_results_path
-        parent_path = os.path.join("..", parent_path)
-        eIM, S = self.read_from_txt(parent_path+"/eIM")
+        prev_market_ = prev_market(self.sim_ctx.market)
+        parent_path = Path("..") / config.base_result_dir / config.famscen_all / prev_market_ / "market" / self.sim_ctx.sim / "IM"
+        im_no = re.search(r'\d+', self.sim_ctx.market)[0]
+        im_no = int(im_no)
+
+        eIM_from_im1, S = self.read_from_txt(parent_path / f"eIM_{im_no}")
+        lI_from_im1_run, _ = self.read_from_txt(parent_path / f"lI_{im_no}")
+        matched_eim1 = {}
+        for t in range(1, self.scenario_data["nT"] + 1):
+        #for t in range(12,25):
+            real_price = self.scenario_data["lI"][im_no,t,self.S_preserved[0]] # scenario doesn't matter
+            sorted_bid_curve = self.get_sorted_bid_curve(lI_from_im1_run, S, t)
+            sorted_bid_curve_prices_only = [i[0] for i in sorted_bid_curve]
+            sorted_curve_with_energy = [(lI_from_im1_run[t,s], s, eIM_from_im1[t,s]) for s in S]
+            vol,scen = self.matched_volume(sorted_curve_with_energy, real_price)
+            matched_eim1[t] = vol
+
+        eIM_prev = {}
+        for i in range(1, im_no):
+            for t in range(1, self.scenario_data["nT"] + 1):
+                for s in self.S_preserved:
+                    eIM_prev[i,t,s] = matched_eim1[t]
+
+        #self.scenario_data["eIM"] = eIM1
+        self.sim_ctx.eIM_prev= eIM_prev
+
+
 
     def load_market_vars(self, market):
         """
@@ -330,6 +322,11 @@ class PreviousMarketResultsLoader:
             #self.previous_vars = config.RM_PARAMS
             self.load_dam_results(market="IM1")
             self.load_rm_results()
+
+        if self.sim_ctx.market in  ["IM2", "IM3"]:
+            self.load_dam_results(market="IM2")
+            self.load_rm_results()
+            self.load_im_results()
 
         return self.scenario_data
 

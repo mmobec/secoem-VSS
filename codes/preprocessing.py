@@ -105,6 +105,24 @@ class PreProcessor:
 
         self.scenario_data.data()["lR"] = lR_preserved
 
+        #lI
+        # --- figure out the first RV of stage‑2 -----------------------------
+        nRVSG2_dict = self.scenario_data.data().get("nRVSG", {})
+        nRVSG2 = nRVSG2_dict.get(2, 0)  # RVs in stage‑2
+        rv0_IM = nRVSG1 + int(nRVSG2)  # first IM1 RV index
+
+        # --- copy 24 IM1 prices to lI ----------------------------
+        lI_preserved = {}
+        nT = int(self.scenario_data["nT"])
+        for i in range(1, self.scenario_data["nIM"] + 1):
+            for t in range(1, nT + 1):
+                rv = rv0_IM + (t - 1)  # row that holds IM price for hour t
+                for s in self.S_preserved:  # or self.scenario_data["S0"]
+                    price = self.scenario_data.data()["Scen"].get((rv, s), 0.0)
+                    lI_preserved[(i,t, s)] = float(price)
+
+        self.scenario_data.data()["lI"] = lI_preserved
+
     def find_closest_dam_scenario(self):
         best_s, best_d = None, 1e20
 

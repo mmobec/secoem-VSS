@@ -43,17 +43,7 @@ def main(market):
 if __name__ == "__main__":
     #main("DA")
     #main("RM")
-
-    #ToDo: for IM3: these have to be fixed: discharges, charges, flex. demand -> think about how the first 12 hours
-    # of the  IM3 can be fixed
-
-    main("IM1")
-    # ToDO: How do we decide how much reserve energy is demanded by the market after clearing?
-    # I uncommented the IM constraints, but changed the cap on the amount that can be traded in IM, otherwise
-    # the model is unbounded.
-
-
+    #main("IM1")
     #main("IM2")
-    #main("IM3")
-    #ToDo: Copare the results of this with the models separate and see if they are the same
-
+    main("IM3")
+    #ToDO: das probme ist irgwnas mit wie nT und T definiert sind.. da wir sie nur von 12-24 brauchen
