@@ -150,8 +150,8 @@ model.lI = pyo.Param(model.IM, model.T, model.S, default=0.0, within=pyo.Reals, 
 model.maxTIM = pyo.Param(within=pyo.Reals, default=0.2)
 
 # 8.4 System Imbalances
-model.lPIB = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True, default=0.0)  # positive imbalance price
-model.lNIB = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True, default=0.0)  # negative imbalance price
+model.lPIB = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)  # positive imbalance price
+model.lNIB = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)  # negative imbalance price
 model.PIB_p = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)            # upper bound on positive imbalance
 model.PIB_m = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)            # upper bound on negative imbalance
 
