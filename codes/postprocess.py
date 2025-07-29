@@ -202,6 +202,7 @@ class PostProcess:
                 f.write(f"RUFD[{t}]: {value(self.instance.RUFD[t])}\n")
                 f.write(f"RDFD[{t}]: {value(self.instance.RDFD[t])}\n")
 
+
             for f_ in self.instance.FI:
                 f.write(f"TF_L[{f_}]: {value(self.instance.TF_L[f_])}\n")
                 f.write(f"TF_U[{f_}]: {value(self.instance.TF_U[f_])}\n")
@@ -332,6 +333,9 @@ class PostProcess:
             ("rD_FD.txt", self.instance.rD_FD),
             ("lR.txt", self.instance.lR),
         ]
+        if "IM" in self.sim_ctx.market:
+            rm_vars.append(("rU_penalty.txt", self.instance.rU_penalty))
+            rm_vars.append(("rD_penalty.txt", self.instance.rD_penalty))
 
         # Use the general method
         self.save_ts_variable_group(rm_path, rm_vars)

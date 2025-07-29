@@ -18,7 +18,7 @@ class PreviousMarketResultsLoader:
         self.S_preserved = self.scenario_data.data()["S"][None]  #This is kept for naming convention
         self.previous_vars = None
     @staticmethod
-    def read_from_txt(filename):
+    def read_from_txt(filename, socv=False):
         """
         This function is used to read in the results of the DAM run of the DAM model
         """
@@ -33,6 +33,10 @@ class PreviousMarketResultsLoader:
                 s = int(parts[0])  # scenario index
                 scenarios.append(s)
                 values = list(map(float, parts[2:]))  # drop parts[1]=probability
+                if socv:
+                    for t, v in enumerate(values, start=0):
+                        data[(t, s)] = v
+                    continue
                 if len(values) != 24:
                     raise ValueError(
                         f"Line {lineno}: expected 24 values after the probability, "
@@ -267,27 +271,111 @@ class PreviousMarketResultsLoader:
         im_no = re.search(r'\d+', self.sim_ctx.market)[0]
         im_no = int(im_no)
 
-        eIM_from_im1, S = self.read_from_txt(parent_path / f"eIM_{im_no}")
-        lI_from_im1_run, _ = self.read_from_txt(parent_path / f"lI_{im_no}")
+
         matched_eim1 = {}
-        for t in range(1, self.scenario_data["nT"] + 1):
-        #for t in range(12,25):
-            real_price = self.scenario_data["lI"][im_no,t,self.S_preserved[0]] # scenario doesn't matter
-            sorted_bid_curve = self.get_sorted_bid_curve(lI_from_im1_run, S, t)
-            sorted_bid_curve_prices_only = [i[0] for i in sorted_bid_curve]
-            sorted_curve_with_energy = [(lI_from_im1_run[t,s], s, eIM_from_im1[t,s]) for s in S]
-            vol,scen = self.matched_volume(sorted_curve_with_energy, real_price)
-            matched_eim1[t] = vol
+        last_matched_scen = None
+        for i in range(1, im_no):
+            eIM_from_im1, S = self.read_from_txt(parent_path / f"eIM_{i}")
+            lI_from_im1_run, _ = self.read_from_txt(parent_path / f"lI_{i}")
+            for t in range(1, self.scenario_data["nT"] + 1):
+            #for t in range(12,25):
+                real_price = self.scenario_data["lI"][im_no,t,self.S_preserved[0]] # scenario doesn't matter
+                sorted_bid_curve = self.get_sorted_bid_curve(lI_from_im1_run, S, t)
+                sorted_bid_curve_prices_only = [i[0] for i in sorted_bid_curve]
+                sorted_curve_with_energy = [(lI_from_im1_run[t,s], s, eIM_from_im1[t,s]) for s in S]
+                vol,scen = self.matched_volume(sorted_curve_with_energy, real_price)
+                if scen:
+                    last_matched_scen = scen
+                matched_eim1[i,t] = vol
 
         eIM_prev = {}
         for i in range(1, im_no):
             for t in range(1, self.scenario_data["nT"] + 1):
                 for s in self.S_preserved:
-                    eIM_prev[i,t,s] = matched_eim1[t]
+                    eIM_prev[i,t,s] = matched_eim1[i,t]
 
         #self.scenario_data["eIM"] = eIM1
         self.sim_ctx.eIM_prev= eIM_prev
 
+        if im_no == 3:
+
+            parent_path = Path(
+                "..") / config.base_result_dir / config.famscen_all / prev_market_ / "market" / self.sim_ctx.sim
+            ru_penalty_from_im2, S = self.read_from_txt(parent_path / "RM" / f"rU_penalty")
+            rd_penalty_from_im2, _ = self.read_from_txt(parent_path / "RM" / f"rD_penalty")
+            rU_B_from_im2, _ = self.read_from_txt(parent_path / "RM" / f"rU_B")
+            rD_B_from_im2, _ = self.read_from_txt(parent_path / "RM" / f"rD_B")
+            rU_FD_from_im2, _ = self.read_from_txt(parent_path / "RM" / f"rU_FD")
+            rD_FD_from_im2, _ = self.read_from_txt(parent_path / "RM" / f"rD_FD")
+
+            pib_p_from_im2, _ = self.read_from_txt(parent_path / "IB" / f"pib_p")
+            pib_m_from_im2, _ = self.read_from_txt(parent_path / "IB" / f"pib_m")
+
+            parent_path = Path(
+                "..") / config.base_result_dir / config.famscen_all / prev_market_ / "ec" / self.sim_ctx.sim
+            var_fd_from_im2 = self.read_fd_files(parent_path / "FD" /  f"var_fd")
+            var_afd_p_from_im2 = self.read_fd_files(parent_path / "FD" / f"var_afd_p")
+            var_afd_m_from_im2 = self.read_fd_files(parent_path / "FD" / f"var_afd_m")
+            dv_from_im2, _ = self.read_from_txt(parent_path / "BESS" / f"dv")
+            cv_from_im2, _= self.read_from_txt(parent_path / "BESS" / f"cv")
+            idv_from_im2, _ = self.read_from_txt(parent_path / "BESS" / f"idv")
+            socv_from_im2, _ = self.read_from_txt(parent_path / "BESS" / f"socv", socv=True)
+
+            var_fd = {}
+            var_afd_p = {}
+            var_afd_m = {}
+            dv = {}
+            cv = {}
+            idv = {}
+            socv = {}
+            ru_penalty = {}
+            rd_penalty = {}
+            ru_b = {}
+            rd_b = {}
+            ru_fd = {}
+            rd_fd = {}
+            pib_p = {}
+            pib_m = {}
+
+            prev_vars = {}
+            for t in range(1, self.scenario_data["nT"] + 1):
+                for s in  self.scenario_data["S"]:
+                    var_fd[t,s] = var_fd_from_im2[t, last_matched_scen]
+                    var_afd_p[t,s] = var_afd_p_from_im2[t,last_matched_scen]
+                    var_afd_m[t,s] = var_afd_m_from_im2[t,last_matched_scen]
+                    dv[t,s] = dv_from_im2[t,last_matched_scen]
+                    cv[t,s] = cv_from_im2[t,last_matched_scen]
+                    idv[t,s] = idv_from_im2[t,last_matched_scen]
+                    socv[t,s] = socv_from_im2[t,last_matched_scen]
+                    ru_penalty[t,s] = ru_penalty_from_im2[t,last_matched_scen]
+                    rd_penalty[t,s] = rd_penalty_from_im2[t,last_matched_scen]
+                    ru_b[t,s] = rU_B_from_im2[t,last_matched_scen]
+                    rd_b[t,s] = rD_B_from_im2[t,last_matched_scen]
+                    ru_fd[t,s] = rU_FD_from_im2[t,last_matched_scen]
+                    rd_fd[t,s] = rD_FD_from_im2[t,last_matched_scen]
+                    pib_p[t,s] = pib_p_from_im2[t,last_matched_scen]
+                    pib_m[t,s] = pib_m_from_im2[t,last_matched_scen]
+
+            #special case for socv because it is defined from 0-24:
+            for s in self.scenario_data["S"]:
+                socv[0,s] = socv_from_im2[0,S[0]]
+
+            prev_vars["var_fd"] = var_fd
+            prev_vars["var_afd_p"] = var_afd_p
+            prev_vars["var_afd_m"] = var_afd_m
+            prev_vars["dv"] = dv
+            prev_vars["cv"] = cv
+            prev_vars["idv"] = idv
+            prev_vars["socv"] = socv
+            prev_vars["ru_penalty"] = ru_penalty
+            prev_vars["rd_penalty"] = rd_penalty
+            prev_vars["ru_b"] = ru_b
+            prev_vars["rd_b"] = rd_b
+            prev_vars["ru_fd"] = ru_fd
+            prev_vars["rd_fd"] = rd_fd
+            prev_vars["pib_p"] = pib_p
+            prev_vars["pib_m"] = pib_m
+            self.sim_ctx.prev_vars = prev_vars
 
 
     def load_market_vars(self, market):

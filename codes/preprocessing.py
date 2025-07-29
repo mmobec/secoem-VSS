@@ -22,6 +22,7 @@ class PreProcessor:
         # Print messages like AMPL:
         print("\n########################")
         print(f"#### Instance {config.probl}-{sc.sim}")
+        print(f"#### of Market {self.sim_ctx.market}")
         print("########################\n")
 
         print(f"scenfile path = {self.sim_ctx.pathscen}{sc.scenfile}")
