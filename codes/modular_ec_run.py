@@ -41,9 +41,8 @@ def main(market):
 
 
 if __name__ == "__main__":
-    #main("DA")
-    #main("RM")
-    #main("IM1")
-    #main("IM2")
+    main("DA")
+    main("RM")
+    main("IM1")
+    main("IM2")
     main("IM3")
-    #ToDO: das probme ist irgwnas mit wie nT und T definiert sind.. da wir sie nur von 12-24 brauchen
