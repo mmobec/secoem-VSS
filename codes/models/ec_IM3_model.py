@@ -563,8 +563,8 @@ def build_stage1_nac_index(model):
     """
     day_ahead_reserve_vars = [
         #"eDA_p", "eDA_m", "ieDA_p", "ieDA_m", commented out for RM model
-        "rU", "rU_B", "rU_FD",
-        "rD", "rD_B", "rD_FD"
+        "rU", #"rU_B", "rU_FD",
+        "rD", #"rD_B", "rD_FD"
     ]
     idx = []
     for var_name in day_ahead_reserve_vars:
@@ -657,6 +657,8 @@ def build_nac_fd_battery_index(model):
     for var_name in fd_batt_vars:
         var_obj = getattr(model, var_name)
         for t in model.T:
+            if t <= model.TIM[3].first():
+                continue
             sg_for_t_minus1 = model.sgpw[t] - 1
             if sg_for_t_minus1 < 0:
                 continue
