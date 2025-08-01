@@ -650,8 +650,10 @@ def build_nac_fd_battery_index(model):
     We'll store (var_name, t, k, l, l_next).
     """
     fd_batt_vars = [
-        #"var_fd", "var_afd_p", "var_afd_m",
-        "dV", "cV", "idV", "socV"
+        "var_fd", "var_afd_p", "var_afd_m",
+        "dV", "cV", "idV", "socV",
+        "rU_B", "rU_FD",
+        "rU_FD", "rD_FD"
     ]
     idx = []
     for var_name in fd_batt_vars:

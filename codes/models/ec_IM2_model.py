@@ -594,18 +594,22 @@ stage_cur = 4
 
 def build_nac_eIM_index(model):
     idx = []
-    for t in model.TIM[i_current]:
-        for k in model.S0:
-            if (stage_cur, k) in model.c.index_set():  # Ensure (sg, k) exists
-                for (l, l_next) in consecutive_scenarios(model, stage_cur, k):
-                    if l in model.S and l_next in model.S:  # Ensure valid indices
-                        idx.append((t, k, l, l_next))
+    for i in model.IM:
+        for t in model.TIM[i]:
+            for k in model.S0:
+                # Use sgim[i] directly for IM1 (recourse), else sgim[i] - 1
+                sg_for_i = model.sgim[i] if i == 2 else model.sgim[i] - 1 # for IM2, the NAC is at the stage where
+                                                                          # IM2 is revealed
+                if (sg_for_i, k) in model.c.index_set():
+                    for (l, l_next) in consecutive_scenarios(model, sg_for_i, k):
+                        if l in model.S and l_next in model.S:
+                            idx.append((i, t, k, l, l_next))
     return idx
 
-def NAC_eIM_rule(m, t, k, l, l_next):
-    if (i_current, t, l) not in m.eIM or (i_current, t, l_next) not in m.eIM:
+def NAC_eIM_rule(i,m, t, k, l, l_next):
+    if (i, t, l) not in m.eIM or (i, t, l_next) not in m.eIM:
         return pyo.Constraint.Skip
-    return m.eIM[i_current, t, l] == m.eIM[i_current, t, l_next]
+    return m.eIM[i, t, l] == m.eIM[i, t, l_next]
 
 model.NAC_eIM_index = pyo.Set(dimen=4, initialize=build_nac_eIM_index)
 model.NAC_eIM = pyo.Constraint(model.NAC_eIM_index, rule=NAC_eIM_rule)
@@ -650,8 +654,10 @@ def build_nac_fd_battery_index(model):
     We'll store (var_name, t, k, l, l_next).
     """
     fd_batt_vars = [
-        #"var_fd", "var_afd_p", "var_afd_m",
-        "dV", "cV", "idV", "socV"
+        "var_fd", "var_afd_p", "var_afd_m",
+        "dV", "cV", "idV", "socV",
+        "rU_B", "rU_FD",
+        "rU_FD", "rD_FD"
     ]
     idx = []
     for var_name in fd_batt_vars:
