@@ -453,24 +453,35 @@ model.RM_bid_mono_2 = pyo.Constraint(model.SsR, rule=RM_bid_mono_2_rule)
 # 8.3 Intraday Markets
 # -------------------------------------------------------
 
-# - maxTIM*(eDA_p[t,s]+eDA_m[t,s]) <= sum{i in IMT[t]} eIM[i,t,s];
-def IM_bounds_1_rule(m, t, s):
-    return -m.maxTIM * (m.eDA_p[t, s] + m.eDA_m[t, s]) <= sum(m.eIM[i, t, s] for i in m.IMT[t])
-model.IM_bounds_1 = pyo.Constraint(model.T, model.S, rule=IM_bounds_1_rule)
+EPS = 1e-9  # tolerance for "DA volume is zero"
 
-# sum{i in IMT[t]} eIM[i,t,s] <= maxTIM*(eDA_p[t,s]+eDA_m[t,s]);
-def IM_bounds_2_rule(m, t, s):
-    return sum(m.eIM[i, t, s] for i in m.IMT[t]) <= m.maxTIM * (m.eDA_p[t, s] + m.eDA_m[t, s])
-model.IM_bounds_2 = pyo.Constraint(model.T, model.S, rule=IM_bounds_2_rule)
+def _cap20(m, t, s):
+    D = pyo.value(m.eDA_p[t, s]) + pyo.value(m.eDA_m[t, s])  # OK only if fixed/Param
+    return m.maxTIM * D if D > EPS else 50.0
 
-# - maxTIM*(eDA_p[t,s]+eDA_m[t,s]) <= eIM[i,t,s];
+model.eIM_pos = pyo.Var(model.IM, model.T, model.S,within=pyo.NonNegativeReals)
+model.eIM_neg = pyo.Var(model.IM, model.T, model.S, within=pyo.NonNegativeReals)
+
+def link_posneg_rule(m, i, t, s):
+    return m.eIM[i, t, s] == m.eIM_pos[i, t, s] - m.eIM_neg[i, t, s]
+model.IM_link_posneg = pyo.Constraint(model.IM, model.T, model.S, rule=link_posneg_rule)
+
+# -cap ≤ Σ_i eIM ≤ +cap
+def IM_bounds_1_rule_pos(m, t, s):
+    return sum(m.eIM_pos[i, t, s] for i in m.IMT[t]) <=  _cap20(m, t, s)
+model.IM_bounds_1_pos = pyo.Constraint(model.T, model.S, rule=IM_bounds_1_rule_pos)
+
+def IM_bounds_1_rule_neg(m, t, s):
+    return sum(m.eIM_neg[i, t, s] for i in m.IMT[t]) <= _cap20(m, t, s)
+model.IM_bounds_1_neg = pyo.Constraint(model.T, model.S, rule=IM_bounds_1_rule_neg)
+
+# Per-step bounds: -cap ≤ eIM[i] ≤ +cap
 def IM_bounds_3_rule(m, i, t, s):
-    return -m.maxTIM * (m.eDA_p[t, s] + m.eDA_m[t, s]) <= m.eIM[i, t, s]
+    return m.eIM[i, t, s] >= -_cap20(m, t, s)
 model.IM_bounds_3 = pyo.Constraint(model.IM, model.T, model.S, rule=IM_bounds_3_rule)
 
-# eIM[i,t,s] <= maxTIM*(eDA_p[t,s]+eDA_m[t,s]);
 def IM_bounds_4_rule(m, i, t, s):
-    return m.eIM[i, t, s] <= m.maxTIM * (m.eDA_p[t, s] + m.eDA_m[t, s])
+    return m.eIM[i, t, s] <= _cap20(m, t, s)
 model.IM_bounds_4 = pyo.Constraint(model.IM, model.T, model.S, rule=IM_bounds_4_rule)
 
 # (Optional) lI_bid monotonicity constraints for IM are commented out in ec.mod
@@ -497,14 +508,16 @@ def Imbalances_rule(m, t, s):
     return lhs == rhs
 model.Imbalances = pyo.Constraint(model.T, model.S, rule=Imbalances_rule)
 
-# pIB_p[t,s] <= PIB_p[t,s];
+MIN_UB =10.0
+
 def IB_pos_UB_rule(m, t, s):
-    return m.pIB_p[t, s] <= 500#m.PIB_p[t, s]
+    ub = MIN_UB if pyo.value(m.PIB_p[t, s]) <= 1e-9 else m.PIB_p[t, s]
+    return m.pIB_p[t, s] <= ub
 model.IB_pos_UB = pyo.Constraint(model.T, model.S, rule=IB_pos_UB_rule)
 
-# pIB_m[t,s] <= PIB_m[t,s];
 def IB_neg_UB_rule(m, t, s):
-    return m.pIB_m[t, s] <= 500 #m.PIB_m[t, s]
+    ub = MIN_UB if pyo.value(m.PIB_m[t, s]) <= 1e-9 else m.PIB_m[t, s]
+    return m.pIB_m[t, s] <= ub
 model.IB_neg_UB = pyo.Constraint(model.T, model.S, rule=IB_neg_UB_rule)
 
 
@@ -550,7 +563,6 @@ def build_stage1_nac_index(model):
         var_obj = getattr(model, var_name)
         for t in model.T:
             for k in model.S0:
-                # stage=1 for these
                 for (l, l_next) in consecutive_scenarios(model, 2, k):
                     # skip if not in domain
                     if (t, l) in var_obj and (t, l_next) in var_obj:

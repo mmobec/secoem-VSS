@@ -437,24 +437,36 @@ model.RM_components_D = pyo.Constraint(model.T, model.S, rule=RM_components_D_ru
 # 8.3 Intraday Markets
 # -------------------------------------------------------
 
-# - maxTIM*(eDA_p[t,s]+eDA_m[t,s]) <= sum{i in IMT[t]} eIM[i,t,s];
-def IM_bounds_1_rule(m, t, s):
-    return -m.maxTIM * (m.eDA_p[t, s] + m.eDA_m[t, s]) <= sum(m.eIM[i, t, s] for i in m.IMT[t])
-model.IM_bounds_1 = pyo.Constraint(model.T, model.S, rule=IM_bounds_1_rule)
+EPS = 1e-9  # tolerance for "DA volume is zero"
 
-# sum{i in IMT[t]} eIM[i,t,s] <= maxTIM*(eDA_p[t,s]+eDA_m[t,s]);
-def IM_bounds_2_rule(m, t, s):
-    return sum(m.eIM[i, t, s] for i in m.IMT[t]) <= m.maxTIM * (m.eDA_p[t, s] + m.eDA_m[t, s])
-model.IM_bounds_2 = pyo.Constraint(model.T, model.S, rule=IM_bounds_2_rule)
+def _cap20(m, t, s):
+    D = (m.eDA_p[t, s]) + (m.eDA_m[t, s])  # OK only if fixed/Param
+    return m.maxTIM * D
 
-# - maxTIM*(eDA_p[t,s]+eDA_m[t,s]) <= eIM[i,t,s];
+model.eIM_pos = pyo.Var(model.IM, model.T, model.S,within=pyo.NonNegativeReals)
+model.eIM_neg = pyo.Var(model.IM, model.T, model.S, within=pyo.NonNegativeReals)
+
+def link_posneg_rule(m, i, t, s):
+    return m.eIM[i, t, s] == m.eIM_pos[i, t, s] - m.eIM_neg[i, t, s]
+model.IM_link_posneg = pyo.Constraint(model.IM, model.T, model.S, rule=link_posneg_rule)
+
+# -cap ≤ Σ_i eIM ≤ +cap
+def IM_bounds_1_rule_pos(m, t, s):
+    return sum(m.eIM_pos[i, t, s] for i in m.IMT[t]) <=  _cap20(m, t, s)
+model.IM_bounds_1_pos = pyo.Constraint(model.T, model.S, rule=IM_bounds_1_rule_pos)
+
+def IM_bounds_1_rule_neg(m, t, s):
+    return sum(m.eIM_neg[i, t, s] for i in m.IMT[t]) <= _cap20(m, t, s)
+model.IM_bounds_1_neg = pyo.Constraint(model.T, model.S, rule=IM_bounds_1_rule_neg)
+
+
+# Per-step bounds: -cap ≤ eIM[i] ≤ +cap
 def IM_bounds_3_rule(m, i, t, s):
-    return -m.maxTIM * (m.eDA_p[t, s] + m.eDA_m[t, s]) <= m.eIM[i, t, s]
+    return m.eIM[i, t, s] >= -_cap20(m, t, s)
 model.IM_bounds_3 = pyo.Constraint(model.IM, model.T, model.S, rule=IM_bounds_3_rule)
 
-# eIM[i,t,s] <= maxTIM*(eDA_p[t,s]+eDA_m[t,s]);
 def IM_bounds_4_rule(m, i, t, s):
-    return m.eIM[i, t, s] <= m.maxTIM * (m.eDA_p[t, s] + m.eDA_m[t, s])
+    return m.eIM[i, t, s] <= _cap20(m, t, s)
 model.IM_bounds_4 = pyo.Constraint(model.IM, model.T, model.S, rule=IM_bounds_4_rule)
 
 # (Optional) lI_bid monotonicity constraints for IM are commented out in ec.mod

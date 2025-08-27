@@ -139,14 +139,14 @@ class PreviousMarketResultsLoader:
 
             # 1: the real price is below the lowest price of the bid curve -> buy everything
             if sorted_bid_curve[0][0] > real_price:
-                closest_lambda_minus = sorted_bid_curve[0][1]
-                e_da_m_matched[t] = e_da_m_from_DAM_run[t,closest_lambda_minus]
+                closest_lambda_plus = sorted_bid_curve[0][1]
+                e_da_m_matched[t] = e_da_m_from_DAM_run[t,closest_lambda_plus]
                 e_da_p_matched[t] = 0
                 continue
             # 2: The real price is above the highest price of the bid curve -> buy nothing, sell everything
             if sorted_bid_curve[-1][0] < real_price:
-                closest_lambda_plus = sorted_bid_curve[-1][1]
-                e_da_p_matched[t] = e_da_p_from_DAM_run[t,closest_lambda_plus]
+                closest_lambda_minus = sorted_bid_curve[-1][1]
+                e_da_p_matched[t] = e_da_p_from_DAM_run[t,closest_lambda_minus]
                 e_da_m_matched[t] = 0
                 continue
 
@@ -223,7 +223,11 @@ class PreviousMarketResultsLoader:
             if idx >= 0:
                 scenario = sorted_bid_curve[idx][1]
                 matched_rU[t] = rU_from_rm_run[t, scenario]
+                if abs(matched_rU[t]) < 1e-8:
+                    matched_rU[t] = 0
                 matched_rD[t] = rD_from_rm_run[t, scenario]
+                if abs(matched_rD[t]) < 1e-8:
+                    matched_rD[t] = 0
 
             else:
                 matched_rU[t] = 0
@@ -247,19 +251,19 @@ class PreviousMarketResultsLoader:
         sells = [(p, sid, v) for p, sid, v in one_hour_curve if v > 0]
         buys = [(p, sid, v) for p, sid, v in one_hour_curve if v < 0]
 
-        # --- SELL side -------------------------------------------------
+        #  SELL side
         if sells and real_price >= sells[0][0]:  # price high enough
             # bids are sorted ↑ so the last one ≤ P_star is the marginal
             idx = bisect.bisect_right([p for p, _, _ in sells], real_price) - 1
             return sells[idx][2], sells[idx][1]  # (volume, scen)
 
-        # --- BUY side --------------------------------------------------
+        # BUY side
         if buys and real_price <= buys[0][0]:  # price low enough
             # buy list is sorted ↓ (highest price first)
             idx = bisect.bisect_left([p for p, _, _ in buys], real_price)
             return buys[idx][2], buys[idx][1]  # negative volume
 
-        # --- no block accepted ----------------------------------------
+        # no block accepted
         return 0.0, None
 
 
@@ -279,12 +283,12 @@ class PreviousMarketResultsLoader:
             lI_from_im1_run, _ = self.read_from_txt(parent_path / f"lI_{i}")
             for t in range(1, self.scenario_data["nT"] + 1):
             #for t in range(12,25):
-                real_price = self.scenario_data["lI"][im_no,t,self.S_preserved[0]] # scenario doesn't matter
+                real_price = self.scenario_data["lI"][i,t,self.S_preserved[0]] # scenario doesn't matter
                 sorted_bid_curve = self.get_sorted_bid_curve(lI_from_im1_run, S, t)
                 sorted_bid_curve_prices_only = [i[0] for i in sorted_bid_curve]
                 sorted_curve_with_energy = [(lI_from_im1_run[t,s], s, eIM_from_im1[t,s]) for s in S]
                 vol,scen = self.matched_volume(sorted_curve_with_energy, real_price)
-                if scen:
+                if scen and scen !=  (1, None):
                     last_matched_scen = scen
                 matched_eim1[i,t] = vol
 
@@ -313,9 +317,10 @@ class PreviousMarketResultsLoader:
 
             parent_path = Path(
                 "..") / config.base_result_dir / config.famscen_all / prev_market_ / "ec" / self.sim_ctx.sim
-            var_fd_from_im2 = self.read_fd_files(parent_path / "FD" /  f"var_fd")
-            var_afd_p_from_im2 = self.read_fd_files(parent_path / "FD" / f"var_afd_p")
-            var_afd_m_from_im2 = self.read_fd_files(parent_path / "FD" / f"var_afd_m")
+
+            var_fd_from_im2, _ = self.read_from_txt(parent_path / "FD" / "var_fd")
+            var_afd_p_from_im2, _ = self.read_from_txt(parent_path / "FD" / "var_afd_p")
+            var_afd_m_from_im2, _  = self.read_from_txt(parent_path / "FD" / "var_afd_m")
             dv_from_im2, _ = self.read_from_txt(parent_path / "BESS" / f"dv")
             cv_from_im2, _= self.read_from_txt(parent_path / "BESS" / f"cv")
             idv_from_im2, _ = self.read_from_txt(parent_path / "BESS" / f"idv")

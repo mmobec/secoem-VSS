@@ -182,13 +182,21 @@ class PostProcess:
         fd_path = os.path.join("..", self.sim_ctx.pathres, "FD/")
         os.makedirs(fd_path, exist_ok=True)
 
+        """
+
         for filename, var in zip(["var_fd.txt", "var_afd_p.txt", "var_afd_m.txt"],
                                  [self.instance.var_fd, self.instance.var_afd_p, self.instance.var_afd_m]):
             with open(os.path.join(fd_path, filename), "w") as f:
                 for s in self.instance.S:
                     for t in self.instance.T:
                         f.write(f"{s} {value(self.instance.Prob[s])} {t} {value(var[t, s])}\n")
-
+        """
+        fd_vars = [
+            ("var_fd.txt", self.instance.var_fd),
+            ("var_afd_p.txt", self.instance.var_afd_p),
+            ("var_afd_m.txt", self.instance.var_afd_m),
+        ]
+        self.save_ts_variable_group(fd_path,fd_vars)
         # Store FD parameters and sets
         fd_params_file = os.path.join(fd_path, "FD_params.txt")
         with open(fd_params_file, "w") as f:
@@ -499,10 +507,21 @@ class PostProcess:
                             (value(self.instance.eDA_p[t, s]) - value(self.instance.eDA_m[t, s]))
                             for t in self.instance.T for s in self.instance.S)
 
-        obj_RM_income = sum(
-            value(self.instance.Prob[s]) * (value(self.instance.rD[t, s]) + value(self.instance.rU[t, s])) * value(
-                self.instance.lR[t, s])
-            for t in self.instance.T for s in self.instance.S)
+        if "IM" in self.sim_ctx.market:
+            obj_RM_income = sum(
+                value(self.instance.Prob[s]) * (
+                        (value(self.instance.rD[t, s]) + value(self.instance.rU[t, s])) * value(self.instance.lR[t, s])
+                        - value(self.instance.lR_penalty[t, s]) * (
+                                    value(self.instance.rU_penalty[t, s]) + value(self.instance.rD_penalty[t, s]))
+                )
+                for t in self.instance.T
+                for s in self.instance.S
+            )
+        else:
+            obj_RM_income = sum(
+                value(self.instance.Prob[s]) * (value(self.instance.rD[t, s]) + value(self.instance.rU[t, s])) * value(
+                    self.instance.lR[t, s])
+                for t in self.instance.T for s in self.instance.S)
 
         obj_IM_income = sum(
             value(self.instance.Prob[s]) * sum(
@@ -590,6 +609,8 @@ class PostProcess:
         self.store_scenarios()
         self.store_objective_function()
         curves = self.get_RM_bid_curves()
+        #plot_rm_bid_curve(curves, cumulate=False, t=1)
+        #plot_rm_bid_curve(curves, cumulate=False, t=14)
         x=1
 
     def perform_nac_checks(self):
@@ -645,16 +666,32 @@ def plot_rm_bid_curve(curves, t, *, cumulate=True, show=True, ax=None):
     # --- pull the data ---------------------------------------------------
     up_pairs   = curves[t]["up"]
     down_pairs = curves[t]["down"]
+    def _prep(pairs):
+        if not pairs:
+            return array([0.0, 1.0]), array([0.0, 0.0])  # harmless flat line
+        # unpack
+        prices = array([p for p, _ in pairs], dtype=float)
+        qty    = array([q for _, q in pairs], dtype=float)
+        if cumulate:
+            qty = cumsum(qty)
+        # build staircase with horizontal tails:
+        # left tail: start at q=0 with first price
+        # Start with tail at q=0
+        x = [0.0] + qty.tolist()
+        y = [0] + prices.tolist()
+        # End tail: extend x and y by one more point at same price
+        #xmax = x[-1] + x[-1] * 1.25
+        #x.append(xmax)
+        #y.append(prices[-1])
+        return array(x), array(y)
 
-    if cumulate:
-        # convert tuples to two arrays & build cumulative MW
-        p_up,   q_up   = array([p for p, _ in up_pairs]),   cumsum([q for _, q in up_pairs])
-        p_down, q_down = array([p for p, _ in down_pairs]), cumsum([q for _, q in down_pairs])
-    else:
-        p_up,   q_up   = zip(*up_pairs)   if up_pairs   else ([], [])
-        p_down, q_down = zip(*down_pairs) if down_pairs else ([], [])
+
+    p_up,   q_up   = zip(*up_pairs)   if up_pairs   else ([], [])
+    p_down, q_down = zip(*down_pairs) if down_pairs else ([], [])
 
     # --- plotting --------------------------------------------------------
+    p_up,   q_up   = _prep(up_pairs)
+    p_down, q_down = _prep(down_pairs)
     if ax is None:
         fig, ax = plt.subplots(figsize=(6, 4))
 

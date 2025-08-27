@@ -211,8 +211,8 @@ class InstanceManager:
         # Store values in Pyomo self.instance
         #for (t, s), val in lR_dict.items():
             #self.instance.lR[t, s] = val
-        for (i, t, s), val in lI_dict.items():
-            self.instance.lI[i, t, s] = val
+        #for (i, t, s), val in lI_dict.items():
+            #self.instance.lI[i, t, s] = val
         for (t, s), val in lIB_dict.items():
             self.instance.lIB[t, s] = val
 
@@ -391,7 +391,7 @@ class InstanceManager:
     @staticmethod
     def init_penalties(reserve):
         r_total, r_b, r_fd = reserve
-        return r_total - r_b - r_fd
+        return r_total - r_b.value - r_fd.value
 
 
     def fix_eIM(self):
@@ -419,8 +419,9 @@ class InstanceManager:
         #now since IM3 starts at t=12 on delivery day, we need to fix everything up to that point:
         instance = self.instance
 
-        for t in range(self.instance.T.first(), self.instance.TIM[3].first()):     #0 - first hour of IM3
+        for t in range(self.instance.T.first(), self.instance.TIM[3].first()) :     #0 - first hour of IM3
             for s in instance.S:
+
                 instance.var_fd[t,s] = self.sim_ctx.prev_vars["var_fd"][t,s]
                 instance.var_afd_p[t,s] = self.sim_ctx.prev_vars["var_afd_p"][t,s]
                 instance.var_afd_m[t,s] = self.sim_ctx.prev_vars["var_afd_m"][t,s]
@@ -430,15 +431,17 @@ class InstanceManager:
                 instance.socV[t,s] = self.sim_ctx.prev_vars["socv"][t,s]
 
                 instance.rU_B[t,s] = self.sim_ctx.prev_vars["ru_b"][t,s]
-                instance.rD_B[t,s] = self.sim_ctx.prev_vars["ru_b"][t,s]
+                instance.rD_B[t,s] = self.sim_ctx.prev_vars["rd_b"][t,s]
                 instance.rU_FD[t,s] = self.sim_ctx.prev_vars["ru_fd"][t,s]
-                instance.rD_FD[t,s] = self.sim_ctx.prev_vars["ru_fd"][t,s]
-                #instance.pIB_p[t,s] = self.sim_ctx.prev_vars["pib_p"][t,s]
-                #instance.pIB_m[t,s] = self.sim_ctx.prev_vars["pib_m"][t,s]
+                instance.rD_FD[t,s] = self.sim_ctx.prev_vars["rd_fd"][t,s]
+                instance.pIB_p[t,s] = self.sim_ctx.prev_vars["pib_p"][t,s]
+                instance.pIB_m[t,s] = self.sim_ctx.prev_vars["pib_m"][t,s]
                 instance.rU_penalty[t, s] = self.init_penalties([instance.rU[t,s], instance.rU_B[t,s],
                                                                 instance.rU_FD[t,s]])
                 instance.rD_penalty[t, s] = self.init_penalties([instance.rD[t,s], instance.rD_B[t,s],
                                                                 instance.rD_FD[t,s]])
+                if instance.rU_penalty[t, s].value  < -0.5:
+                    x=1
                 instance.var_fd[t,s].fix()
                 instance.var_afd_p[t,s].fix()
                 instance.var_afd_m[t,s].fix()
@@ -454,8 +457,8 @@ class InstanceManager:
                 instance.rU_FD[t,s].fix()
                 instance.rD_FD[t,s].fix()
 
-                #instance.pIB_p[t,s].fix()
-                #instance.pIB_m[t,s].fix()
+                instance.pIB_p[t,s].fix()
+                instance.pIB_m[t,s].fix()
 
         #again special case for socv because it is defined from 0-24
         for t in range(self.instance.TIM[3].first(), self.instance.TIM[3].last() + 1):
@@ -466,7 +469,7 @@ class InstanceManager:
                 # To initialize, I set socv[12] = socv[11]. otherwise, the model is deemed infeasible, because
                 # for t=11 it is already initialized and fixed to a historical value, and t=12 is none
                 instance.socV[t,s] = instance.socV[t-1,s]
-
+                instance.socV[instance.nT, s] = instance.SOCfin
         self.init_rm_params_for_im3()
 
     def init_rm_params_for_im3(self):

@@ -4,6 +4,7 @@ from pyomo.environ import DataPortal, value, SolverFactory
 import config_definition as config
 from previous_results_loader import PreviousMarketResultsLoader
 import importlib
+import re
 
 class PreProcessor:
     def __init__(self, sim_ctx):
@@ -108,15 +109,16 @@ class PreProcessor:
 
         #lI
         # --- figure out the first RV of stage‑2 -----------------------------
-        nRVSG2_dict = self.scenario_data.data().get("nRVSG", {})
-        nRVSG2 = nRVSG2_dict.get(2, 0)  # RVs in stage‑2
-        rv0_IM = nRVSG1 + int(nRVSG2)  # first IM1 RV index
+        nRVSG_dict = self.scenario_data.data().get("nRVSG", {})  # maps stage -> num RVs
 
+        # Define the stage where each IM level starts
+        IM_stage_map = self.scenario_data["sgim"]  # example: IM1 at stage 3, IM2 at stage 9, IM3 at stage 15
         # --- copy 24 IM1 prices to lI ----------------------------
         lI_preserved = {}
         nT = int(self.scenario_data["nT"])
-        for i in range(1, self.scenario_data["nIM"] + 1):
-            for t in range(1, nT + 1):
+        for t in range(1, nT + 1):
+            for i in self.scenario_data["IMT"][t]:
+                rv0_IM = sum(int(nRVSG_dict.get(i, 0)) for i in range(1, IM_stage_map[i]))  + 1
                 rv = rv0_IM + (t - 1)  # row that holds IM price for hour t
                 for s in self.S_preserved:  # or self.scenario_data["S0"]
                     price = self.scenario_data.data()["Scen"].get((rv, s), 0.0)
