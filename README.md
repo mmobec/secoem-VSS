@@ -23,6 +23,8 @@ The energy community consists of:
 
 The problem is formulated as a **multi-stage stochastic optimization** for scheduling energy production, consumption, and trading.
 
+Currently, there are models for the day-ahead, reserve and the three intraday markets.
+
 ---
 
 ## Setting Up the Environment
@@ -42,7 +44,13 @@ conda activate optirec_env
 
 ---
 
-## Workflow
+## Scenario File Setup
+
+If multiple markets should be run within one simulation, is is important to keep the naming convention of the scenario files.
+Within `scenarios/`, there needs to be a directory with the name of the simulation, for example `FTC_100_2024`. 
+Within that directory, the scenarios for each of the markets needs to be under the name defined in the market chain.
+In case of simulating all markets, this would mean folders with the names `DA`, `RM`, `IM1`, `IM1` and `IM3` containing the scenarios.
+
 
 1. Copy your AMPL-formatted `.dat` scenario files into the `scenarios/` folder.
 2. Ensure the directory follows the naming convention, e.g., `FTC_10_2023_12/` for a 10-scenario simulation.
@@ -67,6 +75,15 @@ This script:
 
 ---
 
+---
+## Setup
+
+`config_definition.py` contains the setup for the static parameters of the simulation, especially file names.
+
+`famscen_all` is the parent directory of the scenarios for the simulation, `like FTC_100_2024` in the example above.
+
+The paths for the results can also be defined here.
+
 ## Running the Simulation
 
 Navigate to the `codes/` directory:
@@ -75,7 +92,9 @@ Navigate to the `codes/` directory:
 cd ../codes
 ```
 
-Run the optimization model:
+Select the models you want to run in `modular_ec_run.py`
+
+Run the optimization model(s):
 
 ```sh
 python modular_ec_run.py
@@ -88,16 +107,10 @@ This will:
 
 ---
 
-To configure the scenario and simulation duration:
-
-- Open the `config_definition.py` file
-- Set the scenario family using the `famscen` parameter
-- Set the number of simulation days using the `n_days` parameter
----
-
 ## Output and Results
 
 - The results of the optimization will be stored in the `results/` directory.
+- the results for each simulated market will be stored in a subdirectory with the name of the market within a parent dirrectory in `results/` under the same name as defined in `condig_definition` for `famscen_all`.
 - The output includes scheduled energy production, consumption, and trading strategies.
 
 ---
@@ -116,7 +129,7 @@ c. `data/ec_wind.dat` AMPL data file containing the values of the wind farm and 
 
 d. `data/market.dat` AMPL data file containing the market parameters.
 
-e. `scenarios/famscen("nom de la familia")/famscen-SIM.dat` AMPL data file containing the values of all scenarios (all electricity market prices and wind and PV generation). It also contains the cluster structure to represent the scenario tree.
+e. `scenarios/famscen_all` AMPL data file containing the values of all scenarios (all electricity market prices and wind and PV generation). It also contains the cluster structure to represent the scenario tree.
 
 See Section *Convert AMPL Data to Pyomo Format* on converting the AMPL data files into Pyomo data files.
 
@@ -126,7 +139,7 @@ The code files are in the directory `codes/`:
 
 `codes/modular_ec_run.py` is the main file for running the simulation. It contains a for loop that runs a simulation for every period defined in the configuration file `config_definition.py`.
 For each simulation, a `SimulationContext` object is created, which will contain all mutable attributes of a simulation including paths and file names, solver time and the results of the objective function.
-Next, a `PreProcesor` object is created, which loads the corresponding scenaro data.
+Next, a `PreProcesor` object is created, which loads the corresponding scenaro data, using `PreviousMarketResultsLoade` to get the cleared results of the previous markets.
 Afterwards, an `InstanceManager` object is created, which handles everything related to the isntance of the abstract model. First, the `compute_instance()` method is called, which does a load of things to populate the instance with data.
 Then, a `Solver` object is createed, and the `solve()` method is called. This is a helper object that initialized the solver settings defined in the `config_definition.py` and solves the problem for the instance, and returns the results.
 The following step is the postprocessing, for which a `Postprocess` object is created. After performing the NAC checks, the `store_results()` method stores all important data of the simulation into the corresponding files and logs.
@@ -172,19 +185,10 @@ SimulationSummaryWriter  ➜  tables + ec_<family>_summary.out
 | **`codes/modular_ec_run.py`**            | __main__                         | Contains the main loop for the simulations
 | **`codes/config_definition.py`**            | —                         | Static variables that do not change from sim to sim like solver options and file paths
 
-a. `codes/ec_model.py` contains the optimization model in a Pyomo Abstract Model format. It follows the mathematical formulation found in `model_formulation/ec_model_formulation.pdf`.
-
-b. `codes/ec_run.py` controls the execution of the model. It loads the optimization model in `codes/ec_model.py`, loads the required data in `data/` and `scenarios/`, executes the model in the specified days and stores the results in `results/`.
-
-### 3. Results Files
-
-The directory `results/` contains the results files of the days for which the model has been executed. 
-
-They are indexed by scenario family. This means that if the code has been executed for the scenario family `famscen`, the results will be stored in `results/famscen/`.
 
 ### 4. Mathematical Formulation Files
 
-An updated mathematical formulation in `LaTeX` of the optimization model in `codes/ec_model.py` is maintained in the file `model_formulation/ec_model_formulation.pdf`.
+An updated mathematical formulation in `LaTeX` of the optimization models for all markets is maintained in the directory `model_formulation`.
 
 ## Notes
 
