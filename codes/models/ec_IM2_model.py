@@ -476,6 +476,8 @@ EPS = 1e-9  # tolerance for "DA volume is zero"
 def _cap20(m, t, s):
     D = pyo.value(m.eDA_p[t, s]) + pyo.value(m.eDA_m[t, s])  # OK only if fixed/Param
     return m.maxTIM * D if D > EPS else 20.0
+    #lim =  m.FD_U[t]  #- m.eDA_m[t, s] + m.pPV[t, s] + m.dV[t, s]
+    #return lim
 
 model.eIM_pos = pyo.Var(model.IM, model.T, model.S,within=pyo.NonNegativeReals)
 model.eIM_neg = pyo.Var(model.IM, model.T, model.S, within=pyo.NonNegativeReals)
@@ -486,12 +488,12 @@ model.IM_link_posneg = pyo.Constraint(model.IM, model.T, model.S, rule=link_posn
 
 # -cap ≤ Σ_i eIM ≤ +cap
 def IM_bounds_1_rule_pos(m, t, s):
-    return sum(m.eIM_pos[i, t, s] for i in m.IMT[t]) <=  _cap20(m, t, s)
+    return sum((m.eIM_pos[i, t, s] + m.eIM_neg[i,t,s]) for i in m.IMT[t]) <=  _cap20(m, t, s)
 model.IM_bounds_1_pos = pyo.Constraint(model.T, model.S, rule=IM_bounds_1_rule_pos)
 
 def IM_bounds_1_rule_neg(m, t, s):
-    return sum(m.eIM_neg[i, t, s] for i in m.IMT[t]) <= _cap20(m, t, s)
-model.IM_bounds_1_neg = pyo.Constraint(model.T, model.S, rule=IM_bounds_1_rule_neg)
+    return sum(m.eIM_neg[i, t, s] for i in m.IMT[t]) <=  _cap20(m, t, s)
+#model.IM_bounds_1_neg = pyo.Constraint(model.T, model.S, rule=IM_bounds_1_rule_neg)
 
 # Per-step bounds: -cap ≤ eIM[i] ≤ +cap
 def IM_bounds_3_rule(m, i, t, s):
@@ -504,12 +506,10 @@ model.IM_bounds_4 = pyo.Constraint(model.IM, model.T, model.S, rule=IM_bounds_4_
 
 # (Optional) lI_bid monotonicity constraints for IM are commented out in ec.mod
 def IM_bid_mono_1_rule(m, t, l, k):
-    return m.eIM[3,t, l] <= m.eIM[3,t, k]
-model.RM_bid_mono_1 = pyo.Constraint(model.SsI, rule=IM_bid_mono_1_rule)
-# (Optional) lI_bid monotonicity constraints for IM are commented out in ec.mod
-def IM_bid_mono_1_rule(m, t, l, k):
     return m.eIM[2,t, l] <= m.eIM[2,t, k]
 model.RM_bid_mono_1 = pyo.Constraint(model.SsI, rule=IM_bid_mono_1_rule)
+
+
 
 # -------------------------------------------------------
 # 8.4 System Imbalances

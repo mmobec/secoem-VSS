@@ -49,7 +49,7 @@ class PreProcessor:
 
 
     def preprocess_data(self):
-        "Before creating the instance"
+        # Before creating the instance
         # Some Data Preprocess needed before creating the instance because these values are used to build sets in model.py, so they must be defined before creating the instance
 
         sc = self.sim_ctx
@@ -67,7 +67,7 @@ class PreProcessor:
         self.scenario_data.data()["Prob"] = Prob_preserved  # Assign Probabilities correctly
 
 
-    def allocate_ld(self):
+    def allocate_market_prices(self):
 
         ### lD allocation (necessary to define Ssd set in ec_DA_model.py which is necessary to build bidding curves)
         # Scen values are needed to define lD values
@@ -89,7 +89,7 @@ class PreProcessor:
                                                                                 0.0)  # Default to 0.0 if missing
         self.scenario_data.data()["lD"] = lD_preserved  # Assign `lD` values
 
-    #def allocate_lr(self):
+
         #same thing for lR:
         # --- figure out the first RV of stage‑2 -----------------------------
         nRVSG1_dict = self.scenario_data.data().get("nRVSG", {})
@@ -126,121 +126,13 @@ class PreProcessor:
 
         self.scenario_data.data()["lI"] = lI_preserved
 
-    def find_closest_dam_scenario(self):
-        best_s, best_d = None, 1e20
-
-        for s in self.S_preserved:
-            d = math.sqrt(sum((self.scenario_data.data()["lD"][rv, s] - config.DA_PRICE_OBS[rv] )**2 for rv in
-                          range(1, int(self.scenario_data["nT"]) +1 )))
-
-            if d < best_d:
-                best_s, best_d = s, d
-
-        c_dict = self.scenario_data.data()["c"]  # {(sg,k): [leaf IDs]}
-        x=2
-
-        kRM = None
-        for (sg, k), cluster in c_dict.items():
-            if sg == 1 and best_s in cluster:  # stage‑1 node whose cluster contains best_s
-                kRM = k
-                break
-
-        # Filter the cluster to only contain scenarios that exist in S_preserved
-
-        self.scenario_data.data()["kRM"] = kRM
-
-    def update_probabilities_and_scenarios(self):
-        """
-         Considering that we now found the cluster that contains the scenarios,
-         that are descendents of the closest DAM scenario, we can set the probabilities
-         of the other ones to 0
-         """
-
-        c_dict = self.scenario_data.data()["c"]
-        kRM = self.scenario_data.data()["kRM"]
-        probs = self.scenario_data.data()["Prob"]
-        cluster_closest_to_real_dam = c_dict[(1, kRM)]
-
-        filtered_cluster_closest_to_real_dam = [s for s in cluster_closest_to_real_dam if s in probs.keys()]
-
-        self.scenario_data.data()["S"] = {None: filtered_cluster_closest_to_real_dam}
-        self.S_preserved = filtered_cluster_closest_to_real_dam
-
-        """
-        for s in self.scenario_data.data()["S"][None]:
-            if s not in cluster_closest_to_real_dam:
-                self.scenario_data.data()["Prob"][s]= 0
-        """
-        # Instead of setting the probability to 0, now the elements are removed so that S_preserved and Prob are in line
-        prob = self.scenario_data.data()["Prob"]
-        for s in list(prob.keys()):  # list(...) makes a snapshot
-            if s not in cluster_closest_to_real_dam:
-                del prob[s]
-        self.scenario_data.data()["Prob"] = prob
-
-        # Now, Rescale the probabilities
-        sum_prob = sum(self.scenario_data.data()["Prob"].values())
-        for s in self.scenario_data.data()["Prob"]:
-            self.scenario_data.data()["Prob"][s] /= sum_prob
-
-
-    def update_clusters(self):
-        trimmed = {}
-        for (sg, k), cluster in self.scenario_data.data()["c"].items():
-            # cluster was a Python list of leaf IDs
-            trimmed[(sg, k)] = [leaf for leaf in cluster if leaf in self.scenario_data.data()["S"][None]]
-        self.scenario_data.data()["c"] = trimmed
-
-    def truncate_remaining_vars(self):
-        # 1) grab the raw Scen0 table
-        Scen0_raw = self.scenario_data.data()["Scen0"]
-        # total # of random variables (over *all* stages)
-        nRV_total = sum(self.scenario_data.data()["nRVSG"].values())
-
-        # 2) trim to only those scenarios we kept after DAM
-
-        Scen_trim = {
-            (rv, s): Scen0_raw.get((rv, s), 0.0)
-            for rv in range(1, nRV_total + 1)
-            for s in self.S_preserved
-        }
-        self.scenario_data.data()["Scen"] = Scen_trim
-
-        # 3) figure out where the DA block lives:
-        rv0_DA = 1  # by convention Pyomo stages start RV 1 at DA
-        n_DA = int(self.scenario_data.data()["nRVSG"][1])
-        # 4) build lD from that slice of Scen_trim
-        lD = {}
-        for t in range(1, int(self.scenario_data["nT"]) + 1):
-            rv = rv0_DA + (t - 1)
-            for s in self.S_preserved:
-                lD[(t, s)] = float(Scen_trim.get((rv, s), 0.0))
-        self.scenario_data.data()["lD"] = lD
-
-        # 5) and the RM block immediately follows DA in RV‐space
-        rv0_RM = rv0_DA + n_DA
-        lR = {}
-        for t in range(1, int(self.scenario_data["nT"]) + 1):
-            rv = rv0_RM + (t - 1)
-            for s in self.S_preserved:
-                lR[(t, s)] = float(Scen_trim.get((rv, s), 0.0))
-        self.scenario_data.data()["lR"] = lR
 
     def run_preprocessing(self):
-
-
         """
         Should we redo the clusters so that the scenarios that are no longer in S_preserved are removed?
         """
-
         self.prepare_scenario_data()
         self.preprocess_data()
-        #self.allocate_lr_and_ld()
-        self.allocate_ld()
-        #self.allocate_lr()
+        self.allocate_market_prices()
         self.scenario_data = PreviousMarketResultsLoader(self.sim_ctx, self.scenario_data).load_results()
-        #self.find_closest_dam_scenario() These two are also commented out bc hopefully not needed bc of Cristian
-        #self.update_probabilities_and_scenarios()
-        #self.update_clusters()  I think this is already done in instancemanager
-        #self.truncate_remaining_vars()
         return self.scenario_data, self.abstract_model

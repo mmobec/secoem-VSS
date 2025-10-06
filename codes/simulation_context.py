@@ -3,6 +3,11 @@ from pathlib import Path
 import os
 import config_definition as cfg   # your run_config module
 
+"""
+Class used to pass around information about the current simulation between other classes.
+It also builds the scenario and results path using parent directory names from config_definition.
+
+"""
 
 def prev_market(market: str) -> str | None:
     """Return the market that immediately precedes *market* in the chain."""
@@ -34,8 +39,8 @@ class SimulationContext:
         self.pathmarketres = Path("results") /cfg.famscen_all / self.market / "market"   / str(sim)
         self.scenfile      = f"{cfg.famscen_all}-{sim}_{self.market}.dat"
         self.demfile       = f"demand-{sim}.dat"
-        self.famscen = cfg.famscen_all+"_"+self.market
-        self.pathscen = cfg.pathscen_all+"_"+self.market
+        self.famscen = cfg.famscen_all+"/"+self.market
+        self.pathscen = cfg.pathscen_all+"/"+self.market
         self.previous_results_path = self.get_previous_results_dir()
 
         # make sure resultfolders exist (relative to parent directory)
@@ -58,9 +63,11 @@ class SimulationContext:
         }
         self.scenario_data = None
 
-        # previous IM results here, because they need to be fixed after the instance is created because eIM for all
-        # IM are in the same variable, so first create the var, then load the previous ones (for Im2 and 3) and then
-        # fix those
+        """
+         previous IM results here, because they need to be fixed after the instance is created because eIM for all
+         IM are in the same variable, so first create the var, then load the previous ones (for Im2 and 3) and then
+         fix those
+        """
         self.eIM_prev = None
         self.prev_vars = None
 

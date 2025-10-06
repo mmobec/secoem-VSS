@@ -9,18 +9,19 @@ class PreviousMarketResultsLoader:
     """
     Loading the results of the previous run
     The path for where the results are stored is already in config_definiton
-    Later, this might be expanded to be a more general PreviousRunResultLoader class than can load results of DAM,
-    RM, IM1, ...,
     """
+
     def __init__(self, sim_ctx, scen_data):
         self.sim_ctx = sim_ctx
         self.scenario_data = scen_data
         self.S_preserved = self.scenario_data.data()["S"][None]  #This is kept for naming convention
         self.previous_vars = None
+
     @staticmethod
     def read_from_txt(filename, socv=False):
         """
-        This function is used to read in the results of the DAM run of the DAM model
+        Generic function to read the results of the previous run. For files that are structured
+        scen_no | probability | values
         """
         # initialize empty structure
         data = {}#{t: {} for t in range(1, 25)}
@@ -46,18 +47,6 @@ class PreviousMarketResultsLoader:
                     data[(t, s)] = v
 
         return data, scenarios
-
-    @staticmethod
-    def read_fd_files(filename):
-        data = {}#{t: {} for t in range(1, 25)}
-        with open(f'{filename}.txt') as f:
-            for lineno, line in enumerate(f, start=1):
-                parts = line.strip().split()
-                s = int(parts[0])
-                t = int(parts[2])
-                data[(t,s)] = float(parts[3])
-                x=1
-        return data
 
     @staticmethod
     def get_sorted_bid_curve(ld,S, t, ascending = True):
@@ -97,9 +86,7 @@ class PreviousMarketResultsLoader:
         #parent_path = self.sim_ctx.previous_results_path
         #parent_path = os.path.join("..", parent_path)
 
-
         parent_path = Path("..") / config.base_result_dir / config.famscen_all / "DA" / "market" / self.sim_ctx.sim / "DA"
-
         e_da_m_from_DAM_run, S = self.read_from_txt(parent_path / "eDA_m")
         e_da_p_from_DAM_run, _ = self.read_from_txt(parent_path / "eDA_p")
         ld_from_DAM_run, _ = self.read_from_txt(parent_path / "lD")
@@ -381,22 +368,6 @@ class PreviousMarketResultsLoader:
             prev_vars["pib_p"] = pib_p
             prev_vars["pib_m"] = pib_m
             self.sim_ctx.prev_vars = prev_vars
-
-
-    def load_market_vars(self, market):
-        """
-        this function is used to load the results of the markets that came even beore the previous one;
-        e.g. to run IM1, you also need DAM results
-        """
-        parent_path = self.sim_ctx.previous_results_path
-        parent_path = os.path.join("..", parent_path)
-
-        files = config.VAR_FILES.get(market, {})
-        for var, file_name in files.items():
-            path = parent_path+"/"+file_name
-            var_from_file, _ = self.read_from_txt(path)
-            self.scenario_data[var] = var_from_file
-
 
 
     def load_results(self):
