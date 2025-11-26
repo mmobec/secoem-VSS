@@ -288,20 +288,29 @@ model.pIB_m = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # negativ
 # model.pPIB = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)
 # model.pNIB = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)
 
+
+model.IB_pos_slack = pyo.Var(model.T, model.S,within=pyo.NonNegativeReals, bounds=(0,100))
+model.IB_neg_slack = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals, bounds=(0,100))
+
+
 # =========================================================
 # OBJECTIVE FUNCTION
 # =========================================================
 
 def EECSW_rule(m):
-    return sum(
+     return  (sum(
         sum( m.Prob[s] * m.lD[t, s] * (m.eDA_p[t, s] - m.eDA_m[t, s]) for s in m.S ) +
-        sum(m.Prob[s] * (m.lR[t, s] * (m.rD[t, s] + m.rU[t, s]) - m.lR_penalty[t,s] * (m.rU_penalty[t,s] + m.rD_penalty[t,s])) for s in m.S) +
+        sum( m.Prob[s] * (m.lR[t, s] * (m.rD[t, s] + m.rU[t, s]) - m.lR_penalty[t,s] * (m.rU_penalty[t,s] + m.rD_penalty[t,s])) for s in m.S) +
         sum( m.Prob[s] * m.lI[i, t, s] * m.eIM[i, t, s] for s in m.S for i in m.IMT[t] ) +
         sum( m.Prob[s] * m.lPIB[t, s] * m.pIB_p[t, s] for s in m.S ) -
         sum( m.Prob[s] * m.lNIB[t, s] * m.pIB_m[t, s] for s in m.S ) -
-        sum( m.Prob[s] * m.C_FD * (m.var_afd_p[t, s] + m.var_afd_m[t, s]) for s in m.S )
-        for t in m.T
+        sum( m.Prob[s] * m.C_FD * (m.var_afd_p[t, s] + m.var_afd_m[t, s]) for s in m.S ) -
+        sum( m.Prob[s] * m.imbalanceSlackPenalty * (m.IB_pos_slack[t, s] + m.IB_neg_slack[t, s]) for s in m.S )
+        for t in m.T)
+        - m.lambda_risk * m.CVAR
     )
+
+
 model.EECSW = pyo.Objective(rule=EECSW_rule, sense=pyo.maximize)
 
 # =========================================================
@@ -474,8 +483,8 @@ EPS = 1e-9  # tolerance for "DA volume is zero"
 
 def _cap20(m, t, s):
     D = pyo.value(m.eDA_p[t, s]) + pyo.value(m.eDA_m[t, s])  # OK only if fixed/Param
-    return m.maxTIM * D if D > EPS else 20.0
-    #lim =  m.FD_U[t] #- m.eDA_m[t, s] + m.pPV[t, s] + m.dV[t, s]
+    return m.maxTIM * D if D > EPS else m.FD_U[t] #- m.pPV[t,s] - m.pW[t,s]
+    #lim =  m.FD_U[t] - m.eDA_m[t, s] + m.pPV[t, s] + m.dV[t, s]
     #return lim
 
 model.eIM_pos = pyo.Var(model.IM, model.T, model.S,within=pyo.NonNegativeReals)
@@ -532,18 +541,57 @@ def Imbalances_rule(m, t, s):
     return lhs == rhs
 model.Imbalances = pyo.Constraint(model.T, model.S, rule=Imbalances_rule)
 
-MIN_UB = 10.0
+MIN_UB = 5.0
+model.imbalanceSlackPenalty = pyo.Param(default=500,mutable=True)
+
+
+
 
 def IB_pos_UB_rule(m, t, s):
-    ub = MIN_UB if pyo.value(m.PIB_p[t, s]) <= 1e-9 else m.PIB_p[t, s]
-    return m.pIB_p[t, s] <= ub
+    #ub = MIN_UB if pyo.value(m.PIB_p[t, s]) <= 1e-9 else m.PIB_p[t, s]
+    #return m.pIB_p[t, s] <= ub
+    return m.pIB_p[t, s] <= pyo.value(m.PIB_p[t, s]) + m.IB_pos_slack[t, s]
+
 model.IB_pos_UB = pyo.Constraint(model.T, model.S, rule=IB_pos_UB_rule)
 
 def IB_neg_UB_rule(m, t, s):
-    ub = MIN_UB if pyo.value(m.PIB_m[t, s]) <= 1e-9 else m.PIB_m[t, s]
-    return m.pIB_m[t, s] <= ub
+    #ub = MIN_UB if pyo.value(m.PIB_m[t, s]) <= 1e-9 else m.PIB_m[t, s]
+    #return m.pIB_m[t, s] <= ub
+    return m.pIB_m[t, s] <= pyo.value(m.PIB_m[t, s]) + m.IB_neg_slack[t, s]
+
 model.IB_neg_UB = pyo.Constraint(model.T, model.S, rule=IB_neg_UB_rule)
 
+
+
+
+
+# =========================================================
+# Risk Aversion
+# =========================================================
+
+model.alpha = pyo.Param(initialize=0.90, mutable=True)  # confidence level
+model.lambda_risk = pyo.Param(initialize=25, mutable=False)  # risk aversion weight
+
+model.eta_IM = pyo.Var()                       # VaR-like level for IM loss
+model.z_IM = pyo.Var(model.S, within=pyo.NonNegativeReals)  # tail excesses
+
+def im_loss(m, s):
+    #return sum(
+    #    (m.eIM_pos[i, t, s] + m.eIM_neg[i,t,s]) for t in m.T for i in m.IMT[t])
+    return sum(
+        m.lI[i,t,s] * (m.eIM_pos[i, t, s] + m.eIM_neg[i,t,s]) for t in m.T for i in m.IMT[t])
+
+def CVaR_IM_excess_rule(m, s):
+    return m.z_IM[s] >= im_loss(m, s) - m.eta_IM
+
+model.CVaR_IM_excess = pyo.Constraint(model.S, rule=CVaR_IM_excess_rule)
+
+def CVAR_rule(m):
+    return m.eta_IM + (1.0 / (1.0 - m.alpha)) * sum(
+        m.Prob[s] * m.z_IM[s] for s in m.S
+    )
+
+model.CVAR = pyo.Expression(rule=CVAR_rule)
 
 # =============================================================================
 # Nonanticipativity Constraints

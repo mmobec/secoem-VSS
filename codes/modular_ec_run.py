@@ -44,5 +44,5 @@ if __name__ == "__main__":
     main("DA")
     main("RM")
     main("IM1")
-    main("IM2")
-    main("IM3")
+    #main("IM2")
+    #main("IM3")

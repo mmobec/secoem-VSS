@@ -270,7 +270,7 @@ model.pIB_m = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # negativ
 # =========================================================
 
 def EECSW_rule(m):
-    return sum(
+    return (sum(
         sum( m.Prob[s] * m.lD[t, s] * (m.eDA_p[t, s] - m.eDA_m[t, s]) for s in m.S ) +
         sum( m.Prob[s] * m.lR[t, s] * (m.rD[t, s] + m.rU[t, s]) for s in m.S ) +
         sum( m.Prob[s] * m.lI[i, t, s] * m.eIM[i, t, s] for s in m.S for i in m.IMT[t] ) +
@@ -278,6 +278,7 @@ def EECSW_rule(m):
         sum( m.Prob[s] * m.lNIB[t, s] * m.pIB_m[t, s] for s in m.S ) -
         sum( m.Prob[s] * m.C_FD * (m.var_afd_p[t, s] + m.var_afd_m[t, s]) for s in m.S )
         for t in m.T
+    ) - m.lambda_risk * m.CVAR
     )
 model.EECSW = pyo.Objective(rule=EECSW_rule, sense=pyo.maximize)
 
@@ -503,6 +504,35 @@ def IB_neg_UB_rule(m, t, s):
     return m.pIB_m[t, s] <= m.PIB_m[t, s]
 model.IB_neg_UB = pyo.Constraint(model.T, model.S, rule=IB_neg_UB_rule)
 
+
+
+# =========================================================
+# Risk Aversion
+# =========================================================
+
+model.alpha = pyo.Param(initialize=0.90, mutable=True)  # confidence level
+model.lambda_risk = pyo.Param(initialize=25, mutable=False)  # risk aversion weight
+
+model.eta_IM = pyo.Var()                       # VaR-like level for IM loss
+model.z_IM = pyo.Var(model.S, within=pyo.NonNegativeReals)  # tail excesses
+
+def im_loss(m, s):
+    #return sum(
+    #    (m.eIM_pos[i, t, s] + m.eIM_neg[i,t,s]) for t in m.T for i in m.IMT[t])
+    return sum(
+        m.lI[i,t,s] * (m.eIM_pos[i, t, s] + m.eIM_neg[i,t,s]) for t in m.T for i in m.IMT[t])
+
+def CVaR_IM_excess_rule(m, s):
+    return m.z_IM[s] >= im_loss(m, s) - m.eta_IM
+
+model.CVaR_IM_excess = pyo.Constraint(model.S, rule=CVaR_IM_excess_rule)
+
+def CVAR_rule(m):
+    return m.eta_IM + (1.0 / (1.0 - m.alpha)) * sum(
+        m.Prob[s] * m.z_IM[s] for s in m.S
+    )
+
+model.CVAR = pyo.Expression(rule=CVAR_rule)
 
 # =============================================================================
 # Nonanticipativity Constraints

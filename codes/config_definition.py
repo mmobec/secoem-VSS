@@ -38,12 +38,12 @@ probl = 'ec'
 
 # Suppose we define a scenario family (famscen) & set of SIMS in Python:
 #famscen = "FTC_10_2023_12"
-famscen_all = "FTC_100_202410_202012"
+famscen_all = "FTC_202407_202412_c92_sc100"
 #famscen_all = "FTC_100_202410_202012_all_random_DA"
 
 # Suppose we have SIMS = [001..031]
-n_days = 1
-SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days for brevity
+n_days = 3
+SIMS = [f"{i:03d}" for i in range(5,5 + n_days+1)]  # Example with just few days for brevity
 
 pathscen_all = f"scenarios/{famscen_all}"
 pathdem  = "data/demand/"
@@ -59,7 +59,7 @@ numscenfile  = "numscen.txt"
 ### Solver options ###
 SOLVER_OPTIONS = {
     # --- MILP tolerances & strategy ---
-    "MIPGap":          1e-4,     # 0.0001
+    "MIPGap":          1e-2,     # 0.0001
     "Threads":         4,
     "Presolve":        0,
     "Method":          3,        # dual simplex
