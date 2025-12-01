@@ -84,9 +84,9 @@ class PreviousMarketResultsLoader:
         """
 
         #parent_path = self.sim_ctx.previous_results_path
-        #parent_path = os.path.join("..", parent_path)
+        #parent_path = os.path.join(config.PROJECT_ROOT, parent_path)
 
-        parent_path = Path("..") / config.base_result_dir / config.famscen_all / "DA" / "market" / self.sim_ctx.sim / "DA"
+        parent_path = Path(config.PROJECT_ROOT) / config.base_result_dir / config.famscen_all / "DA" / "market" / self.sim_ctx.sim / "DA"
         e_da_m_from_DAM_run, S = self.read_from_txt(parent_path / "eDA_m")
         e_da_p_from_DAM_run, _ = self.read_from_txt(parent_path / "eDA_p")
         ld_from_DAM_run, _ = self.read_from_txt(parent_path / "lD")
@@ -191,8 +191,8 @@ class PreviousMarketResultsLoader:
         Function to load the RM results for the IM1 model to run
         """
         #parent_path = self.sim_ctx.previous_results_path  #f'{config.dam_results_folder}/market/{self.sim_ctx.sim}/DA'
-        #parent_path = os.path.join("..", parent_path)
-        parent_path = Path("..") / config.base_result_dir / config.famscen_all / "RM" / "market" / self.sim_ctx.sim / "RM"
+        #parent_path = os.path.join(config.PROJECT_ROOT, parent_path)
+        parent_path = Path(config.PROJECT_ROOT) / config.base_result_dir / config.famscen_all / "RM" / "market" / self.sim_ctx.sim / "RM"
         rU_from_rm_run, S = self.read_from_txt(parent_path / "rU")
         rD_from_rm_run, _ = self.read_from_txt(parent_path/ "rD")
         lR_from_rm_run, _ = self.read_from_txt(parent_path / "lR")
@@ -258,7 +258,7 @@ class PreviousMarketResultsLoader:
         # Because eIM is a single constraint for 3 different markets, we need to load in the data into the variable,
         # and then, after creating the instance, fix the previous IM ones for IM2 and IM3
         prev_market_ = prev_market(self.sim_ctx.market)
-        parent_path = Path("..") / config.base_result_dir / config.famscen_all / prev_market_ / "market" / self.sim_ctx.sim / "IM"
+        parent_path = Path(config.PROJECT_ROOT) / config.base_result_dir / config.famscen_all / prev_market_ / "market" / self.sim_ctx.sim / "IM"
         im_no = re.search(r'\d+', self.sim_ctx.market)[0]
         im_no = int(im_no)
 
@@ -291,7 +291,7 @@ class PreviousMarketResultsLoader:
         if im_no == 3:
 
             parent_path = Path(
-                "..") / config.base_result_dir / config.famscen_all / prev_market_ / "market" / self.sim_ctx.sim
+                config.PROJECT_ROOT) / config.base_result_dir / config.famscen_all / prev_market_ / "market" / self.sim_ctx.sim
             ru_penalty_from_im2, S = self.read_from_txt(parent_path / "RM" / f"rU_penalty")
             rd_penalty_from_im2, _ = self.read_from_txt(parent_path / "RM" / f"rD_penalty")
             rU_B_from_im2, _ = self.read_from_txt(parent_path / "RM" / f"rU_B")
@@ -299,19 +299,19 @@ class PreviousMarketResultsLoader:
             rU_FD_from_im2, _ = self.read_from_txt(parent_path / "RM" / f"rU_FD")
             rD_FD_from_im2, _ = self.read_from_txt(parent_path / "RM" / f"rD_FD")
 
-            pib_p_from_im2, _ = self.read_from_txt(parent_path / "IB" / f"pib_p")
-            pib_m_from_im2, _ = self.read_from_txt(parent_path / "IB" / f"pib_m")
+            pib_p_from_im2, _ = self.read_from_txt(parent_path / "IB" / f"pIB_p")
+            pib_m_from_im2, _ = self.read_from_txt(parent_path / "IB" / f"pIB_m")
 
             parent_path = Path(
-                "..") / config.base_result_dir / config.famscen_all / prev_market_ / "ec" / self.sim_ctx.sim
+                config.PROJECT_ROOT) / config.base_result_dir / config.famscen_all / prev_market_ / "ec" / self.sim_ctx.sim
 
             var_fd_from_im2, _ = self.read_from_txt(parent_path / "FD" / "var_fd")
             var_afd_p_from_im2, _ = self.read_from_txt(parent_path / "FD" / "var_afd_p")
             var_afd_m_from_im2, _  = self.read_from_txt(parent_path / "FD" / "var_afd_m")
-            dv_from_im2, _ = self.read_from_txt(parent_path / "BESS" / f"dv")
-            cv_from_im2, _= self.read_from_txt(parent_path / "BESS" / f"cv")
-            idv_from_im2, _ = self.read_from_txt(parent_path / "BESS" / f"idv")
-            socv_from_im2, _ = self.read_from_txt(parent_path / "BESS" / f"socv", socv=True)
+            dv_from_im2, _ = self.read_from_txt(parent_path / "BESS" / f"dV")
+            cv_from_im2, _= self.read_from_txt(parent_path / "BESS" / f"cV")
+            idv_from_im2, _ = self.read_from_txt(parent_path / "BESS" / f"idV")
+            socv_from_im2, _ = self.read_from_txt(parent_path / "BESS" / f"socV", socv=True)
 
             var_fd = {}
             var_afd_p = {}
@@ -330,6 +330,9 @@ class PreviousMarketResultsLoader:
             pib_m = {}
 
             prev_vars = {}
+
+            if last_matched_scen == None:
+                last_matched_scen = S[0]
             for t in range(1, self.scenario_data["nT"] + 1):
                 for s in  self.scenario_data["S"]:
                     var_fd[t,s] = var_fd_from_im2[t, last_matched_scen]

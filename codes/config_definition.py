@@ -6,6 +6,8 @@ from pathlib import Path
 All static parameters for a simulation
 """
 
+PROJECT_ROOT = Path.home() / "mmobec-pyomo"   #This is the root directory
+
 MARKET_CHAIN = ["DA", "RM", "IM1", "IM2", "IM3", "IB"]
 
 # For PreviousResultsLoader:
@@ -42,8 +44,8 @@ famscen_all = "FTC_202407_202412_c92_sc100"
 #famscen_all = "FTC_100_202410_202012_all_random_DA"
 
 # Suppose we have SIMS = [001..031]
-n_days = 3
-SIMS = [f"{i:03d}" for i in range(5,5 + n_days+1)]  # Example with just few days for brevity
+n_days = 30
+SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days for brevity
 
 pathscen_all = f"scenarios/{famscen_all}"
 pathdem  = "data/demand/"

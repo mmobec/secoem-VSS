@@ -1,5 +1,5 @@
 import os
-from config_definition import probl, profitfile, timefile, numscenfile, resfile, famscen_all
+from config_definition import probl, profitfile, timefile, numscenfile, resfile, famscen_all, PROJECT_ROOT
 
 
 class SimulationSummaryWriter:
@@ -31,7 +31,7 @@ class SimulationSummaryWriter:
         print("\n" + "#" * 80)
 
     def write_results_log(self):
-        log_path = os.path.join("..", self.sim_contexts[-1].pathres, resfile)
+        log_path = os.path.join(PROJECT_ROOT, self.sim_contexts[-1].pathres, resfile)
         with open(log_path, "a") as res_log:
             res_log.write("\n#######################################################\n")
             res_log.write(f"Objective Function and its Components {probl}\n")
@@ -41,7 +41,7 @@ class SimulationSummaryWriter:
             res_log.write("#######################################################\n")
 
     def write_profit_file(self):
-        table_path = os.path.join("..", "results", famscen_all,self.sim_contexts[0].market, "tables/")
+        table_path = os.path.join(PROJECT_ROOT, "results", famscen_all,self.sim_contexts[0].market, "tables/")
         os.makedirs(table_path, exist_ok=True)
         filepath = os.path.join(table_path, profitfile[probl])
 
@@ -55,7 +55,7 @@ class SimulationSummaryWriter:
                 f.write(" ".join([f"{ctx.obj_results[key]:6.0f}" for ctx in self.sim_contexts]) + "\n")
 
     def write_time_file(self):
-        table_path = os.path.join("..", "results", famscen_all,self.sim_contexts[0].market, "tables/")
+        table_path = os.path.join(PROJECT_ROOT, "results", famscen_all,self.sim_contexts[0].market, "tables/")
         filepath = os.path.join(table_path, timefile[probl])
 
         with open(filepath, "w") as f:
@@ -65,7 +65,7 @@ class SimulationSummaryWriter:
             f.write(" ".join([f"{ctx.solve_time:7.1f}" for ctx in self.sim_contexts]) + "\n")
 
     def write_num_scen_file(self):
-        table_path = os.path.join("..", "results", famscen_all,self.sim_contexts[0].market, "tables/")
+        table_path = os.path.join(PROJECT_ROOT, "results", famscen_all,self.sim_contexts[0].market, "tables/")
         filepath = os.path.join(table_path, numscenfile)
 
         with open(filepath, "w") as f:
@@ -75,7 +75,7 @@ class SimulationSummaryWriter:
             f.write(" ".join([f"{ctx.n_scenarios:7d}" for ctx in self.sim_contexts]) + "\n")
 
     def write_out_file(self):
-        out_file = os.path.join("..", "results", famscen_all,self.sim_contexts[0].market, f"ec_{famscen_all}_summary.out")
+        out_file = os.path.join(PROJECT_ROOT, "results", famscen_all,self.sim_contexts[0].market, f"ec_{famscen_all}_summary.out")
 
         with open(out_file, "w") as f:
             f.write("############################################################\n")

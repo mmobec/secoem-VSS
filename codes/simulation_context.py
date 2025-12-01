@@ -35,8 +35,9 @@ class SimulationContext:
         self.sim = sim
         self.market = market
         # -------- derive paths / filenames -------------------------
-        self.pathres       = Path("results")  / cfg.famscen_all / self.market / cfg.probl  / str(sim)
-        self.pathmarketres = Path("results") /cfg.famscen_all / self.market / "market"   / str(sim)
+        base = cfg.PROJECT_ROOT
+        self.pathres       = base / "results" / cfg.famscen_all / self.market / cfg.probl  / str(sim)
+        self.pathmarketres = base / "results" /cfg.famscen_all / self.market / "market"   / str(sim)
         self.scenfile      = f"{cfg.famscen_all}-{sim}_{self.market}.dat"
         self.demfile       = f"demand-{sim}.dat"
         self.famscen = cfg.famscen_all+"/"+self.market
@@ -45,8 +46,8 @@ class SimulationContext:
 
         # make sure resultfolders exist (relative to parent directory)
         for p in (self.pathres, self.pathmarketres):
-            full_path = os.path.join("..", str(p))  # adjust path relative to parent dir
-            os.makedirs(full_path, exist_ok=True)
+            #full_path = os.path.join("..", str(p))  # adjust path relative to parent dir
+            os.makedirs(p, exist_ok=True)
 
         # -------- runtime-mutable fields ---------------------------
         self.solve_time   = None

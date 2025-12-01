@@ -147,7 +147,7 @@ class PostProcess:
         print("\n########################")
         print("###### Results #########")
         print("########################\n")
-        with open(os.path.join("..",self.sim_ctx.pathres, run_config.resfile), "a") as res_log:
+        with open(os.path.join(run_config.PROJECT_ROOT, "results",self.sim_ctx.pathres, run_config.resfile), "a") as res_log:
             res_log.write("\n########################\n")
             res_log.write("###### Results #########\n")
             res_log.write("########################\n\n")
@@ -179,7 +179,7 @@ class PostProcess:
     def store_flex_demand_vars(self):
 
         # Save Flexible Demand Variables
-        fd_path = os.path.join("..", self.sim_ctx.pathres, "FD/")
+        fd_path = os.path.join(run_config.PROJECT_ROOT, "results", self.sim_ctx.pathres, "FD/")
         os.makedirs(fd_path, exist_ok=True)
 
         """
@@ -220,7 +220,7 @@ class PostProcess:
 
     def store_wind_power(self):
         # Define the WP results directory
-        wp_path = os.path.join("..", self.sim_ctx.pathres, "WP/")
+        wp_path = os.path.join(run_config.PROJECT_ROOT, "results", self.sim_ctx.pathres, "WP/")
         os.makedirs(wp_path, exist_ok=True)
 
         # Store WP parameters
@@ -243,7 +243,7 @@ class PostProcess:
 
     def store_pv(self):
         # Define the PV results directory
-        pv_path = os.path.join("..", self.sim_ctx.pathres, "PV/")
+        pv_path = os.path.join(run_config.PROJECT_ROOT, "results", self.sim_ctx.pathres, "PV/")
         os.makedirs(pv_path, exist_ok=True)
 
         # Store PV parameters
@@ -267,7 +267,7 @@ class PostProcess:
                 f.write("\n")
 
     def store_bess(self):
-        bess_path = os.path.join("..", self.sim_ctx.pathres, "BESS/")
+        bess_path = os.path.join(run_config.PROJECT_ROOT, "results", self.sim_ctx.pathres, "BESS/")
         os.makedirs(bess_path, exist_ok=True)
 
         # Save BESS parameters
@@ -309,7 +309,7 @@ class PostProcess:
                 f.write("\n")
 
     def store_day_ahead(self):
-        da_path = os.path.join("..", self.sim_ctx.pathmarketres, "DA/")
+        da_path = os.path.join(run_config.PROJECT_ROOT, "results", self.sim_ctx.pathmarketres, "DA/")
         da_vars = [
             ("lD.txt", self.instance.lD),
             ("eDA_p.txt", self.instance.eDA_p),
@@ -324,7 +324,7 @@ class PostProcess:
         """
         Saves Reserve Market (RM) variables and parameters.
         """
-        rm_path = os.path.join("..", self.sim_ctx.pathmarketres, "RM/")
+        rm_path = os.path.join(run_config.PROJECT_ROOT, "results", self.sim_ctx.pathmarketres, "RM/")
         os.makedirs(rm_path, exist_ok=True)
 
         # Store RM parameter TSR
@@ -350,11 +350,11 @@ class PostProcess:
 
     def store_im(self):
         # Print header for Intraday Market Parameters
-        with open(os.path.join("..", self.sim_ctx.pathmarketres, run_config.resfile), "a") as res_log:
+        with open(os.path.join(run_config.PROJECT_ROOT, "results", self.sim_ctx.pathmarketres, run_config.resfile), "a") as res_log:
             res_log.write("\n###### Printing Intraday Market Parameters and Optimal Variables #########\n\n")
 
         # Define the IM results directory
-        im_path = os.path.join("..", self.sim_ctx.pathmarketres, "IM/")
+        im_path = os.path.join(run_config.PROJECT_ROOT, "results", self.sim_ctx.pathmarketres, "IM/")
         os.makedirs(im_path, exist_ok=True)
 
         # IM Sets and Parameters (lI values for each i in IM)
@@ -407,11 +407,11 @@ class PostProcess:
 
     def store_ib(self):
         # Print header for Imbalances Parameters
-        with open(os.path.join("..", self.sim_ctx.pathmarketres, run_config.resfile), "a") as res_log:
+        with open(os.path.join(run_config.PROJECT_ROOT, "results", self.sim_ctx.pathmarketres, run_config.resfile), "a") as res_log:
             res_log.write("\n###### Printing Imbalances Parameters and Optimal Variables #########\n\n")
 
         # Define the IB results directory
-        ib_path = os.path.join("..", self.sim_ctx.pathmarketres, "IB/")
+        ib_path = os.path.join(run_config.PROJECT_ROOT, "results", self.sim_ctx.pathmarketres, "IB/")
         os.makedirs(ib_path, exist_ok=True)
 
         # Store IB Parameters (lPIB and lNIB)
@@ -461,11 +461,11 @@ class PostProcess:
 
     def store_scenarios(self):
         # Print header for Scenarios
-        with open(os.path.join("..", self.sim_ctx.pathmarketres, run_config.resfile), "a") as res_log:
+        with open(os.path.join(run_config.PROJECT_ROOT, "results", self.sim_ctx.pathmarketres, run_config.resfile), "a") as res_log:
             res_log.write("\n###### Printing Scenarios #########\n\n")
 
         # Define the Scenarios results directory
-        scenarios_path = os.path.join("..", self.sim_ctx.pathmarketres)
+        scenarios_path = os.path.join(run_config.PROJECT_ROOT, "results", self.sim_ctx.pathmarketres)
         os.makedirs(scenarios_path, exist_ok=True)
 
         # Store Scenarios Data (Scen0)
@@ -493,11 +493,11 @@ class PostProcess:
 
     def store_objective_function(self):
         # Print header for Objective Function
-        with open(os.path.join("..", self.sim_ctx.pathres, run_config.resfile), "a") as res_log:
+        with open(os.path.join(run_config.PROJECT_ROOT, "results", self.sim_ctx.pathres, run_config.resfile), "a") as res_log:
             res_log.write("\n###### Objective Function #########\n\n")
 
         # Define the Objective function results directory
-        obj_path = os.path.join("..", self.sim_ctx.pathres, "OBJ/")
+        obj_path = os.path.join(run_config.PROJECT_ROOT, "results", self.sim_ctx.pathres, "OBJ/")
         os.makedirs(obj_path, exist_ok=True)
 
         # Compute Objective Function Components

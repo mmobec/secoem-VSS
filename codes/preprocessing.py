@@ -1,7 +1,7 @@
 import os
 import math
 from pyomo.environ import DataPortal, value, SolverFactory
-import config_definition as config
+import config_definition as cfg
 from previous_results_loader import PreviousMarketResultsLoader
 import importlib
 import re
@@ -22,27 +22,27 @@ class PreProcessor:
         sc = self.sim_ctx
         # Print messages like AMPL:
         print("\n########################")
-        print(f"#### Instance {config.probl}-{sc.sim}")
+        print(f"#### Instance {cfg.probl}-{sc.sim}")
         print(f"#### of Market {self.sim_ctx.market}")
         print("########################\n")
 
         print(f"scenfile path = {self.sim_ctx.pathscen}{sc.scenfile}")
         print(f"pathres        = {sc.pathres}")
 
-        print(f"demfile path   = {config.pathdem}{sc.demfile}")
+        print(f"demfile path   = {cfg.pathdem}{sc.demfile}")
         print(f"pathres        = {sc.pathres}")
 
         abstract_model = self.abstract_model
         # Load the "base" data
         #ToDo: Should these be loaded according to market?
-        self.scenario_data.load(filename=os.path.join("..", "data", config.market_datfile), model=abstract_model)
-        self.scenario_data.load(filename=os.path.join("..", "data", config.BESS_datfile), model=abstract_model)
-        self.scenario_data.load(filename=os.path.join("..", "data", config.wind_datfile), model=abstract_model)
+        self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, "data", cfg.market_datfile), model=abstract_model)
+        self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, "data", cfg.BESS_datfile), model=abstract_model)
+        self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, "data", cfg.wind_datfile), model=abstract_model)
 
         # Then load scenario & demand data
-        self.scenario_data.load(filename=os.path.join("..", self.sim_ctx.pathscen, sc.scenfile), model=abstract_model)
+        self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, self.sim_ctx.pathscen, sc.scenfile), model=abstract_model)
         #ToDo: demand data should also be loaded according  to  market?
-        self.scenario_data.load(filename=os.path.join("..", config.pathdem, sc.demfile), model=abstract_model)
+        self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, cfg.pathdem, sc.demfile), model=abstract_model)
 
 
         print(f"\nT = {self.scenario_data['nT']}, nS = {self.scenario_data['nS']}, nIM = {self.scenario_data['nIM']}")

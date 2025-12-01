@@ -103,7 +103,7 @@ class InstanceManager:
         self.metrics["mean_pPV_avg"] = mean_pPV_avg
 
 
-        #with open(os.path.join("..", self.sim_ctx.pathres, run_config.resfile), "a") as res_log:
+        #with open(os.path.join(run_config.PROJECT_ROOT, self.sim_ctx.pathres, run_config.resfile), "a") as res_log:
         #    res_log.write(f"max_pW: {max_pW}, max_pPV: {max_pPV}\n")
         #    res_out.write(f"mean_pW_avg  = {mean_pW_avg:.6f}\n")
         #    res_out.write(f"mean_pPV_avg  = {mean_pW_avg:.6f}\n")
@@ -118,7 +118,7 @@ class InstanceManager:
         self.metrics["\n Cardinality \n card(S0)"] = card_S0
         self.metrics["Cardinality card(S)"] = card_S
 
-        #with open(os.path.join("..", self.sim_ctx.pathres, run_config.resfile), "a") as res_log:
+        #with open(os.path.join(run_config.PROJECT_ROOT, self.sim_ctx.pathres, run_config.resfile), "a") as res_log:
         #    res_log.write("\n Cardinality of the problem:\n")
         #    res_log.write(f"card(S0): {card_S0}\n")
         #    res_log.write(f"card(S): {card_S}\n")
@@ -146,7 +146,7 @@ class InstanceManager:
         self.metrics["min_dTO"] = min_dTO
 
 
-        #with open(os.path.join("..", self.sim_ctx.pathres, run_config.resfile), "a") as res_log:
+        #with open(os.path.join(run_config.PROJECT_ROOT, self.sim_ctx.pathres, run_config.resfile), "a") as res_log:
         #    res_log.write("\n Nearest Tree scenario, Observed data:\n")
         #    res_log.write(f"sOR: {sOR}\n")
         #    res_log.write(f"min_dTO: {min_dTO}\n")
@@ -281,7 +281,7 @@ class InstanceManager:
         self.metrics['mean_lD_avg'] = mean_lD_avg
         self.metrics['mean_lR_avg'] = mean_lR_avg
         self.metrics['mean_lIB_avg'] = mean_lIB_avg
-        #with open(os.path.join("..", self.sim_ctx.pathres, run_config.resfile), "a") as res_out:
+        #with open(os.path.join(run_config.PROJECT_ROOT, self.sim_ctx.pathres, run_config.resfile), "a") as res_out:
         #    res_out.write("\nMean Values:\n")
         #    res_out.write(f"mean_lD_avg  = {mean_lD_avg:.6f}\n")
         #    res_out.write(f"mean_lR_avg  = {mean_lR_avg:.6f}\n")
@@ -358,12 +358,12 @@ class InstanceManager:
                 lines.append(f"{key}: {val:.6f}")
         text = "\n".join(lines)
         print(text)
-        with open(os.path.join("..", self.sim_ctx.pathres, run_config.resfile), "a") as f:
+        with open(os.path.join(run_config.PROJECT_ROOT, self.sim_ctx.pathres, run_config.resfile), "a") as f:
             f.write(text + "\n")
 
     def _append_to_file(self, text):
         """Helper method to append text to the results file."""
-        with open(os.path.join("..", self.sim_ctx.pathres, run_config.resfile), "a") as f:
+        with open(os.path.join(run_config.PROJECT_ROOT, self.sim_ctx.pathres, run_config.resfile), "a") as f:
             f.write(text + "\n")
 
     def next_initial_conditions(self):
@@ -379,7 +379,7 @@ class InstanceManager:
         instance.SOCini = SOCini_next
 
         # Log the new initial conditions
-        with open(os.path.join("..", sc.pathres, run_config.resfile), "a") as res_log:
+        with open(os.path.join(run_config.PROJECT_ROOT, sc.pathres, run_config.resfile), "a") as res_log:
             res_log.write("\nNew initial conditions:\n")
             res_log.write(f"SOCini: {SOCini_next}\n")
             res_log.write(f"sOR: {value(instance.sOR)}\n")

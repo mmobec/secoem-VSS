@@ -5,10 +5,11 @@ from simulation_context import SimulationContext
 from preprocessing import PreProcessor
 from solver import Solver
 from postprocess import PostProcess
+import multiprocessing as mp
 
-def main(market):
-    sim_data = []
-    for sim in run_config.SIMS:
+
+
+def run_day(sim, market):
         # Create Simulationcontext object to store data of each sim
         sim_ctx = SimulationContext(sim=sim, market=market) # market parameter is used in preprocessing to confirm which
                                                           # results are loaded into the model
@@ -31,7 +32,16 @@ def main(market):
         # Update initial conditions for next scenario
         instance_wrapper.next_initial_conditions()
 
-        sim_data.append(sim_ctx)
+        return sim_ctx
+
+
+def main(market):
+    sim_data = []
+    with mp.Pool(processes=64) as pool:  # choose a sensible number
+        sim_data = pool.starmap(
+            run_day,
+            [(sim, market) for sim in run_config.SIMS]
+        )
 
     # Final Summary of all Simulation Runs
 
@@ -44,5 +54,5 @@ if __name__ == "__main__":
     main("DA")
     main("RM")
     main("IM1")
-    #main("IM2")
-    #main("IM3")
+    main("IM2")
+    main("IM3")
