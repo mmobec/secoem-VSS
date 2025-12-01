@@ -237,7 +237,7 @@ class PreviousMarketResultsLoader:
 
         sells = [(p, sid, v) for p, sid, v in one_hour_curve if v > 0]
         buys = [(p, sid, v) for p, sid, v in one_hour_curve if v < 0]
-
+        buys = sorted(buys, key=lambda x: x[0])
         #  SELL side
         if sells and real_price >= sells[0][0]:  # price high enough
             # bids are sorted ↑ so the last one ≤ P_star is the marginal
@@ -248,7 +248,17 @@ class PreviousMarketResultsLoader:
         if buys and real_price <= buys[0][0]:  # price low enough
             # buy list is sorted ↓ (highest price first)
             idx = bisect.bisect_left([p for p, _, _ in buys], real_price)
-            return buys[idx][2], buys[idx][1]  # negative volume
+            try:
+                return buys[idx][2], buys[idx][1]  # negative volume
+            except IndexError:
+                print(
+                    "DEBUG buys IndexError:",
+                    "real_price =", real_price,
+                    "prices =", prices,
+                    "idx =", idx,
+                    "len(buys) =", len(buys),
+                    flush=True,
+                )
 
         # no block accepted
         return 0.0, None
