@@ -163,6 +163,11 @@ class PreviousMarketResultsLoader:
                     e_da_p_matched[t] = e_da_p_from_DAM_run[t, closest_lambda_minus]
                     e_da_m_matched[t] = 0
 
+                if buying_lambda_plus + selling_lambda_minus == 0:
+                    #nothing matched
+                    e_da_p_matched[t] = 0
+                    e_da_m_matched[t] = 0
+
 
             # Final scenario: unmatched
             if ieDA_m_from_DAM_run[t, closest_lambda_minus] + ieDA_m_from_DAM_run[t, closest_lambda_minus] + \
