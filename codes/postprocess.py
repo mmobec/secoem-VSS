@@ -457,6 +457,22 @@ class PostProcess:
                     pIB_net = value(self.instance.pIB_p[t, s]) - value(self.instance.pIB_m[t, s])
                     f.write(f"{pIB_net} ")
                 f.write("\n")
+        
+        if ("IM" in self.sim_ctx.market) or ("RM" in self.sim_ctx.market):
+            IB_pos_slack_file = os.path.join(ib_path, "IB_pos_slack.txt")
+            with open(IB_pos_slack_file, "w") as f:
+                for s in self.instance.S:
+                    f.write(f"{s} {value(self.instance.Prob[s])} ")
+                    for t in self.instance.T:
+                        f.write(f"{value(self.instance.IB_pos_slack[t, s])} ")
+                    f.write("\n")
+            IB_neg_slack_file = os.path.join(ib_path, "IB_neg_slack.txt")
+            with open(IB_neg_slack_file, "w") as f:
+                for s in self.instance.S:
+                    f.write(f"{s} {value(self.instance.Prob[s])} ")
+                    for t in self.instance.T:
+                        f.write(f"{value(self.instance.IB_neg_slack[t, s])} ")
+                    f.write("\n")
 
 
     def store_scenarios(self):
@@ -615,7 +631,7 @@ class PostProcess:
 
     def perform_nac_checks(self):
         # Perform Non-Anticipativity Constraint (NAC) checks
-        self.nac_DAM_and_RM()
+        #self.nac_DAM_and_RM()
         self.nac_demand_and_battery()
 
     def get_RM_bid_curves(self):
