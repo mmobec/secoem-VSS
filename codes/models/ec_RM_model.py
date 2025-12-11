@@ -553,7 +553,7 @@ model.z_IM = pyo.Var(model.S, within=pyo.NonNegativeReals)  # tail excesses
 def im_loss(m, s):    #return sum(
     #    (m.eIM_pos[i, t, s] + m.eIM_neg[i,t,s]) for t in m.T for i in m.IMT[t])
     return sum(
-        m.lI[i,t,s] * (m.eIM_pos[i, t, s] + m.eIM_neg[i,t,s]) for t in m.T for i in m.IMT[t])
+        (m.eIM_pos[i, t, s] + m.eIM_neg[i,t,s]) for t in m.T for i in m.IMT[t])
 
 def CVaR_IM_excess_rule(m, s):
     return m.z_IM[s] >= im_loss(m, s) - m.eta_IM
