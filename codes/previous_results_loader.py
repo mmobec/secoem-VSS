@@ -1,5 +1,6 @@
 from pyomo.environ import value
 import config_definition as config
+from pyomo.environ import DataPortal
 import os
 import bisect
 from pathlib import Path
@@ -387,15 +388,105 @@ class PreviousMarketResultsLoader:
             prev_vars["pib_m"] = pib_m
             self.sim_ctx.prev_vars = prev_vars
 
+    def load_scen0(self):
+        scen0_data = DataPortal()
+        scen0_data.load(filename=os.path.join(config.PROJECT_ROOT, self.sim_ctx.pathscen, self.sim_ctx.scenfile))
+
+    def load_im3_matched(self):
+        """
+        special function to calculate and load IM3 results when doing EMS optimization. The difference as opposo to the other IM is that for IM3, we take the resuts from the
+        current sim and not sim-1 like for all other markets when doing EMS. Also for the real price we use ScenO not Scen0
+        """
+        matched_eim1 = {}
+        parent_path = Path(config.PROJECT_ROOT) / config.base_result_dir / config.famscen_all / "IM3" / "market" / self.sim_ctx.sim / "IM"
+        eIM_from_im3, S = self.read_from_txt(parent_path / f"eIM_3")
+        lI_from_im3_run, _ = self.read_from_txt(parent_path / f"lI_3")
+        nRVSG_dict = self.scenario_data.data().get("nRVSG", {})
+        rv0_IM3 = sum(int(nRVSG_dict.get(i,0)) for i in range(self.scenario_data["sgim"][3])) + 1
+        for t_ in range(1, self.scenario_data["nT"] + 1):
+        #for t in range(12,25):
+            rv = rv0_IM3 + (t_-1)
+            real_price = self.scenario_data["ScenO"].get(rv,0) # important, here we take ScenO  (O not zero) to get the observed values
+            sorted_curve_with_energy = [(lI_from_im3_run[t_,s_], s_, eIM_from_im3[t_,s_]) for s_ in S]
+            vol,scen = self.matched_volume(sorted_curve_with_energy, real_price)
+            matched_eim1[t_] = vol
+            for s_ in self.S_preserved:
+                self.sim_ctx.eIM_prev[3,t_,s_] = matched_eim1[t_]  
+                  
+
+    def load_results_ems(self):
+        parent_path = self.sim_ctx.previous_results_path
+        parent_path_DA = parent_path / "DA"
+        parent_path_RM = parent_path / "RM"
+        parent_path_IM = parent_path / "IM"
+        e_da_m_from_DAM_run, S_DA = self.read_from_txt(parent_path_DA / "eDA_m")
+        e_da_p_from_DAM_run, _ = self.read_from_txt(parent_path_DA / "eDA_p")
+        ld_from_DAM_run, _ = self.read_from_txt(parent_path_DA / "lD")
+        ieDA_m_from_DAM_run, _ = self.read_from_txt(parent_path_DA / "ieDA_m")
+        ieDA_p_from_DAM_run, _ = self.read_from_txt(parent_path_DA / "ieDA_p")  
+        rU_from_rm_run, S_RM = self.read_from_txt(parent_path_RM / "rU")
+        rD_from_rm_run, _ = self.read_from_txt(parent_path_RM/ "rD")
+        lR_from_rm_run, _ = self.read_from_txt(parent_path_RM / "lR")
+        eIM_from_im1, _ = self.read_from_txt(parent_path_IM / f"eIM_1")
+        eIM_from_im2, S_IM2 = self.read_from_txt(parent_path_IM / f"eIM_2")
+        lI_1_from_im2_run, _ = self.read_from_txt(parent_path_IM / f"lI_1")
+        lI_2_from_im2_run, _ = self.read_from_txt(parent_path_IM / f"lI_2")
+        data_eDA_m = {}
+        data_eDA_p = {}
+        data_lD = {}
+        data_ieDA_m = {}
+        data_ieDA_p = {}
+        data_rU = {}
+        data_rD = {}
+        data_lR = {}
+        data_lI_1 = {}
+        data_lI_2 = {}
+
+        idx_da = S_DA[0]
+        idx_rm = S_RM[0]
+        idx_im2 = S_IM2[0]
+        for s in self.S_preserved:
+            for t in range(1, self.scenario_data["nT"] + 1):
+                data_eDA_m[t, s] = e_da_m_from_DAM_run[t, idx_da]
+                data_eDA_p[t, s] = e_da_p_from_DAM_run[t, idx_da]
+                data_lD[t, s] = ld_from_DAM_run[t, idx_da]
+                data_ieDA_m[t, s] = ieDA_m_from_DAM_run[t, idx_da]
+                data_ieDA_p[t, s] = ieDA_p_from_DAM_run[t, idx_da]
+
+                data_rU[t, s] = rU_from_rm_run[t, idx_rm]
+                data_rD[t, s] = rD_from_rm_run[t, idx_rm]
+                data_lR[t, s] = lR_from_rm_run[t, idx_rm]
+
+                self.sim_ctx.eIM_prev[1, t, s] = eIM_from_im1[t, idx_im2] #bc eIM can only be fixed after the istance is 
+                self.sim_ctx.eIM_prev[2, t, s] = eIM_from_im2[t, idx_im2]
+                data_lI_1[t, s] = lI_1_from_im2_run[t, idx_im2]
+                data_lI_2[t, s] = lI_2_from_im2_run[t, idx_im2]
+
+                """
+                IMPORTANT: IM3 is cleared on day D As well, so we can only use its results starting at hour 12!
+                Until then, we only have the anticipated IM3 volume from the IM2 model.
+                """
+
+                if t >= self.scenario_data.data("TIM")[3][0]:  #If we are loading IM3 as well
+                    self.load_im3_matched()
+
+        self.scenario_data["eDA_m"] = data_eDA_m
+        self.scenario_data["eDA_p"] = data_eDA_p
+        self.scenario_data["lD"] = data_lD
+        self.scenario_data["ieDA_m"] = data_ieDA_m
+        self.scenario_data["ieDA_p"] = data_ieDA_p
+        self.scenario_data["rU"] = data_rU
+        self.scenario_data["rD"] = data_rD
+        self.scenario_data["lR"] = data_lR
+        self.scenario_data["lI_1"] = data_lI_1
+        self.scenario_data["lI_2"] = data_lI_2
+    
 
     def load_results(self):
         if self.sim_ctx.market == "DA":
             return self.scenario_data
-
-        #for mkt in config.MARKET_CHAIN:
-         #   if mkt == self.sim_ctx.market:
-          #      break
-           # self.load_market_vars(mkt)
+        if self.sim_ctx.market == "EMS":
+            self.load_results_ems()
 
         if self.sim_ctx.market == "RM":
             #self.previous_vars = config.DA_PARAMS

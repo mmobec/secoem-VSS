@@ -37,7 +37,8 @@ def run_day(sim, market):
 
 def main(market):
     sim_data = []
-    with mp.Pool(processes=64) as pool:  # choose a sensible number
+
+    with mp.Pool(processes=1) as pool:  # choose a sensible number
         sim_data = pool.starmap(
             run_day,
             [(sim, market) for sim in run_config.SIMS]
@@ -51,6 +52,11 @@ def main(market):
 
 
 if __name__ == "__main__":
+
+    #for i in run_config.SIMS:
+    #     result = run_day(i, "RM")
+    run_day("002", "EMS")
+    main("EMS")
     main("DA")
     main("RM")
     main("IM1")

@@ -40,7 +40,7 @@ class PreProcessor:
         self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, "data", cfg.wind_datfile), model=abstract_model)
 
         # Then load scenario & demand data
-        self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, self.sim_ctx.pathscen, sc.scenfile), model=abstract_model)
+        self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, sc.pathscen, sc.scenfile), model=abstract_model)
         #ToDo: demand data should also be loaded according  to  market?
         self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, cfg.pathdem, sc.demfile), model=abstract_model)
 

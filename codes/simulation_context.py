@@ -11,6 +11,8 @@ It also builds the scenario and results path using parent directory names from c
 
 def prev_market(market: str) -> str | None:
     """Return the market that immediately precedes *market* in the chain."""
+    if market == "EMS":
+        return None
     chain = cfg.MARKET_CHAIN
     try:
         idx = chain.index(market.upper())
@@ -34,14 +36,19 @@ class SimulationContext:
     def __init__(self, sim: int, market):
         self.sim = sim
         self.market = market
+        if self.market == "EMS":
+            #For now just loading IM3 scenarios for EMS
+            market_path_var = "IM3"
+        else:
+            market_path_var = self.market
         # -------- derive paths / filenames -------------------------
         base = cfg.PROJECT_ROOT
-        self.pathres       = base / "results" / cfg.famscen_all / self.market / cfg.probl  / str(sim)
-        self.pathmarketres = base / "results" /cfg.famscen_all / self.market / "market"   / str(sim)
-        self.scenfile      = f"{cfg.famscen_all}-{sim}_{self.market}.dat"
+        self.pathres       = base / "results" / cfg.famscen_all / market_path_var / cfg.probl  / str(sim)
+        self.pathmarketres = base / "results" /cfg.famscen_all / market_path_var / "market"   / str(sim)
+        self.scenfile      = f"{cfg.famscen_all}-{sim}_{market_path_var}.dat"
         self.demfile       = f"demand-{sim}.dat"
-        self.famscen = cfg.famscen_all+"/"+self.market
-        self.pathscen = cfg.pathscen_all+"/"+self.market
+        self.famscen = cfg.famscen_all+"/"+market_path_var
+        self.pathscen = cfg.pathscen_all+"/"+market_path_var
         self.previous_results_path = self.get_previous_results_dir()
 
         # make sure resultfolders exist (relative to parent directory)
@@ -69,12 +76,16 @@ class SimulationContext:
          IM are in the same variable, so first create the var, then load the previous ones (for Im2 and 3) and then
          fix those
         """
-        self.eIM_prev = None
+        self.eIM_prev = {}
         self.prev_vars = None
 
     def get_previous_results_dir(self):
+        if self.market == "EMS":
+            prev_run = str(int(self.sim)-1).zfill(len(self.sim))   #from 005 -> 004 e.g.
+            res = cfg.PROJECT_ROOT / cfg.base_result_dir / cfg.famscen_all / "IM3" / "market" / prev_run    # if we solve EMS, we want the results of D-1
+            return res
         if self.market != "DA":
-            res = cfg.base_result_dir / cfg.famscen_all / prev_market(self.market) / "market" / self.sim / prev_market(self.market)
+            res = cfg.PROJECT_ROOT / cfg.base_result_dir / cfg.famscen_all / prev_market(self.market) / "market" / self.sim / prev_market(self.market)
             return res
         else:
             return None
