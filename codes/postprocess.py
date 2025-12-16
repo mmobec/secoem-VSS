@@ -404,6 +404,16 @@ class PostProcess:
                 f.write("\n")
 
 
+    def store_ib_var(self, var_name, ib_path):
+        file = os.path.join(ib_path, "{var_name}.txt")
+        atrribute = getattr(self.instance, var_name)   #this gets self.instance.PIB for example 
+        with open(file, "w") as f:
+            for s in self.instance.S:
+                f.write(f"{s} {value(self.instance.Prob[s])} ")
+                for t in self.instance.T:
+                    f.write(f"{value(atrribute[t, s])} ")
+                f.write("\n")
+
 
     def store_ib(self):
         # Print header for Imbalances Parameters
@@ -415,38 +425,11 @@ class PostProcess:
         os.makedirs(ib_path, exist_ok=True)
 
         # Store IB Parameters (lPIB and lNIB)
-        lPIB_file = os.path.join(ib_path, "lPIB.txt")
-        with open(lPIB_file, "w") as f:
-            for s in self.instance.S:
-                f.write(f"{s} {value(self.instance.Prob[s])} ")
-                for t in self.instance.T:
-                    f.write(f"{value(self.instance.lPIB[t, s])} ")
-                f.write("\n")
 
-        lNIB_file = os.path.join(ib_path, "lNIB.txt")
-        with open(lNIB_file, "w") as f:
-            for s in self.instance.S:
-                f.write(f"{s} {value(self.instance.Prob[s])} ")
-                for t in self.instance.T:
-                    f.write(f"{value(self.instance.lNIB[t, s])} ")
-                f.write("\n")
-
-        # Store IB Variables (pIB_p and pIB_m)
-        pIB_p_file = os.path.join(ib_path, "pIB_p.txt")
-        with open(pIB_p_file, "w") as f:
-            for s in self.instance.S:
-                f.write(f"{s} {value(self.instance.Prob[s])} ")
-                for t in self.instance.T:
-                    f.write(f"{value(self.instance.pIB_p[t, s])} ")
-                f.write("\n")
-
-        pIB_m_file = os.path.join(ib_path, "pIB_m.txt")
-        with open(pIB_m_file, "w") as f:
-            for s in self.instance.S:
-                f.write(f"{s} {value(self.instance.Prob[s])} ")
-                for t in self.instance.T:
-                    f.write(f"{value(self.instance.pIB_m[t, s])} ")
-                f.write("\n")
+        self.store_ib_var("lPIB", ib_path)
+        self.store_ib_var("lNIB", ib_path)
+        self.store_ib_var("pIB_p", ib_path)
+        self.store_ib_var("pIB_m", ib_path)
 
         # Store IB Net Imbalances (pIB_p - pIB_m)
         pIB_net_file = os.path.join(ib_path, "pIB_p-pIB_m.txt")
@@ -459,20 +442,8 @@ class PostProcess:
                 f.write("\n")
         
         if ("IM" in self.sim_ctx.market) or ("RM" in self.sim_ctx.market):
-            IB_pos_slack_file = os.path.join(ib_path, "IB_pos_slack.txt")
-            with open(IB_pos_slack_file, "w") as f:
-                for s in self.instance.S:
-                    f.write(f"{s} {value(self.instance.Prob[s])} ")
-                    for t in self.instance.T:
-                        f.write(f"{value(self.instance.IB_pos_slack[t, s])} ")
-                    f.write("\n")
-            IB_neg_slack_file = os.path.join(ib_path, "IB_neg_slack.txt")
-            with open(IB_neg_slack_file, "w") as f:
-                for s in self.instance.S:
-                    f.write(f"{s} {value(self.instance.Prob[s])} ")
-                    for t in self.instance.T:
-                        f.write(f"{value(self.instance.IB_neg_slack[t, s])} ")
-                    f.write("\n")
+            self.store_ib_var("IB_pos_slack", ib_path)
+            self.store_ib_var("IB_neg_slack", ib_path)
 
 
     def store_scenarios(self):
