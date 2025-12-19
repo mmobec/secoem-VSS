@@ -378,6 +378,19 @@ class InstanceManager:
         # Update the Pyomo model's initial SOC value
         instance.SOCini = SOCini_next
 
+        if self.sim_ctx.include_hydro:
+            #init hydro params. For now this is just a placeholder
+            #ToDo: init them with previous values like andrea did
+            #instance.LOH_ini     = read_last_value(os.path.join(hyd_dir,"LOH.txt"),    prev_sOR)
+            instance.LOH_ini     = value(instance.socV[max(instance.T0), int(value(instance.sOR))])
+            instance.iEL_on_ini  = value(instance.iEL_on[max(instance.T0), int(value(instance.sOR))])
+            instance.iEL_sb_ini  = value(instance.iEL_sb[max(instance.T0), int(value(instance.sOR))])
+            instance.iEL_off_ini = value(instance.iEL_off[max(instance.T0), int(value(instance.sOR))])
+            instance.iFC_on_ini  = value(instance.iFC_on[max(instance.T0), int(value(instance.sOR))])
+            instance.iFC_sb_ini  = value(instance.iFC_sb[max(instance.T0), int(value(instance.sOR))])
+            instance.iFC_off_ini = value(instance.iFC_off[max(instance.T0), int(value(instance.sOR))])
+
+
         # Log the new initial conditions
         with open(os.path.join(run_config.PROJECT_ROOT, sc.pathres, run_config.resfile), "a") as res_log:
             res_log.write("\nNew initial conditions:\n")

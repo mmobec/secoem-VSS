@@ -30,10 +30,11 @@ class SimulationContext:
         "obj_results", "scenario_data",
         "market", "famscen","pathscen",
         "previous_results_path",
-        "eIM_prev", "prev_vars"
+        "eIM_prev", "prev_vars", "include_hydro",
+        "demfile_h2"
     )
 
-    def __init__(self, sim: int, market):
+    def __init__(self, sim: int, market, include_hydro = False):
         self.sim = sim
         self.market = market
         if self.market == "EMS":
@@ -41,12 +42,17 @@ class SimulationContext:
             market_path_var = "IM3"
         else:
             market_path_var = self.market
+        #For hydrogen-chain. Needed e.g. in InstanceManager 
+        self.include_hydro = include_hydro
+        
         # -------- derive paths / filenames -------------------------
         base = cfg.PROJECT_ROOT
         self.pathres       = base / "results" / cfg.famscen_all / market_path_var / cfg.probl  / str(sim)
         self.pathmarketres = base / "results" /cfg.famscen_all / market_path_var / "market"   / str(sim)
         self.scenfile      = f"{cfg.famscen_all}-{sim}_{market_path_var}.dat"
         self.demfile       = f"demand-{sim}.dat"
+        if self.include_hydro:
+            self.demfile_h2 = f"demand_h2-{sim}.dat"
         self.famscen = cfg.famscen_all+"/"+market_path_var
         self.pathscen = cfg.pathscen_all+"/"+market_path_var
         self.previous_results_path = self.get_previous_results_dir()

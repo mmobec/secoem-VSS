@@ -5,6 +5,7 @@ import config_definition as cfg
 from previous_results_loader import PreviousMarketResultsLoader
 import importlib
 import re
+from model_builder import ModelBuilder
 
 class PreProcessor:
     def __init__(self, sim_ctx):
@@ -14,9 +15,19 @@ class PreProcessor:
         self.S_preserved = None
 
     def load_model(self):
-        module_name = f"models.ec_{self.sim_ctx.market}_model"
+        """
+
+        if self.sim_ctx.include_hydro:
+            module_name = f"models.ec_{self.sim_ctx.market}_hydrogen_model"
+        else:
+            module_name = f"models.ec_{self.sim_ctx.market}_model"
         mdl = importlib.import_module(module_name)
+
         return mdl.model
+        """
+        builder = ModelBuilder(self.sim_ctx)
+        model = builder.build_model()
+        return model
 
     def prepare_scenario_data(self):
         sc = self.sim_ctx
@@ -38,7 +49,9 @@ class PreProcessor:
         self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, "data", cfg.market_datfile), model=abstract_model)
         self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, "data", cfg.BESS_datfile), model=abstract_model)
         self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, "data", cfg.wind_datfile), model=abstract_model)
-
+        if self.sim_ctx.include_hydro:
+            self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, "data", cfg.hydro_datfile), model=abstract_model)
+            self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, cfg.pathdem_h2, sc.demfile_h2), model=abstract_model)
         # Then load scenario & demand data
         self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, sc.pathscen, sc.scenfile), model=abstract_model)
         #ToDo: demand data should also be loaded according  to  market?

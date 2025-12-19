@@ -9,9 +9,9 @@ import multiprocessing as mp
 
 
 
-def run_day(sim, market):
+def run_day(sim, market, hydro = False):
         # Create Simulationcontext object to store data of each sim
-        sim_ctx = SimulationContext(sim=sim, market=market) # market parameter is used in preprocessing to confirm which
+        sim_ctx = SimulationContext(sim=sim, market=market, include_hydro = hydro) # market parameter is used in preprocessing to confirm which
                                                           # results are loaded into the model
 
         # Preprocessing
@@ -35,13 +35,13 @@ def run_day(sim, market):
         return sim_ctx
 
 
-def main(market):
+def main(market, hydro=False):
     sim_data = []
 
-    with mp.Pool(processes=1) as pool:  # choose a sensible number
+    with mp.Pool(processes=64) as pool:  # choose a sensible number
         sim_data = pool.starmap(
             run_day,
-            [(sim, market) for sim in run_config.SIMS]
+            [(sim, market, hydro) for sim in run_config.SIMS]
         )
 
     # Final Summary of all Simulation Runs
@@ -55,8 +55,10 @@ if __name__ == "__main__":
 
     #for i in run_config.SIMS:
     #     result = run_day(i, "RM")
-    run_day("002", "EMS")
-    main("EMS")
+    #run_day("002", "EMS")
+    #main("EMS")
+    #main("DA", hydro = True)
+    run_day("001", "DA", hydro= False)
     main("DA")
     main("RM")
     main("IM1")
