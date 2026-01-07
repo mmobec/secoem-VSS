@@ -33,22 +33,24 @@ VAR_FILES = {
 BESS_datfile     = "ec_BESS.dat"
 wind_datfile     = "ec_wind.dat"
 market_datfile   = "market.dat"
-
+hydro_datfile    = "ec_HYD.dat"
 # In AMPL: set PROB default {'ec'}; param probl symbolic default 'ec';
 PROB  = ['ec']
 probl = 'ec'
 
 # Suppose we define a scenario family (famscen) & set of SIMS in Python:
-#famscen = "FTC_10_2023_12"
+
 famscen_all = "FTC_202407_202412_c92_sc100"
-#famscen_all = "FTC_100_202410_202012_all_random_DA"
+#famscen_all = "FTC_10_2023_12_HYDRO"
+
 
 # Suppose we have SIMS = [001..031]
-n_days = 30
+n_days = 10
 SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days for brevity
 
 pathscen_all = f"scenarios/{famscen_all}"
 pathdem  = "data/demand/"
+pathdem_h2 = "data/demand_h2"
 base_result_dir = Path("results")
 
 # Some log-file placeholders

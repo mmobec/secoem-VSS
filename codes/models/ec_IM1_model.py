@@ -356,7 +356,7 @@ model.InterDem = pyo.Constraint(model.FI, model.S, rule=InterDem_rule)
 # FD[t] - var_fd[t, s] = var_afd_p[t, s] - var_afd_m[t, s];
 def FlexDemDisplace_rule(m, t, s):
     return m.FD[t] - m.var_fd[t, s] == m.var_afd_p[t, s] - m.var_afd_m[t, s]
-#model.FlexDemDisplace = pyo.Constraint(model.T,VPP_RU_SOCV model.S, rule=FlexDemDisplace_rule)
+model.FlexDemDisplace = pyo.Constraint(model.T, model.S, rule=FlexDemDisplace_rule)
 
 # -------------------
 # 5. Battery System

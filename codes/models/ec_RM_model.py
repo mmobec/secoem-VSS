@@ -456,7 +456,7 @@ model.RM_bid_mono_2 = pyo.Constraint(model.SsR, rule=RM_bid_mono_2_rule)
 # 8.3 Intraday Markets
 # -------------------------------------------------------
 
-EPS = 1e-9  # tolerance for "DA volume is zero"
+ # tolerance for "DA volume is zero"
 
 def _cap20(m, t, s):
     D = pyo.value(m.eDA_p[t, s]) + pyo.value(m.eDA_m[t, s])  # OK only if fixed/Param

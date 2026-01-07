@@ -40,7 +40,7 @@ class ModelBuilder:
 
         # Stage sets
         model.SG = pyo.RangeSet(1, model.nSG)
-        model.SG0 = pyo.Set(initialize=lambda m: [0] + list(range(1, pyo.value(model.nSG)+1)), ordered=True)
+        model.SG0 = pyo.Set(initialize=lambda m: [0] + list(range(1, pyo.value(m.nSG)+1)), ordered=True)
 
         # Scenario clusters c {SG0, S0}: # In Pyomo, we can define this as a two-dimensional set:
         def c_init(model, sg, s): # Then I will modify this cluster after creating the instance in ec_run.py
@@ -48,8 +48,8 @@ class ModelBuilder:
         model.c = pyo.Set(model.SG0, model.S0, initialize=c_init, within=model.S0)
 
         model.nRVSG = pyo.Param(model.SG, within=pyo.NonNegativeIntegers, default=0) # Number of random variables at each stage
-        model.nRV = pyo.Param(initialize=lambda model: sum(model.nRVSG[sg] for sg in model.SG)) # total number of random variables = sum of nRVSG
-        model.fRVSG = pyo.Param(model.SG, initialize=lambda model, i: 1 + sum(model.nRVSG[sg] for sg in range(1, i))) # fRVSG = index of first RV of each stage
+        model.nRV = pyo.Param(initialize=lambda m: sum(m.nRVSG[sg] for sg in m.SG)) # total number of random variables = sum of nRVSG
+        model.fRVSG = pyo.Param(model.SG, initialize=lambda m, i: 1 + sum(m.nRVSG[sg] for sg in range(1, i))) # fRVSG = index of first RV of each stage
 
         # Probabilities and random variables
         model.Prob0 = pyo.Param(model.S0)       # scenario's probabilities (including zero values)
@@ -121,13 +121,17 @@ class ModelBuilder:
 
         # Day-Ahead market
         model.mean_lD = pyo.Param(model.T, within=pyo.Reals, mutable=True)        # average day-ahead price
-
+        model.PDA_LB = pyo.Param(within=pyo.NonNegativeReals)  # Minimum bid size [MWh]
         # Reserve market
         model.mean_lR = pyo.Param(model.T, within=pyo.Reals, mutable=True)          # average reserve price
 
         # Infraday market
         model.mean_lI = pyo.Param(model.IM, model.T, within=pyo.Reals, mutable=True) # average IMs price
-        
+        model.lIB  = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)             # imbalances price
+        model.mean_lPIB = pyo.Param(model.T, within=pyo.Reals, mutable=True)
+        model.mean_lNIB = pyo.Param(model.T, within=pyo.Reals, mutable=True)
+        model.mean_lIB  = pyo.Param(model.T, within=pyo.Reals, mutable=True)
+
         # Parameters for the VSS Calculation
         model.ScenF = pyo.Param(pyo.RangeSet(1, model.nRV), within=pyo.Reals)           # Forecasted scenario
         model.ScenO = pyo.Param(pyo.RangeSet(1, model.nRV), within=pyo.Reals)           # Observed scenario
@@ -167,13 +171,13 @@ class ModelBuilder:
         model.Ssd = pyo.Set(
             initialize=lambda m: [
             (t, l, j)
-            for t in model.T
-            for l in model.S
-            for j in model.S
-            if (pyo.value(model.lD[t, l]) <= pyo.value(model.lD[t, j]) and j != l)
+            for t in m.T
+            for l in m.S
+            for j in m.S
+            if (pyo.value(m.lD[t, l]) <= pyo.value(m.lD[t, j]) and j != l)
             ]
         )
-        model.PDA_LB = pyo.Param(within=pyo.NonNegativeReals)  # Minimum bid size [MWh]
+
 
 
     def _add_RM_exclusive_set(self):
@@ -181,10 +185,10 @@ class ModelBuilder:
         model.SsR = pyo.Set(
         initialize=lambda m: [
             (t, l, j)
-            for t in model.T
-            for l in model.S
-            for j in model.S
-            if (pyo.value(model.lR[t, l]) <= pyo.value(model.lR[t, j]) and j != l)
+            for t in m.T
+            for l in m.S
+            for j in m.S
+            if (pyo.value(m.lR[t, l]) <= pyo.value(m.lR[t, j]) and j != l)
             ]
         )
 
@@ -195,10 +199,10 @@ class ModelBuilder:
         model.SsI = pyo.Set(
         initialize=lambda m: [
             (t, l, j)
-            for t in model.TIM[market_no]
-            for l in model.S
-            for j in model.S
-            if (pyo.value(model.lI[market_no,t, l]) <= pyo.value(model.lI[market_no,t, j]) and j != l)
+            for t in m.TIM[market_no]
+            for l in m.S
+            for j in m.S
+            if (pyo.value(m.lI[market_no,t, l]) <= pyo.value(m.lI[market_no,t, j]) and j != l)
             ]
         )
 
@@ -228,10 +232,10 @@ class ModelBuilder:
         # IB
         model.lPIB = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)  # positive imbalance price
         model.lNIB = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)  # negative imbalance price
-        model.PIB_p = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)            # upper bound on positive imbalance
-        model.PIB_m = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)            # upper bound on negative imbalance
+        model.PIB_p = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)            # upper bound on positive imbalance
+        model.PIB_m = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True, default=0.0)             # upper bound on negative imbalance
         
-        if self.sim_ctx.market == "DA":
+        if self.sim_ctx.market == "DA":  
             self._add_DA_exclusive_set()
             # Variables
             model.eDA_p = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # sold energy #Set to Mutable!
@@ -247,6 +251,9 @@ class ModelBuilder:
             
         if self.sim_ctx.market == "RM":
             self._add_RM_exclusive_set()
+        
+
+        if self.sim_ctx.market in ["DA", "RM"]:
             model.rU = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # upward reserve
             model.rD = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # downward reserve
         else:
@@ -254,6 +261,10 @@ class ModelBuilder:
             model.rD = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)      # downward reserve
 
         if "IM" in self.sim_ctx.market:
+            model.lR_penalty = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)   # penalty price for undelivered reserve
+            model.rU_penalty = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals) # penalty terms undelivered rU and rD
+            model.rD_penalty = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals) 
+
             self._add_IM_exclusive_set()
 
 
@@ -280,6 +291,11 @@ class ModelBuilder:
         model.pIB_p = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # positive imbalance
         model.pIB_m = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # negative imbalance
 
+        # Slack Variables for models from RM forward
+
+        if self.model != "DA":
+            model.IB_pos_slack = pyo.Var(model.T, model.S,within=pyo.NonNegativeReals, bounds=(0,200))
+            model.IB_neg_slack = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals, bounds=(0,200))
 
     def add_objective(self):
         # Because the rule needs to be a function
@@ -345,8 +361,9 @@ class ModelBuilder:
 
             obj_expr -= m.lambda_risk * m.CVAR
             return obj_expr
+        
         self.model.EECSW = pyo.Objective(rule=EECSW_rule, sense=pyo.maximize)
-
+        #self.model.debug_obj_limit = pyo.Constraint(expr=self.model.EECSW <= 1e9) 
 
     def _add_common_constraints(self):
         model = self.model
@@ -487,7 +504,7 @@ class ModelBuilder:
                     return m.rD[t, s] == m.rD_B[t, s] + m.rD_FD[t, s]
                 model.RM_components_D = pyo.Constraint(model.T, model.S, rule=RM_components_D_rule)
 
-            elif "IM" in self.sim_ctx.model:
+            elif "IM" in self.sim_ctx.market:
                 def RM_components_U_rule(m, t, s):
                     return m.rU[t, s] == m.rU_B[t, s] + m.rU_FD[t, s] + m.rU_penalty[t, s]
                 model.RM_components_U = pyo.Constraint(model.T, model.S, rule=RM_components_U_rule)
@@ -573,7 +590,10 @@ class ModelBuilder:
                 - m.cV[t, s]
             )
             return lhs == rhs
-        model.Imbalances = pyo.Constraint(model.T, model.S, rule=Imbalances_rule)
+        if self.sim_ctx.market == "IM3": 
+            model.Imbalances = pyo.Constraint(range(12,25), model.S, rule=Imbalances_rule)    #not a pretty solution bc hardcoded.. however this is necessary otherwise IM3 is infeasible
+        else:
+            model.Imbalances = pyo.Constraint(model.T, model.S, rule=Imbalances_rule)
 
         if self.sim_ctx.market == "DA":
             def IB_pos_UB_rule(m, t, s):
@@ -586,7 +606,7 @@ class ModelBuilder:
 
         elif (self.sim_ctx.market == "RM") or ("IM" in self.sim_ctx.market):
             # For RM and IM, we consider the imbalance slack variable to ensure feasibility
-            model.imbalanceSlackPenalty = pyo.Param(default=500,mutable=True)
+            model.imbalanceSlackPenalty = pyo.Param(default=100,mutable=True)
             def IB_pos_UB_rule(m, t, s):
                 return m.pIB_p[t, s] <= pyo.value(m.PIB_p[t, s]) + m.IB_pos_slack[t, s]
             model.IB_pos_UB = pyo.Constraint(model.T, model.S, rule=IB_pos_UB_rule)
@@ -630,6 +650,7 @@ class ModelBuilder:
         self._add_monotonicity_constraints()
         self._add_im_constraints()
         self._add_risk_aversion()
+        self._add_imbalance_constraints()
 
     @staticmethod
     def consecutive_scenarios(model, sg, k):
@@ -655,8 +676,8 @@ class ModelBuilder:
         if market == "DA":
             day_ahead_reserve_vars = [
                 "eDA_p", "eDA_m", "ieDA_p", "ieDA_m",
-                "rU", "rU_B", "rU_FD", "rU_EL", "rU_FC",
-                "rD", "rD_B", "rD_FD", "rD_EL", "rD_FC"]
+                "rU", "rU_B", "rU_FD", #"rU_EL", "rU_FC",
+                "rD", "rD_B", "rD_FD"]#, "rD_EL", "rD_FC"]
             stage = 1
         elif market == "RM":
             day_ahead_reserve_vars = [
@@ -692,14 +713,16 @@ class ModelBuilder:
     def _add_im_nac(self):
         market = self.sim_ctx.market
         model = self.model
-        if market == "DA":
-            return
+        #if market == "DA":
+         #   return
         
-        elif market == "RM":
-            pass
+        #elif market == "RM":
+         #   return
 
-        elif "IM" in market:
+        if "IM" in market:
             market_no = int(market[-1])
+        else: 
+            market_no = -1
 
         def _build_nac_eIM_index(model):
             idx = []
@@ -779,7 +802,7 @@ class ModelBuilder:
             for var_name in ec_asset_var:
                 var_obj = getattr(model, var_name)
                 for t in model.T:
-                    if (t <= model.TIM[-1].first()) and (market_no == model.TIM[-1]): #For IM3, we don't need nac for the first 10h, because they are revealed already
+                    if (t < model.TIM[model.nIM].first()) and (market_no == model.nIM): #For IM3, we don't need nac for the first 10h, because they are revealed already
                         continue
                     sg_for_t_minus1 = model.sgpw[t] - 1
                     if sg_for_t_minus1 < 0:
