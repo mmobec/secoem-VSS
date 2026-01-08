@@ -164,6 +164,87 @@ class ModelBuilder:
         model.obj_IB_costs = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
         model.obj_IB_net = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
         model.obj_FD_costs = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
+        if self.use_hydro:
+            model.obj_H2_income = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
+            model.obj_H2_DEM = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
+            model.obj_BESS_costs = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
+            model.obj_wat_costs = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
+            model.obj_warm_st_costs = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
+            model.obj_cold_st_costs = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
+            model.obj_deg_EL_costs = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
+            model.obj_warm_st_costs_FC = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
+            model.obj_cold_st_costs_FC = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
+            model.obj_deg_FC_costs = pyo.Param(model.PROB, model.SIMS, mutable=True, default=0.0)
+
+
+    def _add_hydrogen_params(self):
+        model = self.model
+        model.B_sp_cost = pyo.Param(within=pyo.NonNegativeReals)            # BESS specific replacement cost (€/MWh)
+        model.cyc_max = pyo.Param(within=pyo.NonNegativeReals)            # Total number of cycles in BESS lifetime (cycles)
+        # Computing BESS degradation cost
+        model.C_BESS = model.B_sp_cost/model.cyc_max              # cost per unit of battery degradation (€ / (MWh x cycle))
+        # =============================================================================
+        # 7. Hydrogen chain
+        # =============================================================================
+
+        # 7.1 Electrolyzer
+
+        # Set
+        model.Ndown_EL = pyo.Param(within=pyo.PositiveIntegers)     # minimum off-time periods [h]
+        # def NdownEL_init(m, t):
+        #     # build set of future periods for minimum down-time
+        #     start = t + 1
+        #     end   = min(t + pyo.value(m.Ndown_EL), pyo.value(m.nT))
+        #     return list(range(start, end+1)) if start <= end else []
+        # model.NEL_down = pyo.Set(model.T, initialize=NdownEL_init, ordered=True)
+
+        # Parameters
+        model.min_EL_frac = pyo.Param(within=pyo.NonNegativeReals)  # Minimum input power fraction when activated [0-1] 
+        model.P_EL_nom = pyo.Param(within=pyo.NonNegativeReals)     # Electrolyzer nominal power [MW] 
+        model.eta_EL = pyo.Param(within=pyo.NonNegativeReals)       # Electrolyzer efficiency [MWh/kg]
+        model.sp_wat_EL   = pyo.Param(within=pyo.NonNegativeReals)  # specific water consumption [L/kg H2]
+        model.lambda_wat   = pyo.Param(within=pyo.NonNegativeReals)  # water cost [€/L]
+        model.SB_frac      = pyo.Param(within=pyo.NonNegativeReals)  # standby fraction of power consumption [0-1]
+        model.EL_lifetime  = pyo.Param(within=pyo.PositiveReals)     # EL lifetime [hrs]
+        model.EL_repl_cost = pyo.Param(within=pyo.NonNegativeReals)  # Actualized replacement cost [€/MW]
+        model.lambda_warm_st  = pyo.Param(within=pyo.NonNegativeReals)    # warm startup cost [€/MW per event]
+        model.lambda_cold_st  = pyo.Param(within=pyo.NonNegativeReals)    # cold startup cost [€/MW per event]
+        model.iEL_on_ini   = pyo.Param(within=pyo.Binary, mutable=True) # Initial value for on state binary variable
+        model.iEL_sb_ini   = pyo.Param(within=pyo.Binary, mutable=True) # Initial value for standby state binary variable
+        model.iEL_off_ini  = pyo.Param(within=pyo.Binary, mutable=True) # Initial value for off state binary variable                                                                                                          
+
+        # 7.2 Compressor
+        model.spec_COMP = pyo.Param(within=pyo.NonNegativeReals)    # Compressor specific consumption [MWh/kg] 
+        model.P_COMP_nom = pyo.Param(within=pyo.NonNegativeReals)   # Compressor nominal power [MW]
+
+        # 7.3 Storage tank
+        model.H_tank_cap = pyo.Param(within=pyo.NonNegativeReals)               # Tank capacity [kg] 
+        model.LOH_ini = pyo.Param(within=pyo.NonNegativeReals, mutable=True)    # Initial level of hydrogen in tank [-] 
+        model.LOH_fin = pyo.Param(within=pyo.NonNegativeReals)                  # Final level of hydrogen in tank [-] 
+        model.P_tank = pyo.Param(within=pyo.NonNegativeReals)                   # Tank charge/discharge power [kg/h] 
+        model.eta_tank = pyo.Param(within=pyo.UnitInterval)                     # Tank round-trip efficiency [0-1] 
+        model.LOH_max = pyo.Param(within=pyo.NonNegativeReals)                  # Maximum LOH in tank [-] 
+        model.LOH_min = pyo.Param(within=pyo.NonNegativeReals)                  # Minimum LOH in tank [-]
+
+        # 7.4 Fuel cell
+        model.min_FC_frac = pyo.Param(within=pyo.NonNegativeReals)      # Minimum output power fraction when activated [0-1] 
+        model.P_FC_nom = pyo.Param(within=pyo.NonNegativeReals)         # Fuel cell nominal power [MW] 
+        model.eta_FC = pyo.Param(within=pyo.NonNegativeReals)           # Fuel cell efficiency [kg/MWh]
+        model.SB_frac_FC      = pyo.Param(within=pyo.NonNegativeReals)  # standby fraction of power consumption [0-1]
+        model.FC_lifetime  = pyo.Param(within=pyo.PositiveReals)     # FC lifetime [hrs]
+        model.FC_repl_cost = pyo.Param(within=pyo.NonNegativeReals)  # Actualized replacement cost [€/MW]
+        model.lambda_warm_st_FC  = pyo.Param(within=pyo.NonNegativeReals)    # warm startup cost [€/MW per event]
+        model.lambda_cold_st_FC  = pyo.Param(within=pyo.NonNegativeReals)    # cold startup cost [€/MW per event]
+        model.iFC_on_ini   = pyo.Param(within=pyo.Binary, mutable=True) # Initial value for on state binary variable
+        model.iFC_sb_ini   = pyo.Param(within=pyo.Binary, mutable=True) # Initial value for standby state binary variable
+        model.iFC_off_ini  = pyo.Param(within=pyo.Binary, mutable=True) # Initial value for off state binary variable                                                                                                          
+
+        # 7.5 Hydrogen demand
+        model.HDEM = pyo.Param(model.T, within=pyo.NonNegativeReals)    # Hydrogen demand at time t [kg]
+        model.HDEM_press = pyo.Param(within=pyo.NonNegativeReals)       # Hydrogen demand pressure [bar]
+        model.HEL_press	 = pyo.Param(within=pyo.NonNegativeReals)       # Electrolyzer operating pressure [bar]
+        model.lambda_H = pyo.Param(within=pyo.NonNegativeReals)         # Hydrogen price [€/kg]
+        model.can_sell_H2 = pyo.Param(within=pyo.Binary)                # Hydrogen can be sold or not? [0,1]     
 
 
     def _add_DA_exclusive_set(self):
@@ -267,6 +348,12 @@ class ModelBuilder:
 
             self._add_IM_exclusive_set()
 
+        if self.use_hydro:
+            # hydrogen chain components reserve market participation
+            model.rU_EL = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)    # EL Upward reserve [MW] 
+            model.rD_EL = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)    # EL Downward reserve [MW] 
+            model.rU_FC = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)    # FC Upward reserve [MW] 
+            model.rD_FC = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)    # FC Downward reserve [MW]
 
         
 
@@ -296,6 +383,47 @@ class ModelBuilder:
         if self.model != "DA":
             model.IB_pos_slack = pyo.Var(model.T, model.S,within=pyo.NonNegativeReals, bounds=(0,200))
             model.IB_neg_slack = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals, bounds=(0,200))
+
+        if self.use_hydro:
+            # 7.1 Electrolyzer 
+            model.eEL = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # Electricity absorbed by the electrolyzer [MWh] 
+            model.eEL_on = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # Electricity absorbed by the electrolyzer when producing hydrogen [MWh] 
+            model.eEL_sb = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # Electricity absorbed by the electrolyzer when in stand-by [MWh] 
+            model.HEL = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # Hydrogen produced by the electrolyzer [kg] 
+            # model.iEL = pyo.Var(model.T, model.S, within=pyo.Binary)               # Binary: electrolyzer active (1) or off (0)
+            model.HDIR_EL = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)  # Portion of HEL used directly to cover hydrogen demand (<0 only if demand P<30bar) [kg] 
+            model.HCOMP_EL = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals) # Portion of HEL to be sent to the compressor (100% of it if demand P>30bar) [kg]
+            model.iEL_on   = pyo.Var(model.T0, model.S, within=pyo.Binary)  # on-state
+            model.iEL_sb   = pyo.Var(model.T0, model.S, within=pyo.Binary)  # standby-state
+            model.iEL_off  = pyo.Var(model.T0, model.S, within=pyo.Binary)  # off-state
+            model.i_EL_warm = pyo.Var(model.T, model.S, within=pyo.Binary)  # warm start (sb->on)
+            model.i_EL_cold = pyo.Var(model.T, model.S, within=pyo.Binary)  # cold start (off->on)
+
+            # 7.2 Compressor 
+            model.eCOMP = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)        # Electricity absorbed by the compressor [MWh] 
+            # model.HCOMP = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # Hydrogen output after compression [kg]
+            model.HDIR_COMP = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)    # Portion of compressed hydrogen used directly to cover hydrogen demand (>0 only if demand P>30bar) [kg] 
+            model.HC_TK = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)        # Portion of compressed hydrogen charged into the tank [kg]
+
+            # 7.3 Storage Tank
+            model.LOH = pyo.Var(model.T0, model.S, within=pyo.NonNegativeReals, bounds = (model.LOH_min, model.LOH_max)) # Level of hydrogen in the tank [-] 
+            model.HDISCH_TK = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)        # Hydrogen discharged from the tank [kg] 
+            model.HDIR_TK = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)          # Portion of discharged hydrogen used directly to meet demand [kg]
+            model.iTK = pyo.Var(model.T, model.S, within=pyo.Binary)                       # Binary: tank active (1) or not (0)
+
+            # 7.4 Fuel cell
+            model.HFC = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # Hydrogen used by the fuel cell [kg]  
+            model.eFC_on = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)    # Electricity produced by the fuel cell in on state [MWh]
+            model.eFC_sb = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # Electricity produced by the fuel cell [MWh] 
+            # model.iFC = pyo.Var(model.T, model.S, within=pyo.Binary)               # Binary: fuel cell active (1) or off (0)
+            model.iFC_on   = pyo.Var(model.T0, model.S, within=pyo.Binary)  # on-state
+            model.iFC_sb   = pyo.Var(model.T0, model.S, within=pyo.Binary)  # standby-state
+            model.iFC_off  = pyo.Var(model.T0, model.S, within=pyo.Binary)  # off-state
+            model.i_FC_warm = pyo.Var(model.T, model.S, within=pyo.Binary)  # warm start (sb->on)
+            model.i_FC_cold = pyo.Var(model.T, model.S, within=pyo.Binary)  # cold start (off->on)
+
+            # Hydrogen sold
+            model.Hsold = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)  # Hydrogen sold [kg]    
 
     def add_objective(self):
         # Because the rule needs to be a function
@@ -360,6 +488,76 @@ class ModelBuilder:
                 obj_expr -= term_slack
 
             obj_expr -= m.lambda_risk * m.CVAR
+
+            # Adding Hydrogen Components to the objective function
+            if self.use_hydro:
+     
+                term_h_demand = sum(
+                    m.lambda_H * m.HDEM[t]
+                    for t in m.T
+                )
+                obj_expr += term_h_demand
+                
+
+                term_h_sold = sum(
+                    m.Prob[s] * m.lambda_H * m.Hsold[t, s]
+                    for s in m.S for t in m.T
+                )
+                obj_expr += term_h_sold
+                
+                # Battery degradation costs
+                term_batt_deg = sum(
+                    m.Prob[s] * ((m.dV[t, s] + m.cV[t, s]) / (2 * m.Emax)) * (m.B_sp_cost * m.Emax / m.cyc_max)
+                    for s in m.S for t in m.T
+                )
+                obj_expr -= term_batt_deg
+                
+                # Electrolyzer operating costs
+                term_el_water = sum(
+                    m.Prob[s] * m.lambda_wat * m.sp_wat_EL * m.HEL[t, s]
+                    for s in m.S for t in m.T
+                )
+                obj_expr -= term_el_water
+                
+                term_el_warm_start = sum(
+                    m.Prob[s] * m.lambda_warm_st * m.P_EL_nom * m.i_EL_warm[t, s]
+                    for s in m.S for t in m.T
+                )
+                obj_expr -= term_el_warm_start
+                
+                term_el_cold_start = sum(
+                    m.Prob[s] * m.lambda_cold_st * m.P_EL_nom * m.i_EL_cold[t, s]
+                    for s in m.S for t in m.T
+                )
+                obj_expr -= term_el_cold_start
+                
+                # Electrolyzer degradation/replacement cost
+                term_el_replacement = sum(
+                    m.Prob[s] * (m.EL_repl_cost * m.P_EL_nom / m.EL_lifetime) * m.iEL_on[t, s]
+                    for s in m.S for t in m.T
+                )
+                obj_expr -= term_el_replacement
+                
+                # Fuel cell operating costs
+                term_fc_warm_start = sum(
+                    m.Prob[s] * m.lambda_warm_st_FC * m.P_FC_nom * m.i_FC_warm[t, s]
+                    for s in m.S for t in m.T
+                )
+                obj_expr -= term_fc_warm_start
+                
+                term_fc_cold_start = sum(
+                    m.Prob[s] * m.lambda_cold_st_FC * m.P_FC_nom * m.i_FC_cold[t, s]
+                    for s in m.S for t in m.T
+                )
+                obj_expr -= term_fc_cold_start
+                
+                # Fuel cell degradation/replacement cost
+                term_fc_replacement = sum(
+                    m.Prob[s] * (m.FC_repl_cost * m.P_FC_nom / m.FC_lifetime) * m.iFC_on[t, s]
+                    for s in m.S for t in m.T
+                )
+                obj_expr -= term_fc_replacement
+        
             return obj_expr
         
         self.model.EECSW = pyo.Objective(rule=EECSW_rule, sense=pyo.maximize)
@@ -476,6 +674,8 @@ class ModelBuilder:
         model.DA_sell_bid_LB = pyo.Constraint(model.T, model.S, rule=DA_sell_bid_LB_rule)
 
         def DA_sell_bid_UB_rule(m, t, s):
+            if self.use_hydro:
+                return m.eDA_p[t, s] <= (m.max_pW + m.max_pPV + m.Dmax + m.P_FC_nom - m.FD_L[t]) * m.ieDA_p[t, s]
             return m.eDA_p[t, s] <= (m.max_pW + m.max_pPV + m.Dmax - m.FD_L[t]) * m.ieDA_p[t, s]
         model.DA_sell_bid_UB = pyo.Constraint(model.T, model.S, rule=DA_sell_bid_UB_rule)
 
@@ -484,6 +684,8 @@ class ModelBuilder:
         model.DA_buy_bid_LB = pyo.Constraint(model.T, model.S, rule=DA_buy_bid_LB_rule)
 
         def DA_buy_bid_UB_rule(m, t, s):
+            if self.use_hydro:
+                return m.eDA_m[t, s] <= (m.Dmax + m.FD_U[t] + m.P_EL_nom + m.P_COMP_nom + m.SB_frac_FC*m.P_FC_nom) * m.ieDA_m[t, s]
             return m.eDA_m[t, s] <= (m.Dmax + m.FD_U[t]) * m.ieDA_m[t, s]
         model.DA_buy_bid_UB = pyo.Constraint(model.T, model.S, rule=DA_buy_bid_UB_rule)
 
@@ -498,17 +700,25 @@ class ModelBuilder:
 
             if self.sim_ctx.market in ["DA", "RM"]:       # for DA and RM we don't consider undeliverable resrve
                 def RM_components_U_rule(m, t, s):
+                    if self.use_hydro:
+                        return m.rU[t, s] == m.rU_B[t, s] + m.rU_FD[t, s] + m.rU_EL[t, s] + m.rU_FC[t, s]
                     return m.rU[t, s] == m.rU_B[t, s] + m.rU_FD[t, s]
                 model.RM_components_U = pyo.Constraint(model.T, model.S, rule=RM_components_U_rule)
                 def RM_components_D_rule(m, t, s):
+                    if self.use_hydro:
+                        return m.rD[t, s] == m.rD_B[t, s] + m.rD_FD[t, s] + m.rD_EL[t, s] + m.rD_FC[t, s]
                     return m.rD[t, s] == m.rD_B[t, s] + m.rD_FD[t, s]
                 model.RM_components_D = pyo.Constraint(model.T, model.S, rule=RM_components_D_rule)
 
             elif "IM" in self.sim_ctx.market:
                 def RM_components_U_rule(m, t, s):
+                    if self.use_hydro:
+                        return m.rU[t, s] == m.rU_B[t, s] + m.rU_FD[t, s] + m.rU_EL[t, s] + m.rU_FC[t, s] + m.rU_penalty[t, s]
                     return m.rU[t, s] == m.rU_B[t, s] + m.rU_FD[t, s] + m.rU_penalty[t, s]
                 model.RM_components_U = pyo.Constraint(model.T, model.S, rule=RM_components_U_rule)
                 def RM_components_D_rule(m, t, s):
+                    if self.use_hydro:
+                        return m.rD[t, s] == m.rD_B[t, s] + m.rD_FD[t, s] + m.rD_EL[t, s] + m.rD_FC[t, s] + m.rD_penalty[t, s]
                     return m.rD[t, s] == m.rD_B[t, s] + m.rD_FD[t, s] + m.rD_penalty[t, s]
                 model.RM_components_D = pyo.Constraint(model.T, model.S, rule=RM_components_D_rule)
 
@@ -589,6 +799,13 @@ class ModelBuilder:
                 - m.var_fd[t, s]
                 - m.cV[t, s]
             )
+            if self.use_hydro:
+                rhs = (rhs 
+                    + m.eFC_on[t,s]
+                    - m.eEL[t,s]
+                    - m.eCOMP[t,s]
+                    - m.eFC_sb[t,s]
+                )
             return lhs == rhs
         if self.sim_ctx.market == "IM3": 
             model.Imbalances = pyo.Constraint(range(12,25), model.S, rule=Imbalances_rule)    #not a pretty solution bc hardcoded.. however this is necessary otherwise IM3 is infeasible
@@ -614,6 +831,298 @@ class ModelBuilder:
             def IB_neg_UB_rule(m, t, s):
                 return m.pIB_m[t, s] <= pyo.value(m.PIB_m[t, s]) + m.IB_neg_slack[t, s]
             model.IB_neg_UB = pyo.Constraint(model.T, model.S, rule=IB_neg_UB_rule)
+
+
+    def _add_hydrogen_constraints(self):
+        model = self.model
+        def EL_min_power_rule(m, t, s):
+            # When active, the electrolyzer must consume at least the minimum fraction of its nominal power.
+            return m.eEL_on[t, s] >= m.min_EL_frac * m.P_EL_nom * m.iEL_on[t, s]
+        model.EL_min_power = pyo.Constraint(model.T, model.S, rule=EL_min_power_rule)
+
+        def EL_max_power_rule(m, t, s):
+            # The electrolyzer consumption cannot exceed its nominal power.
+            return m.eEL_on[t, s] <= m.P_EL_nom * m.iEL_on[t, s]
+        model.EL_max_power = pyo.Constraint(model.T, model.S, rule=EL_max_power_rule)
+
+        def EL_hydrogen_production_rule(m, t, s):
+            return m.eEL_on[t,s] == m.eta_EL * m.HEL[t,s] 
+        model.EL_hydrogen_prod = pyo.Constraint(model.T, model.S, rule=EL_hydrogen_production_rule)
+
+        # The hydrogen output after electrolysis is split into the portion used directly to cover demand and that to be compressed.
+        def EL_split_rule(m, t, s):
+            return m.HEL[t,s] == m.HDIR_EL[t,s] + m.HCOMP_EL[t,s]
+        model.EL_split = pyo.Constraint(model.T, model.S, rule=EL_split_rule)
+
+        # Electricity consumed in stand-by conditions
+        def EL_SB_balance_rule(m, t, s):
+            return m.eEL_sb[t,s] == m.SB_frac * m.P_EL_nom * m.iEL_sb[t, s]
+        model.EL_SB_energy_balance = pyo.Constraint(model.T, model.S, rule=EL_SB_balance_rule)
+
+        # Total electricity absorbed by electrolyzer
+        def EL_energy_balance_rule(m, t, s):
+            return m.eEL[t,s] == m.eEL_on[t,s] + m.eEL_sb[t,s]
+        model.EL_energy_balance = pyo.Constraint(model.T, model.S, rule=EL_energy_balance_rule)
+
+        # --- MODE TRANSITION CONSTRAINTS ---
+        # sanity‐check for the initial state that they sum to one:
+        model.EL_ini_sum = pyo.Constraint(expr=model.iEL_on_ini + model.iEL_sb_ini + model.iEL_off_ini == 1)                                                                                              
+
+        model.EL_on_ini  = pyo.Constraint(model.S, rule=lambda m,s: m.iEL_on[0,s]  == m.iEL_on_ini)
+        model.EL_sb_ini  = pyo.Constraint(model.S, rule=lambda m,s: m.iEL_sb[0,s]  == m.iEL_sb_ini)
+        model.EL_off_ini = pyo.Constraint(model.S, rule=lambda m,s: m.iEL_off[0,s] == m.iEL_off_ini)
+
+        # Only one state per time
+        def EL_one_state_rule(m, t, s):
+            return m.iEL_on[t,s] + m.iEL_sb[t,s] + m.iEL_off[t,s] == 1
+        model.EL_one_state = pyo.Constraint(model.T, model.S, rule=EL_one_state_rule)
+
+        # # Downtime constraint
+        # def EL_downtime_rule(m, t, s, n):
+        #     # if turned off at t, must remain off for all n in NEL_down[t]
+        #     if t == m.T.first():
+        #         return pyo.Constraint.Skip
+        #     return m.iEL_off[t,s] - m.iEL_off[t-1,s] <= m.iEL_off[n,s]
+        # model.EL_downtime = pyo.Constraint(model.T, model.S, model.NEL_down, rule=EL_downtime_rule)
+
+        # no transition sb->off or off->sb
+        def EL_no_sb_off_rule(m, t, s):
+            return m.iEL_off[t,s] <= 1 - m.iEL_sb[t-1,s]
+        model.EL_no_sb_off1 = pyo.Constraint(model.T, model.S, rule=EL_no_sb_off_rule)
+
+        def EL_no_off_sb_rule(m, t, s):                         
+            return  m.iEL_sb[t,s] <= 1 - m.iEL_off[t-1,s]
+        model.EL_no_sb_off2 = pyo.Constraint(model.T, model.S, rule=EL_no_off_sb_rule)
+
+        # Warm/cold startup linking (linearized)
+        def EL_warm_start_lower(m, t, s):                                 
+            return m.iEL_sb[t-1, s] + m.iEL_on[t, s] - 1 <= m.i_EL_warm[t, s]
+        model.EL_warm_lower = pyo.Constraint(model.T, model.S, rule=EL_warm_start_lower)
+
+        # def EL_warm_start_upper1(m, t, s):                          
+        #     return m.i_EL_warm[t,s] <= m.iEL_sb[t-1, s]
+        # model.EL_warm_upper1 = pyo.Constraint(model.T, model.S, rule=EL_warm_start_upper1)
+
+        # def EL_warm_start_upper2(m, t, s):                            
+        #     return m.i_EL_warm[t,s] <= m.iEL_on[t,s]
+        # model.EL_warm_upper2 = pyo.Constraint(model.T, model.S, rule=EL_warm_start_upper2)
+
+        # Cold start (off->on)
+        def EL_cold_start_lower(m, t, s):                                     
+            return m.iEL_off[t-1, s] + m.iEL_on[t,s] - 1 <= m.i_EL_cold[t,s]
+        model.EL_cold_lower = pyo.Constraint(model.T, model.S, rule=EL_cold_start_lower)
+
+        # def EL_cold_start_upper1(m, t, s):                      
+        #     return m.i_EL_cold[t,s] <= m.iEL_off[t-1, s]
+        # model.EL_cold_upper1 = pyo.Constraint(model.T, model.S, rule=EL_cold_start_upper1)
+
+        # def EL_cold_start_upper2(m, t, s):
+        #     return m.i_EL_cold[t,s] <= m.iEL_on[t,s]
+        # model.EL_cold_upper2 = pyo.Constraint(model.T, model.S, rule=EL_cold_start_upper2)
+
+        # Reserve market constraints for the electrolyzer
+        def EL_RU_rule(m, t, s):
+            # the effective consumption (baseline minus reserve) must remain above the minimum. 
+            # It can provide upward reserve only in on mode, because in standby the consumption is minimal
+            return m.eEL_on[t,s] - m.rU_EL[t,s] >= m.min_EL_frac * m.P_EL_nom * m.iEL_on[t,s]
+        model.EL_upward_reserve = pyo.Constraint(model.T, model.S, rule=EL_RU_rule)
+
+        def EL_RD_rule(m, t, s):
+            # the effective consumption (baseline plus reserve) must not exceed nominal power.
+            # The eelctrolyzer can provide downward reserve not only in on mode but even in standby mode
+            return m.eEL[t,s] + m.rD_EL[t,s] <= m.P_EL_nom * (1 - m.iEL_off[t,s])
+        model.EL_downward_reserve = pyo.Constraint(model.T, model.S, rule=EL_RD_rule)
+
+        def EL_RD_LOH_rule(m, t, s):
+            # Tank capacity limit to be respected when providing downward reserve only if hydrogen can't be sold
+            if m.can_sell_H2 == 0:
+                return m.LOH[t, s] + m.TSR * m.rD_EL[t, s] / (m.eta_EL * m.H_tank_cap) <= m.LOH_max
+            else:
+                return pyo.Constraint.Skip
+        model.HEL_RD_LOH = pyo.Constraint(model.T, model.S, rule=EL_RD_LOH_rule)
+
+        def EL_RU_LOH_rule(m, t, s):
+            # Tank capacity limit to be respected when providing upward reserve
+            return m.LOH[t, s] - m.TSR * m.rU_EL[t, s] / (m.eta_EL * m.H_tank_cap) >= m.LOH_min
+        model.HEL_RU_LOH = pyo.Constraint(model.T, model.S, rule=EL_RU_LOH_rule)
+
+        # =============================================================================
+        # 7.2 Compressor
+        # =============================================================================
+
+        def COMP_energy_rule(m, t, s):
+            return m.eCOMP[t,s] == m.spec_COMP * m.HCOMP_EL[t,s]
+        model.COMP_energy = pyo.Constraint(model.T, model.S, rule=COMP_energy_rule)
+
+        def COMP_power_rule(m, t, s):
+            return m.eCOMP[t,s] <= m.P_COMP_nom
+        model.COMP_power = pyo.Constraint(model.T, model.S, rule=COMP_power_rule)
+
+        # The hydrogen output after compression is split into the portion used directly to cover demand and that charged into the tank.
+        def COMP_split_rule(m, t, s):
+            return m.HCOMP_EL[t,s] == m.HDIR_COMP[t,s] + m.HC_TK[t,s]
+        model.COMP_split = pyo.Constraint(model.T, model.S, rule=COMP_split_rule)
+
+        # =============================================================================
+        # 7.3 Storage Tank
+        # =============================================================================
+
+        def Tank_initial_rule(m, s):
+            return m.LOH[m.T0.first(), s] == m.LOH_ini
+        model.Tank_initial = pyo.Constraint(model.S, rule=Tank_initial_rule)
+
+        def Tank_final_rule(m, s):
+            return m.LOH[m.nT, s] == m.LOH_fin
+        model.Tank_final = pyo.Constraint(model.S, rule=Tank_final_rule)
+
+        def Tank_charge_rate_rule(m, t, s):
+            # If the tank is charging (iTK = 0) then the charging flow (HC_TK) must be no more than the maximum.
+            return m.HC_TK[t,s] <= m.P_tank * (1 - m.iTK[t,s])
+        model.Tank_charge_rate = pyo.Constraint(model.T, model.S, rule=Tank_charge_rate_rule)
+
+        def Tank_discharge_rate_rule(m, t, s):
+            # If the tank is discharging (iTK = 1) then the discharging flow (HDISCH_TK) is limited.
+            return m.HDISCH_TK[t,s] <= m.P_tank * m.iTK[t,s]
+        model.Tank_discharge_rate = pyo.Constraint(model.T, model.S, rule=Tank_discharge_rate_rule)
+
+        # The hydrogen discharged from the tank is split into the portion used to cover demand and that used to fuel the fuel cell.
+        def Tank_split_rule(m, t, s):
+            return m.HDISCH_TK[t,s] == m.HDIR_TK[t,s] + m.HFC[t,s]
+        model.Tank_split = pyo.Constraint(model.T, model.S, rule=Tank_split_rule)
+
+        def Tank_storage_rule(m, t, s):
+            if t == m.T0.first():
+                return pyo.Constraint.Skip
+            return m.LOH[t,s] == m.LOH[t-1,s] + (m.HC_TK[t,s] - m.HDISCH_TK[t,s] / m.eta_tank) / m.H_tank_cap
+        model.Tank_storage = pyo.Constraint(model.T, model.S, rule=Tank_storage_rule)
+
+        # =============================================================================
+        # 7.4 Fuel Cell
+        # =============================================================================
+
+        ### THESE TWO CONTRAINTS ARE INCLUDED IN THE RESERVE FUEL CELL CONSTRAINTS, SO ARE COMMENTED
+
+        def FC_min_power_rule(m, t, s):
+            # When active, the fuel cell must produce at least the minimum fraction of its nominal power.
+            return m.eFC_on[t, s] >= m.min_FC_frac * m.P_FC_nom * m.iFC_on[t, s]
+        model.FC_min_power = pyo.Constraint(model.T, model.S, rule=FC_min_power_rule)
+
+        def FC_max_power_rule(m, t, s):
+            # The fuel cell production cannot exceed its nominal power.
+            return m.eFC_on[t, s] <= m.P_FC_nom * m.iFC_on[t, s]
+        model.FC_max_power = pyo.Constraint(model.T, model.S, rule=FC_max_power_rule)
+
+        def FC_hydrogen_cons_rule(m, t, s):
+            return m.HFC[t,s] == m.eFC_on[t, s] * m.eta_FC
+        model.FC_hydrogen_cons = pyo.Constraint(model.T, model.S, rule=FC_hydrogen_cons_rule)
+
+        # Electricity consumed in stand-by conditions by the FC (not hydrogen but electricity when in standby)
+        def FC_SB_balance_rule(m, t, s):
+            return m.eFC_sb[t,s] == m.SB_frac_FC * m.P_FC_nom * m.iFC_sb[t, s]
+        model.FC_SB_energy_balance = pyo.Constraint(model.T, model.S, rule=FC_SB_balance_rule)
+
+        # --- MODE TRANSITION CONSTRAINTS ---
+        # sanity‐check for the initial state that they sum to one:
+        model.FC_ini_sum = pyo.Constraint(expr=model.iFC_on_ini + model.iFC_sb_ini + model.iFC_off_ini == 1)                                                                                              
+
+        model.FC_on_ini  = pyo.Constraint(model.S, rule=lambda m,s: m.iFC_on[0,s]  == m.iFC_on_ini)
+        model.FC_sb_ini  = pyo.Constraint(model.S, rule=lambda m,s: m.iFC_sb[0,s]  == m.iFC_sb_ini)
+        model.FC_off_ini = pyo.Constraint(model.S, rule=lambda m,s: m.iFC_off[0,s] == m.iFC_off_ini)
+
+        # Only one state per time
+        def FC_one_state_rule(m, t, s):
+            return m.iFC_on[t,s] + m.iFC_sb[t,s] + m.iFC_off[t,s] == 1
+        model.FC_one_state = pyo.Constraint(model.T, model.S, rule=FC_one_state_rule)
+
+        # no transition sb->off or off->sb
+        def FC_no_sb_off_rule(m, t, s):
+            return m.iFC_off[t,s] <= 1 - m.iFC_sb[t-1,s]
+        model.FC_no_sb_off1 = pyo.Constraint(model.T, model.S, rule=FC_no_sb_off_rule)
+
+        def FC_no_off_sb_rule(m, t, s):
+            return  m.iFC_sb[t,s] <= 1 - m.iFC_off[t-1,s]
+        model.FC_no_sb_off2 = pyo.Constraint(model.T, model.S, rule=FC_no_off_sb_rule)
+
+        # Warm/cold startup linking (linearized)
+        def FC_warm_start_lower(m, t, s):
+            return m.iFC_sb[t-1, s] + m.iFC_on[t,s] - 1 <= m.i_FC_warm[t,s]
+        model.FC_warm_lower = pyo.Constraint(model.T, model.S, rule=FC_warm_start_lower)
+
+        # def FC_warm_start_upper1(m, t, s):    
+        #     return m.i_FC_warm[t,s] <= m.iFC_sb[t-1, s]
+        # model.FC_warm_upper1 = pyo.Constraint(model.T, model.S, rule=FC_warm_start_upper1)
+
+        # def FC_warm_start_upper2(m, t, s):
+        #     return m.i_FC_warm[t,s] <= m.iFC_on[t,s]
+        # model.FC_warm_upper2 = pyo.Constraint(model.T, model.S, rule=FC_warm_start_upper2)
+
+        # Cold start (off->on)
+        def FC_cold_start_lower(m, t, s):
+            return m.iFC_off[t-1, s] + m.iFC_on[t,s] - 1 <= m.i_FC_cold[t,s]
+        model.FC_cold_lower = pyo.Constraint(model.T, model.S, rule=FC_cold_start_lower)
+
+        # def FC_cold_start_upper1(m, t, s): 
+        #     return m.i_FC_cold[t,s] <= m.iFC_off[t-1, s]
+        # model.FC_cold_upper1 = pyo.Constraint(model.T, model.S, rule=FC_cold_start_upper1)
+
+        # def FC_cold_start_upper2(m, t, s):
+        #     return m.i_FC_cold[t,s] <= m.iFC_on[t,s]
+        # model.FC_cold_upper2 = pyo.Constraint(model.T, model.S, rule=FC_cold_start_upper2)
+
+        def FC_RU_rule(m, t, s):
+            # When providing upward reserve, the effective production (production plus reserve) must not exceed nominal power.
+            # The fuel cell can provide upward reserve not only in on mode but even in standby mode
+            return m.eFC_on[t,s] - m.eFC_sb[t,s] +  m.rU_FC[t,s] <= m.P_FC_nom * (1 - m.iFC_off[t,s])
+        model.FC_reserve_upward = pyo.Constraint(model.T, model.S, rule=FC_RU_rule)
+
+        def FC_RD_rule(m, t, s):
+            # When providing downward reserve, the effective production (production minus reserve) must remain above the minimum.
+            # It can provide downward reserve only in on mode, because in standby the consumption is minimal
+            return m.eFC_on[t,s] - m.rD_FC[t,s] >= m.min_FC_frac * m.P_FC_nom * m.iFC_on[t,s]
+        model.FC_reserve_downward = pyo.Constraint(model.T, model.S, rule=FC_RD_rule)
+
+        def FC_RU_LOH_rule(m, t, s):
+            # Minimum Tank capacity must always be guaranteed when providing upward reserve
+            return m.LOH[t, s] - m.TSR * m.rU_FC[t, s] * m.eta_FC / (m.eta_tank * m.H_tank_cap) >= m.LOH_min
+        model.HFC_RU_LOH = pyo.Constraint(model.T, model.S, rule=FC_RU_LOH_rule)
+
+        def FC_RD_LOH_rule(m, t, s):
+            # Minimum Tank capacity must always be guaranteed when providing upward reserve
+            return m.LOH[t, s] + m.TSR * m.rD_FC[t, s] * m.eta_FC / (m.eta_tank * m.H_tank_cap) <= m.LOH_max
+        model.HFC_RD_LOH = pyo.Constraint(model.T, model.S, rule=FC_RD_LOH_rule)
+
+        # =============================================================================
+        # 7.5 Hydrogen demand
+        # =============================================================================
+
+        # The hydrogen demand can be covered directly after electrolysis (if P<30 bar), directly after compression (if P > 30 bar), or from the tank after being laminated if P < 30 bar
+        # Hypotesis: if Demand P>30 bar, Compressor output pressure = Tank Pressure = Demand pressure
+        def DEM_split_rule(m, t, s):
+            return  m.HDIR_COMP[t,s] + m.HDIR_EL[t,s] + m.HDIR_TK[t,s] >= m.HDEM[t]
+        model.DEM_split = pyo.Constraint(model.T, model.S, rule=DEM_split_rule)
+
+        # If hydrogen demand pressure is lower than 30 bar then no direct supply from compressor is allowed,
+        # while if it is higher than 30 bar, no direct supply from electrolyzer is allowed
+        def H2_direct_use_rule(m, t, s): 
+            if m.HDEM_press <= m.HEL_press:
+                return m.HDIR_COMP[t,s] == 0
+            else:
+                return m.HDIR_EL[t,s] == 0
+        model.H2_direct_use = pyo.Constraint(model.T, model.S, rule=H2_direct_use_rule)
+
+        # define Hsold = total hydrogen allocated – demand
+        def Hsold_balance_rule(m, t, s):
+            return m.Hsold[t, s] == m.HDIR_COMP[t, s] + m.HDIR_EL[t, s] + m.HDIR_TK[t, s] - m.HDEM[t]
+        model.Hsold_balance = pyo.Constraint(model.T, model.S, rule=Hsold_balance_rule)
+
+        # only when can_sell_H2==0 do we force Hsold == 0,
+        # otherwise we skip this constraint and let other bounds apply
+        def Hsold_zero_if_no_sell(m, t, s):
+            if m.can_sell_H2 == 0:
+                return m.Hsold[t, s] == 0
+            else:
+                return pyo.Constraint.Skip
+        model.Hsold_zero_if_no_sell = pyo.Constraint(model.T, model.S, rule=Hsold_zero_if_no_sell)
 
 
     def _add_risk_aversion(self):
@@ -651,6 +1160,8 @@ class ModelBuilder:
         self._add_im_constraints()
         self._add_risk_aversion()
         self._add_imbalance_constraints()
+        if self.use_hydro:
+            self._add_hydrogen_constraints()
 
     @staticmethod
     def consecutive_scenarios(model, sg, k):
@@ -676,14 +1187,18 @@ class ModelBuilder:
         if market == "DA":
             day_ahead_reserve_vars = [
                 "eDA_p", "eDA_m", "ieDA_p", "ieDA_m",
-                "rU", "rU_B", "rU_FD", #"rU_EL", "rU_FC",
-                "rD", "rD_B", "rD_FD"]#, "rD_EL", "rD_FC"]
+                "rU", "rU_B", "rU_FD",
+                "rD", "rD_B", "rD_FD"]
             stage = 1
+
         elif market == "RM":
             day_ahead_reserve_vars = [
             "rU", "rU_B", "rU_FD",
             "rD", "rD_B", "rD_FD"]
             stage = 2
+
+        if self.use_hydro:
+            day_ahead_reserve_vars += ["rU_EL", "rU_FC","rD_EL", "rD_FC"]
 
         idx = []
         for var_name in day_ahead_reserve_vars:
@@ -793,6 +1308,13 @@ class ModelBuilder:
                 "rU_B", "rU_FD",
                 "rU_FD", "rD_FD"]
 
+        if self.use_hydro:
+            ec_asset_var += [ "eEL", "eEL_on", "eEL_sb", "iEL_on", "iEL_sb", "iEL_off", "i_EL_warm", "i_EL_cold", "HEL", "HDIR_EL", "HCOMP_EL",
+        "eCOMP", "HDIR_COMP", "HC_TK",
+        "LOH", "HDISCH_TK", "HDIR_TK", "iTK",
+        "HFC", "eFC_on", "eFC_sb", "iFC_on", "iFC_sb", "iFC_off", "i_FC_warm", "i_FC_cold",
+        "Hsold"  ]
+
         def _build_nac_ac_asset_index(model):
             """
             We'll unify flexible demand + battery in one NAC set, referencing c[sgpw[t]-1, k].
@@ -829,8 +1351,11 @@ class ModelBuilder:
         self._add_imbalance_nac()
         self._add_ec_asset_nac()
 
+
     def build_model(self):
         self.add_fundamentals()
+        if self.use_hydro:
+            self._add_hydrogen_params()
         self.add_market_participation()
         self.add_variables()
         self.add_objective()

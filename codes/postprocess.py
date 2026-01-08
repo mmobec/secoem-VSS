@@ -3,7 +3,7 @@ import os
 import config_definition as run_config
 import matplotlib.pyplot as plt
 from numpy import cumsum, array
-
+import pyomo.environ as pyo
 
 
 class PostProcess:
@@ -411,7 +411,10 @@ class PostProcess:
             for s in self.instance.S:
                 f.write(f"{s} {value(self.instance.Prob[s])} ")
                 for t in self.instance.T:
-                    f.write(f"{value(atrribute[t, s])} ")
+                    val = pyo.value(atrribute[t, s], exception=False)
+                    if val == None:
+                        val = 0.0
+                    f.write(f"{val} ")
                 f.write("\n")
 
 
@@ -437,7 +440,13 @@ class PostProcess:
             for s in self.instance.S:
                 f.write(f"{s} {value(self.instance.Prob[s])} ")
                 for t in self.instance.T:
-                    pIB_net = value(self.instance.pIB_p[t, s]) - value(self.instance.pIB_m[t, s])
+                    val_pibp = pyo.value(self.instance.pIB_p[t, s], exception=False)
+                    val_pibm = pyo.value(self.instance.pIB_m[t, s], exception=False)
+                    if val_pibp == None:
+                        val_pibp = 0.0
+                    if val_pibm == None:
+                        val_pibm = 0.0
+                    pIB_net = val_pibp - val_pibm
                     f.write(f"{pIB_net} ")
                 f.write("\n")
         
@@ -598,45 +607,45 @@ class PostProcess:
                            (value(self.instance.var_afd_p[t, s]) + value(self.instance.var_afd_m[t, s]))
                            for t in self.instance.T for s in self.instance.S)
 
-
-        obj_H2_income = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_H) * 
-            value(self.instance.Hsold[t, s]) * value(self.instance.can_sell_H2)
-            for t in self.instance.T for s in self.instance.S)    
-                                                            
-        obj_H2_DEM = sum(value(self.instance.lambda_H) * value(self.instance.HDEM[t])
-            for t in self.instance.T)
-        
-        obj_BESS_costs = sum(value(self.instance.Prob[s]) * 
-        ((value(self.instance.dV[t, s]) + value(self.instance.cV[t, s]))/(2 * value(self.instance.Emax))) * (value(self.instance.B_sp_cost) * value(self.instance.Emax) / value(self.instance.cyc_max))
-        for t in self.instance.T for s in self.instance.S)
-
-        obj_wat_costs = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_wat) * value(self.instance.sp_wat_EL) *
-        value(self.instance.HEL[t, s])
-        for t in self.instance.T for s in self.instance.S)
-
-        obj_warm_st_costs = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_warm_st) * 
-            value(self.instance.P_EL_nom) * value(self.instance.i_EL_warm[t, s]) 
+        if self.sim_ctx.include_hydro:
+            obj_H2_income = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_H) * 
+                value(self.instance.Hsold[t, s]) * value(self.instance.can_sell_H2)
+                for t in self.instance.T for s in self.instance.S)    
+                                                                
+            obj_H2_DEM = sum(value(self.instance.lambda_H) * value(self.instance.HDEM[t])
+                for t in self.instance.T)
+            
+            obj_BESS_costs = sum(value(self.instance.Prob[s]) * 
+            ((value(self.instance.dV[t, s]) + value(self.instance.cV[t, s]))/(2 * value(self.instance.Emax))) * (value(self.instance.B_sp_cost) * value(self.instance.Emax) / value(self.instance.cyc_max))
             for t in self.instance.T for s in self.instance.S)
 
-        obj_cold_st_costs = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_cold_st) * 
-            value(self.instance.P_EL_nom) * value(self.instance.i_EL_cold[t, s]) 
+            obj_wat_costs = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_wat) * value(self.instance.sp_wat_EL) *
+            value(self.instance.HEL[t, s])
             for t in self.instance.T for s in self.instance.S)
 
-        obj_deg_EL_costs = sum(value(self.instance.Prob[s]) * value(self.instance.EL_repl_cost) * 
-            value(self.instance.P_EL_nom) / value(self.instance.EL_lifetime) * value(self.instance.iEL_on[t, s])
-            for t in self.instance.T for s in self.instance.S)
-        
-        obj_warm_st_costs_FC = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_warm_st_FC) * 
-            value(self.instance.P_FC_nom) * value(self.instance.i_FC_warm[t, s]) 
-            for t in self.instance.T for s in self.instance.S)
+            obj_warm_st_costs = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_warm_st) * 
+                value(self.instance.P_EL_nom) * value(self.instance.i_EL_warm[t, s]) 
+                for t in self.instance.T for s in self.instance.S)
 
-        obj_cold_st_costs_FC = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_cold_st_FC) * 
-            value(self.instance.P_FC_nom) * value(self.instance.i_FC_cold[t, s]) 
-            for t in self.instance.T for s in self.instance.S)
-        
-        obj_deg_FC_costs = sum(value(self.instance.Prob[s]) * value(self.instance.FC_repl_cost) * 
-            value(self.instance.P_FC_nom) / value(self.instance.FC_lifetime) * value(self.instance.iFC_on[t, s])
-            for t in self.instance.T for s in self.instance.S)
+            obj_cold_st_costs = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_cold_st) * 
+                value(self.instance.P_EL_nom) * value(self.instance.i_EL_cold[t, s]) 
+                for t in self.instance.T for s in self.instance.S)
+
+            obj_deg_EL_costs = sum(value(self.instance.Prob[s]) * value(self.instance.EL_repl_cost) * 
+                value(self.instance.P_EL_nom) / value(self.instance.EL_lifetime) * value(self.instance.iEL_on[t, s])
+                for t in self.instance.T for s in self.instance.S)
+            
+            obj_warm_st_costs_FC = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_warm_st_FC) * 
+                value(self.instance.P_FC_nom) * value(self.instance.i_FC_warm[t, s]) 
+                for t in self.instance.T for s in self.instance.S)
+
+            obj_cold_st_costs_FC = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_cold_st_FC) * 
+                value(self.instance.P_FC_nom) * value(self.instance.i_FC_cold[t, s]) 
+                for t in self.instance.T for s in self.instance.S)
+            
+            obj_deg_FC_costs = sum(value(self.instance.Prob[s]) * value(self.instance.FC_repl_cost) * 
+                value(self.instance.P_FC_nom) / value(self.instance.FC_lifetime) * value(self.instance.iFC_on[t, s])
+                for t in self.instance.T for s in self.instance.S)
 
         obj_IB_costs = sum(value(self.instance.Prob[s]) * value(self.instance.lNIB[t, s]) * value(self.instance.pIB_m[t, s])
             for t in self.instance.T for s in self.instance.S)
@@ -649,36 +658,49 @@ class PostProcess:
         self.instance.obj_IB_costs[run_config.probl, self.sim_ctx.sim] = obj_IB_costs
         self.instance.obj_IB_net[run_config.probl, self.sim_ctx.sim] = obj_IB_net
         self.instance.obj_FD_costs[run_config.probl, self.sim_ctx.sim] = obj_FD_costs
-        self.instance.obj_H2_income[run_config.probl, self.sim_ctx.sim] = obj_H2_income
-        self.instance.obj_H2_DEM[run_config.probl, self.sim_ctx.sim] = obj_H2_DEM
-        self.instance.obj_BESS_costs[run_config.probl, self.sim_ctx.sim] = obj_BESS_costs
-        self.instance.obj_wat_costs[run_config.probl, self.sim_ctx.sim] = obj_wat_costs
-        self.instance.obj_warm_st_costs[run_config.probl, self.sim_ctx.sim] = obj_warm_st_costs
-        self.instance.obj_cold_st_costs[run_config.probl, self.sim_ctx.sim] = obj_cold_st_costs
-        self.instance.obj_deg_EL_costs[run_config.probl, self.sim_ctx.sim] = obj_deg_EL_costs
-        self.instance.obj_warm_st_costs_FC[run_config.probl, self.sim_ctx.sim] = obj_warm_st_costs_FC
-        self.instance.obj_cold_st_costs_FC[run_config.probl, self.sim_ctx.sim] = obj_cold_st_costs_FC
-        self.instance.obj_deg_FC_costs[run_config.probl, self.sim_ctx.sim] = obj_deg_FC_costs
+        if self.sim_ctx.include_hydro:
+            self.instance.obj_H2_income[run_config.probl, self.sim_ctx.sim] = obj_H2_income
+            self.instance.obj_H2_DEM[run_config.probl, self.sim_ctx.sim] = obj_H2_DEM
+            self.instance.obj_BESS_costs[run_config.probl, self.sim_ctx.sim] = obj_BESS_costs
+            self.instance.obj_wat_costs[run_config.probl, self.sim_ctx.sim] = obj_wat_costs
+            self.instance.obj_warm_st_costs[run_config.probl, self.sim_ctx.sim] = obj_warm_st_costs
+            self.instance.obj_cold_st_costs[run_config.probl, self.sim_ctx.sim] = obj_cold_st_costs
+            self.instance.obj_deg_EL_costs[run_config.probl, self.sim_ctx.sim] = obj_deg_EL_costs
+            self.instance.obj_warm_st_costs_FC[run_config.probl, self.sim_ctx.sim] = obj_warm_st_costs_FC
+            self.instance.obj_cold_st_costs_FC[run_config.probl, self.sim_ctx.sim] = obj_cold_st_costs_FC
+            self.instance.obj_deg_FC_costs[run_config.probl, self.sim_ctx.sim] = obj_deg_FC_costs
         # Store Objective Function Components
-        obj_components = {
+        if self.sim_ctx.include_hydro:
+            obj_components = {
+                "obj_fun.txt": obj_fun,
+                "obj_DA_income.txt": obj_DA_income,
+                "obj_RM_income.txt": obj_RM_income,
+                "obj_IM_income.txt": obj_IM_income,
+                "obj_IB_income.txt": obj_IB_income,
+                "obj_H2_income.txt": obj_H2_income,
+                "obj_H2_DEM.txt": obj_H2_DEM,
+                "obj_IB_costs.txt": obj_IB_costs,
+                "obj_IB_net.txt": obj_IB_net,
+                "obj_FD_costs.txt": obj_FD_costs,
+                "obj_BESS_costs.txt": obj_BESS_costs,
+                "obj_wat_costs.txt": obj_wat_costs,
+                "obj_warm_st_costs.txt": obj_warm_st_costs,
+                "obj_cold_st_costs.txt": obj_cold_st_costs,
+                "obj_deg_EL_costs.txt": obj_deg_EL_costs,
+                "obj_warm_st_costs_FC.txt": obj_warm_st_costs_FC,
+                "obj_cold_st_costs_FC.txt": obj_cold_st_costs_FC,
+                "obj_deg_FC_costs.txt": obj_deg_FC_costs,
+            }
+        else:
+            obj_components = {
             "obj_fun.txt": obj_fun,
             "obj_DA_income.txt": obj_DA_income,
             "obj_RM_income.txt": obj_RM_income,
             "obj_IM_income.txt": obj_IM_income,
             "obj_IB_income.txt": obj_IB_income,
-            "obj_H2_income.txt": obj_H2_income,
-            "obj_H2_DEM.txt": obj_H2_DEM,
             "obj_IB_costs.txt": obj_IB_costs,
             "obj_IB_net.txt": obj_IB_net,
             "obj_FD_costs.txt": obj_FD_costs,
-            "obj_BESS_costs.txt": obj_BESS_costs,
-            "obj_wat_costs.txt": obj_wat_costs,
-            "obj_warm_st_costs.txt": obj_warm_st_costs,
-            "obj_cold_st_costs.txt": obj_cold_st_costs,
-            "obj_deg_EL_costs.txt": obj_deg_EL_costs,
-            "obj_warm_st_costs_FC.txt": obj_warm_st_costs_FC,
-            "obj_cold_st_costs_FC.txt": obj_cold_st_costs_FC,
-            "obj_deg_FC_costs.txt": obj_deg_FC_costs,
         }
 
         for filename, obj_val in obj_components.items():
@@ -694,16 +716,17 @@ class PostProcess:
         self.sim_ctx.obj_results["obj_IB_costs"] = obj_IB_costs
         self.sim_ctx.obj_results["obj_IB_net"] = obj_IB_net
         self.sim_ctx.obj_results["obj_FD_costs"] = obj_FD_costs
-        self.sim_ctx.obj_results["obj_H2_income"] = obj_H2_income
-        self.sim_ctx.obj_results["obj_H2_DEM"] = obj_H2_DEM
-        self.sim_ctx.obj_results["obj_BESS_costs"] = obj_BESS_costs
-        self.sim_ctx.obj_results["obj_wat_costs"] = obj_wat_costs
-        self.sim_ctx.obj_results["obj_warm_st_costs"] = obj_warm_st_costs
-        self.sim_ctx.obj_results["obj_cold_st_costs"] = obj_cold_st_costs
-        self.sim_ctx.obj_results["obj_deg_EL_costs"] = obj_deg_EL_costs
-        self.sim_ctx.obj_results["obj_warm_st_costs_FC"] = obj_warm_st_costs_FC
-        self.sim_ctx.obj_results["obj_cold_st_costs_FC"]= obj_cold_st_costs_FC
-        self.sim_ctx.obj_results["obj_deg_FC_costs"] = obj_deg_FC_costs
+        if self.sim_ctx.include_hydro:
+            self.sim_ctx.obj_results["obj_H2_income"] = obj_H2_income
+            self.sim_ctx.obj_results["obj_H2_DEM"] = obj_H2_DEM
+            self.sim_ctx.obj_results["obj_BESS_costs"] = obj_BESS_costs
+            self.sim_ctx.obj_results["obj_wat_costs"] = obj_wat_costs
+            self.sim_ctx.obj_results["obj_warm_st_costs"] = obj_warm_st_costs
+            self.sim_ctx.obj_results["obj_cold_st_costs"] = obj_cold_st_costs
+            self.sim_ctx.obj_results["obj_deg_EL_costs"] = obj_deg_EL_costs
+            self.sim_ctx.obj_results["obj_warm_st_costs_FC"] = obj_warm_st_costs_FC
+            self.sim_ctx.obj_results["obj_cold_st_costs_FC"]= obj_cold_st_costs_FC
+            self.sim_ctx.obj_results["obj_deg_FC_costs"] = obj_deg_FC_costs
 
     def print_incomes(self):
         instance = self.instance
