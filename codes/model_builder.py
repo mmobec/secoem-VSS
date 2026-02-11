@@ -179,6 +179,8 @@ class ModelBuilder:
 
     def _add_hydrogen_params(self):
         model = self.model
+
+        # Battery Cost 
         model.B_sp_cost = pyo.Param(within=pyo.NonNegativeReals)            # BESS specific replacement cost (€/MWh)
         model.cyc_max = pyo.Param(within=pyo.NonNegativeReals)            # Total number of cycles in BESS lifetime (cycles)
         # Computing BESS degradation cost
@@ -786,7 +788,6 @@ class ModelBuilder:
 
     def _add_imbalance_constraints(self):
         model = self.model
-        #ToDo: Hydrogen here
         def Imbalances_rule(m, t, s):
             lhs = m.pIB_p[t, s] - m.pIB_m[t, s]
             rhs = (
@@ -804,7 +805,7 @@ class ModelBuilder:
                     + m.eFC_on[t,s]
                     - m.eEL[t,s]
                     - m.eCOMP[t,s]
-                    - m.eFC_sb[t,s]
+                    + m.eFC_sb[t,s]
                 )
             return lhs == rhs
         if self.sim_ctx.market == "IM3": 
@@ -1128,7 +1129,7 @@ class ModelBuilder:
     def _add_risk_aversion(self):
         model = self.model
         model.alpha = pyo.Param(initialize=0.90, mutable=True)  # confidence level
-        model.lambda_risk = pyo.Param(initialize=25, mutable=False)  # risk aversion weight
+        model.lambda_risk = pyo.Param(initialize=50, mutable=False)  # risk aversion weight
 
         model.eta_IM = pyo.Var()                       # VaR-like level for IM loss
         model.z_IM = pyo.Var(model.S, within=pyo.NonNegativeReals)  # tail excesses
