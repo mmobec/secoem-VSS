@@ -19,6 +19,7 @@ class ModelBuilder:
         model.nT = pyo.Param(within=pyo.PositiveIntegers)       # number of time periods
         model.T = pyo.RangeSet(1, model.nT)                 # set of time periods
         model.T0 = pyo.RangeSet(0, model.nT)                # T union {0}
+        model.dT = pyo.Param(within=pyo.PositiveReals, default=1.0)  # time step duration [hours]
 
         # >>> Intraday markets:
         model.nIM = pyo.Param(within=pyo.PositiveIntegers)      # number of intraday markets
@@ -630,7 +631,7 @@ class ModelBuilder:
             if t == m.T0.first():
                 # skip t=1 because we define an initial condition separately
                 return pyo.Constraint.Skip
-            return m.socV[t, s] == m.socV[t-1, s] + (m.cV[t, s] - m.dV[t, s]/m.RTE)/m.Emax
+            return m.socV[t, s] == m.socV[t-1, s] + m.dT * (m.cV[t, s] - m.dV[t, s]/m.RTE)/m.Emax
         model.SOCV = pyo.Constraint(model.T, model.S, rule=SOCV_rule)
 
         # socV[first(T0), s] = SOCini;
@@ -847,7 +848,9 @@ class ModelBuilder:
         model.EL_max_power = pyo.Constraint(model.T, model.S, rule=EL_max_power_rule)
 
         def EL_hydrogen_production_rule(m, t, s):
-            return m.eEL_on[t,s] == m.eta_EL * m.HEL[t,s] 
+            # eEL_on[t,s] is in MWh (energy over dT), HEL[t,s] is in kg (mass over dT)
+            # eta_EL is in MWh/kg, so: energy = eta_EL * mass
+            return m.eEL_on[t,s] == m.eta_EL * m.HEL[t,s]
         model.EL_hydrogen_prod = pyo.Constraint(model.T, model.S, rule=EL_hydrogen_production_rule)
 
         # The hydrogen output after electrolysis is split into the portion used directly to cover demand and that to be compressed.
@@ -1014,6 +1017,8 @@ class ModelBuilder:
         model.FC_max_power = pyo.Constraint(model.T, model.S, rule=FC_max_power_rule)
 
         def FC_hydrogen_cons_rule(m, t, s):
+            # eFC_on[t, s] is in MWh (energy over dT), HFC[t,s] is in kg (mass over dT)
+            # eta_FC is in kg/MWh, so: mass = eta_FC * energy
             return m.HFC[t,s] == m.eFC_on[t, s] * m.eta_FC
         model.FC_hydrogen_cons = pyo.Constraint(model.T, model.S, rule=FC_hydrogen_cons_rule)
 
