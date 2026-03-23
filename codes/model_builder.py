@@ -34,7 +34,7 @@ class ModelBuilder:
 
         # For sets of time periods in each intraday market:
         model.TIM = pyo.Set(model.IM, ordered=True)          # time periods in IM "i"
-        model.IMT = pyo.Set(model.T, ordered=True)           # intraday markets that include time "t"
+        model.IMT = pyo.Set(model.T, model.Q, ordered=True)           # intraday markets that include time "t"
         model.sgim = pyo.Param(model.IM, within=pyo.PositiveIntegers)   # stage associated to each IM "i"
 
         # >>> Scenario tree and Electricity market parameters:
@@ -79,8 +79,8 @@ class ModelBuilder:
         model.FD   = pyo.Param(model.T, model.Q, within=pyo.NonNegativeReals)   # Central demand [MWh]
         model.FD_L = pyo.Param(model.T, model.Q, within=pyo.NonNegativeReals)   # Lower bound on flexible demand
         model.FD_U = pyo.Param(model.T, model.Q, within=pyo.NonNegativeReals)   # Upper bound on flexible demand
-        model.TF_L = pyo.Param(model.FI, 1, within=pyo.PositiveIntegers)  # First time step of interval
-        model.TF_U = pyo.Param(model.FI, model.nQ, within=pyo.PositiveIntegers)  # Last time step of interval
+        model.TF_L = pyo.Param(model.FI, within=pyo.PositiveIntegers)  # First time step of interval
+        model.TF_U = pyo.Param(model.FI, within=pyo.PositiveIntegers)  # Last time step of interval
         model.coef_FD = pyo.Param(model.FI, within=pyo.Reals)          # fraction of central demand that must be met
         model.C_FD = pyo.Param(within=pyo.Reals)                       # cost per unit of flexible demand
         model.RUFD = pyo.Param(model.T, model.Q, within=pyo.NonNegativeReals)   # Upwards reserve limit for FD
@@ -250,7 +250,7 @@ class ModelBuilder:
         model.iFC_off_ini  = pyo.Param(within=pyo.Binary, mutable=True) # Initial value for off state binary variable                                                                                                          
 
         # 7.5 Hydrogen demand
-        model.HDEM = pyo.Param(model.T, within=pyo.NonNegativeReals)    # Hydrogen demand at time t [kg]
+        model.HDEM = pyo.Param(model.T, model.Q, within=pyo.NonNegativeReals)    # Hydrogen demand at time t [kg]
         model.HDEM_press = pyo.Param(within=pyo.NonNegativeReals)       # Hydrogen demand pressure [bar]
         model.HEL_press	 = pyo.Param(within=pyo.NonNegativeReals)       # Electrolyzer operating pressure [bar]
         model.lambda_H = pyo.Param(within=pyo.NonNegativeReals)         # Hydrogen price [€/kg]
@@ -330,27 +330,27 @@ class ModelBuilder:
         if self.sim_ctx.market == "DA":  
             self._add_DA_exclusive_set()
             # Variables
-            model.eDA_p = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # sold energy #Set to Mutable!
-            model.eDA_m = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # bought energy #Set to Mutable!
-            model.ieDA_p = pyo.Var(model.T, model.S, within=pyo.Binary)            # binary for selling bid
-            model.ieDA_m = pyo.Var(model.T, model.S, within=pyo.Binary)            # binary for buying bid
+            model.eDA_p = pyo.Var(model.T, model.Q, model.S, within=pyo.NonNegativeReals)   # sold energy #Set to Mutable!
+            model.eDA_m = pyo.Var(model.T, model.Q, model.S, within=pyo.NonNegativeReals)   # bought energy #Set to Mutable!
+            model.ieDA_p = pyo.Var(model.T, model.Q, model.S, within=pyo.Binary)            # binary for selling bid
+            model.ieDA_m = pyo.Var(model.T, model.Q, model.S, within=pyo.Binary)            # binary for buying bid
         else:
             # Now parameters
-            model.eDA_p = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True)   # sold energy #Set to Mutable!
-            model.eDA_m = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals, mutable=True)   # bought energy #Set to Mutable!
-            model.ieDA_p = pyo.Param(model.T, model.S, within=pyo.Binary)            # binary for selling bid
-            model.ieDA_m = pyo.Param(model.T, model.S, within=pyo.Binary)            # binary for buying bid
+            model.eDA_p = pyo.Param(model.T, model.Q, model.S, within=pyo.NonNegativeReals, mutable=True)   # sold energy #Set to Mutable!
+            model.eDA_m = pyo.Param(model.T, model.Q, model.S, within=pyo.NonNegativeReals, mutable=True)   # bought energy #Set to Mutable!
+            model.ieDA_p = pyo.Param(model.T, model.Q, model.S, within=pyo.Binary)            # binary for selling bid
+            model.ieDA_m = pyo.Param(model.T, model.Q, model.S, within=pyo.Binary)            # binary for buying bid
             
         if self.sim_ctx.market == "RM":
             self._add_RM_exclusive_set()
         
 
         if self.sim_ctx.market in ["DA", "RM"]:
-            model.rU = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # upward reserve
-            model.rD = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)      # downward reserve
+            model.rU = pyo.Var(model.T, model.Q, model.S, within=pyo.NonNegativeReals)      # upward reserve
+            model.rD = pyo.Var(model.T, model.Q, model.S, within=pyo.NonNegativeReals)      # downward reserve
         else:
-            model.rU = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)      # upward reserve
-            model.rD = pyo.Param(model.T, model.S, within=pyo.NonNegativeReals)      # downward reserve
+            model.rU = pyo.Param(model.T, model.Q, model.S, within=pyo.NonNegativeReals)      # upward reserve
+            model.rD = pyo.Param(model.T, model.Q, model.S, within=pyo.NonNegativeReals)      # downward reserve
 
         if "IM" in self.sim_ctx.market:
             model.lR_penalty = pyo.Param(model.T, model.Q, model.S, within=pyo.Reals, mutable=True)   # penalty price for undelivered reserve
@@ -377,7 +377,7 @@ class ModelBuilder:
         # 2. Flexible Demand
         model.var_fd = pyo.Var(model.T, model.Q, model.S, within=pyo.NonNegativeReals)      # Flexible Demand [MW]
         model.var_afd_p = pyo.Var(model.T, model.Q, model.S, within=pyo.NonNegativeReals)   # Positive displacement
-        model.var_afd_m = pyo.Var(model.T, model.Q, odel.S, within=pyo.NonNegativeReals)   # Negative displacement
+        model.var_afd_m = pyo.Var(model.T, model.Q, model.S, within=pyo.NonNegativeReals)   # Negative displacement
 
         # 6. Battery Energy Storage System
         model.dV = pyo.Var(model.T, model.Q, model.S, within=pyo.NonNegativeReals)          # Discharge rate [MW]
@@ -391,9 +391,9 @@ class ModelBuilder:
 
         # Slack Variables for models from RM forward
 
-        #if self.model != "DA":
-        #    model.IB_pos_slack = pyo.Var(model.T, model.S,within=pyo.NonNegativeReals, bounds=(0,200))
-        #    model.IB_neg_slack = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals, bounds=(0,200))
+        if self.model != "DA":
+            model.IB_pos_slack = pyo.Var(model.T, model.Q, model.S,within=pyo.NonNegativeReals, bounds=(0,200))
+            model.IB_neg_slack = pyo.Var(model.T, model.Q, model.S, within=pyo.NonNegativeReals, bounds=(0,200))
 
         if self.use_hydro:
             # 7.1 Electrolyzer 
@@ -443,24 +443,24 @@ class ModelBuilder:
             obj_expr = 0.0
             # DA component
             term_da = sum(
-                m.Prob[s] * m.lD[t, s] * (m.eDA_p[t, s] - m.eDA_m[t, s])
-                for s in m.S for t in m.T
+                m.Prob[s] * m.lD[t, q, s] * (m.eDA_p[t, q, s] - m.eDA_m[t, q, s])
+                for s in m.S for t in m.T for q in m.Q
             )
             obj_expr += term_da
             #RM component, with undeliverable reserve peanlty for markets after RM
             if "IM" in self.sim_ctx.market:  
                 term_rm = sum(
                     m.Prob[s] * (
-                        m.lR[t, s] * (m.rD[t, s] + m.rU[t, s]) 
-                        - m.lR_penalty[t, s] * (m.rU_penalty[t, s] + m.rD_penalty[t, s])
+                        m.lR[t, q, s] * (m.rD[t, q, s] + m.rU[t, q, s]) 
+                        - m.lR_penalty[t, q, s] * (m.rU_penalty[t, q, s] + m.rD_penalty[t, q, s])
                     )
-                    for s in m.S for t in m.T
+                    for s in m.S for t in m.T for q in m.Q
                 )
             else:
                 # Standard RM revenue without penalties
                 term_rm = sum(
-                    m.Prob[s] * m.lR[t, s] * (m.rD[t, s] + m.rU[t, s])
-                    for s in m.S for t in m.T
+                    m.Prob[s] * m.lR[t, q, s] * (m.rD[t, q, s] + m.rU[t, q, s])
+                    for s in m.S for t in m.T for q in m.Q
                 )
             obj_expr += term_rm
             # IM term
@@ -612,7 +612,7 @@ class ModelBuilder:
         def InterDem_rule(m, f, s):
             # gather time steps t in [TF_L[f], TF_U[f]]
             t_in_range = [t for t in m.T if m.TF_L[f] <= t <= m.TF_U[f]]
-            return sum(m.var_fd[t, s] for t in t_in_range) >= m.coef_FD[f] * sum(m.FD[t] for t in t_in_range)
+            return sum(m.var_fd[t, q, s] for t in t_in_range for q in m.Q) >= m.coef_FD[f] * sum(m.FD[t,q] for t in t_in_range for q in m.Q)
         model.InterDem = pyo.Constraint(model.FI, model.S, rule=InterDem_rule)
 
         # FD[t] - var_fd[t, s] = var_afd_p[t, s] - var_afd_m[t, s];
@@ -641,7 +641,10 @@ class ModelBuilder:
             if t == m.T0.first():
                 # skip t=1 because we define an initial condition separately
                 return pyo.Constraint.Skip
-            return m.socV[t, q, s] == m.socV[t-1, q, s] + (m.cV[t, q, s] - m.dV[t, q, s]/m.RTE)/m.Emax
+            if q == 1:
+                return m.socV[t, q, s] == m.socV[t-1, m.nQ, s] + m.dQ*(m.cV[t, q, s] - m.dV[t, q, s]/m.RTE)/m.Emax
+            else:
+                return m.socV[t, q, s] == m.socV[t, q-1, s] + m.dQ*(m.cV[t, q, s] - m.dV[t, q, s]/m.RTE)/m.Emax
         model.SOCV = pyo.Constraint(model.T, model.Q, model.S, rule=SOCV_rule)
 
         # socV[first(T0), s] = SOCini;
@@ -682,58 +685,58 @@ class ModelBuilder:
             return
         
         model = self.model
-        def DA_sell_bid_LB_rule(m, t, s):
-            return m.PDA_LB * m.ieDA_p[t, s] <= m.eDA_p[t, s]
-        model.DA_sell_bid_LB = pyo.Constraint(model.T, model.S, rule=DA_sell_bid_LB_rule)
+        def DA_sell_bid_LB_rule(m, t, q, s):
+            return m.PDA_LB * m.ieDA_p[t, q, s] <= m.eDA_p[t, q, s]
+        model.DA_sell_bid_LB = pyo.Constraint(model.T, model.Q, model.S, rule=DA_sell_bid_LB_rule)
 
-        def DA_sell_bid_UB_rule(m, t, s):
+        def DA_sell_bid_UB_rule(m, t, q, s):
             if self.use_hydro:
-                return m.eDA_p[t, s] <= (m.max_pW + m.max_pPV + m.Dmax + m.P_FC_nom - m.FD_L[t]) * m.ieDA_p[t, s]
-            return m.eDA_p[t, s] <= (m.max_pW + m.max_pPV + m.Dmax - m.FD_L[t]) * m.ieDA_p[t, s]
-        model.DA_sell_bid_UB = pyo.Constraint(model.T, model.S, rule=DA_sell_bid_UB_rule)
+                return m.eDA_p[t, q, s] <= (m.max_pW*m.dQ + m.max_pPV*m.dQ + m.Dmax*m.dQ + m.P_FC_nom*m.dQ - m.FD_L[t,q]) * m.ieDA_p[t, q, s]
+            return m.eDA_p[t, q, s] <= (m.max_pW*m.dQ + m.max_pPV*m.dQ + m.Dmax*m.dQ - m.FD_L[t,q]) * m.ieDA_p[t, q, s]
+        model.DA_sell_bid_UB = pyo.Constraint(model.T, model.Q, model.S, rule=DA_sell_bid_UB_rule)
 
-        def DA_buy_bid_LB_rule(m, t, s):
-            return m.PDA_LB * m.ieDA_m[t, s] <= m.eDA_m[t, s]
-        model.DA_buy_bid_LB = pyo.Constraint(model.T, model.S, rule=DA_buy_bid_LB_rule)
+        def DA_buy_bid_LB_rule(m, t, q, s):
+            return m.PDA_LB * m.ieDA_m[t, q, s] <= m.eDA_m[t, q, s]
+        model.DA_buy_bid_LB = pyo.Constraint(model.T, model.Q, model.S, rule=DA_buy_bid_LB_rule)
 
-        def DA_buy_bid_UB_rule(m, t, s):
+        def DA_buy_bid_UB_rule(m, t, q, s):
             if self.use_hydro:
-                return m.eDA_m[t, s] <= (m.Dmax + m.FD_U[t] + m.P_EL_nom + m.P_COMP_nom + m.SB_frac_FC*m.P_FC_nom) * m.ieDA_m[t, s]
-            return m.eDA_m[t, s] <= (m.Dmax + m.FD_U[t]) * m.ieDA_m[t, s]
+                return m.eDA_m[t, q, s] <= (m.Dmax*m.dQ + m.FD_U[t,q] + m.P_EL_nom*m.dQ + m.P_COMP_nom*m.dQ + m.SB_frac_FC*m.P_FC_nom) * m.ieDA_m[t, q, s]
+            return m.eDA_m[t, q, s] <= (m.Dmax*m.dQ + m.FD_U[t,q]) * m.ieDA_m[t, q, s]
         model.DA_buy_bid_UB = pyo.Constraint(model.T, model.S, rule=DA_buy_bid_UB_rule)
 
         # Constraint to Ensure Either Buying or Selling, Not Both
-        def DA_buy_or_sell_rule(m, t, s):
-            return m.ieDA_m[t, s] + m.ieDA_p[t, s] <= 1
-        model.DA_buy_or_sell = pyo.Constraint(model.T, model.S, rule=DA_buy_or_sell_rule)
+        def DA_buy_or_sell_rule(m, t, q, s):
+            return m.ieDA_m[t, q, s] + m.ieDA_p[t, q, s] <= 1
+        model.DA_buy_or_sell = pyo.Constraint(model.T, model.Q, model.S, rule=DA_buy_or_sell_rule)
 
 
     def _add_reserve_constraints(self):
             model = self.model
 
             if self.sim_ctx.market in ["DA", "RM"]:       # for DA and RM we don't consider undeliverable resrve
-                def RM_components_U_rule(m, t, s):
+                def RM_components_U_rule(m, t, q, s):
                     if self.use_hydro:
-                        return m.rU[t, s] == m.rU_B[t, s] + m.rU_FD[t, s] + m.rU_EL[t, s] + m.rU_FC[t, s]
-                    return m.rU[t, s] == m.rU_B[t, s] + m.rU_FD[t, s]
-                model.RM_components_U = pyo.Constraint(model.T, model.S, rule=RM_components_U_rule)
-                def RM_components_D_rule(m, t, s):
+                        return m.rU[t, q, s] == m.rU_B[t, q, s] + m.rU_FD[t, q, s] + m.rU_EL[t, q, s] + m.rU_FC[t, q, s]
+                    return m.rU[t, q, s] == m.rU_B[t, q, s] + m.rU_FD[t, q, s]
+                model.RM_components_U = pyo.Constraint(model.T, model.Q, model.S, rule=RM_components_U_rule)
+                def RM_components_D_rule(m, t, q, s):
                     if self.use_hydro:
-                        return m.rD[t, s] == m.rD_B[t, s] + m.rD_FD[t, s] + m.rD_EL[t, s] + m.rD_FC[t, s]
-                    return m.rD[t, s] == m.rD_B[t, s] + m.rD_FD[t, s]
-                model.RM_components_D = pyo.Constraint(model.T, model.S, rule=RM_components_D_rule)
+                        return m.rD[t, q, s] == m.rD_B[t, q, s] + m.rD_FD[t, q, s] + m.rD_EL[t, q, s] + m.rD_FC[t, q, s]
+                    return m.rD[t, q, s] == m.rD_B[t, q, s] + m.rD_FD[t, q, s]
+                model.RM_components_D = pyo.Constraint(model.T, model.Q, model.S, rule=RM_components_D_rule)
 
             elif "IM" in self.sim_ctx.market:
-                def RM_components_U_rule(m, t, s):
+                def RM_components_U_rule(m, t, q, s):
                     if self.use_hydro:
-                        return m.rU[t, s] == m.rU_B[t, s] + m.rU_FD[t, s] + m.rU_EL[t, s] + m.rU_FC[t, s] + m.rU_penalty[t, s]
-                    return m.rU[t, s] == m.rU_B[t, s] + m.rU_FD[t, s] + m.rU_penalty[t, s]
-                model.RM_components_U = pyo.Constraint(model.T, model.S, rule=RM_components_U_rule)
-                def RM_components_D_rule(m, t, s):
+                        return m.rU[t, q, s] == m.rU_B[t, q, s] + m.rU_FD[t, q, s] + m.rU_EL[t, q, s] + m.rU_FC[t, q, s] + m.rU_penalty[t, q, s]
+                    return m.rU[t, q, s] == m.rU_B[t, q, s] + m.rU_FD[t, q, s] + m.rU_penalty[t, q, s]
+                model.RM_components_U = pyo.Constraint(model.T, model.Q, model.S, rule=RM_components_U_rule)
+                def RM_components_D_rule(m, t, q, s):
                     if self.use_hydro:
-                        return m.rD[t, s] == m.rD_B[t, s] + m.rD_FD[t, s] + m.rD_EL[t, s] + m.rD_FC[t, s] + m.rD_penalty[t, s]
-                    return m.rD[t, s] == m.rD_B[t, s] + m.rD_FD[t, s] + m.rD_penalty[t, s]
-                model.RM_components_D = pyo.Constraint(model.T, model.S, rule=RM_components_D_rule)
+                        return m.rD[t, q, s] == m.rD_B[t, q, s] + m.rD_FD[t, q, s] + m.rD_EL[t, q, s] + m.rD_FC[t, q, s] + m.rD_penalty[t, q, s]
+                    return m.rD[t, q, s] == m.rD_B[t, q, s] + m.rD_FD[t, q, s] + m.rD_penalty[t, q, s]
+                model.RM_components_D = pyo.Constraint(model.T, model.Q, model.S, rule=RM_components_D_rule)
 
 
     def _add_im_constraints(self):
@@ -747,8 +750,8 @@ class ModelBuilder:
                 D = pyo.value(m.eDA_p[t, q, s]) + pyo.value(m.eDA_m[t, q, s])  # OK only if fixed/Param
                 return m.maxTIM * D if D > EPS else m.FD_U[t, q]
         
-        model.eIM_pos = pyo.Var(model.IM, model.Q, model.T, model.S,within=pyo.NonNegativeReals)
-        model.eIM_neg = pyo.Var(model.IM, model.Q, model.T, model.S, within=pyo.NonNegativeReals)
+        model.eIM_pos = pyo.Var(model.IM, model.T, model.Q, model.S,within=pyo.NonNegativeReals)
+        model.eIM_neg = pyo.Var(model.IM, model.T, model.Q, model.S, within=pyo.NonNegativeReals)
 
         def link_posneg_rule(m, i, t, q, s):
             return m.eIM[i, t, q, s] == m.eIM_pos[i, t, q, s] - m.eIM_neg[i, t, q, s]
@@ -805,11 +808,11 @@ class ModelBuilder:
                 m.eDA_m[t, s]
                 + m.pW[t, q, s]
                 + m.pPV[t, q, s]
-                + m.dV[t, q, s]
+                + m.dV[t, q, s]*m.dQ
                 - m.eDA_p[t, s]
                 - sum(m.eIM[i, t, q, s] for i in m.IMT[t,q])
                 - m.var_fd[t, q, s]
-                - m.cV[t, q, s]
+                - m.cV[t, q, s]*m.dQ
             )
             if self.use_hydro:
                 rhs = (rhs 
@@ -873,16 +876,16 @@ class ModelBuilder:
 
         # Total electricity absorbed by electrolyzer
         def EL_energy_balance_rule(m, t, q, s):
-            return m.eEL[t,s] == m.eEL_on[t,q,s] + m.eEL_sb[t,q,s]
+            return m.eEL[t,q,s] == m.eEL_on[t,q,s] + m.eEL_sb[t,q,s]
         model.EL_energy_balance = pyo.Constraint(model.T, model.Q, model.S, rule=EL_energy_balance_rule)
 
         # --- MODE TRANSITION CONSTRAINTS ---
         # sanity‐check for the initial state that they sum to one:
         model.EL_ini_sum = pyo.Constraint(expr=model.iEL_on_ini + model.iEL_sb_ini + model.iEL_off_ini == 1)                                                                                              
 
-        model.EL_on_ini  = pyo.Constraint(model.S, rule=lambda m,s: m.iEL_on[0,s]  == m.iEL_on_ini)
-        model.EL_sb_ini  = pyo.Constraint(model.S, rule=lambda m,s: m.iEL_sb[0,s]  == m.iEL_sb_ini)
-        model.EL_off_ini = pyo.Constraint(model.S, rule=lambda m,s: m.iEL_off[0,s] == m.iEL_off_ini)
+        model.EL_on_ini  = pyo.Constraint(model.S, rule=lambda m,s: m.iEL_on[0,m.Q, s]  == m.iEL_on_ini)
+        model.EL_sb_ini  = pyo.Constraint(model.S, rule=lambda m,s: m.iEL_sb[0,m.Q,s]  == m.iEL_sb_ini)
+        model.EL_off_ini = pyo.Constraint(model.S, rule=lambda m,s: m.iEL_off[0,m.Q,s] == m.iEL_off_ini)
 
         # Only one state per time
         def EL_one_state_rule(m, t, q, s):
@@ -899,11 +902,17 @@ class ModelBuilder:
 
         # no transition sb->off or off->sb
         def EL_no_sb_off_rule(m, t, q, s):
-            return m.iEL_off[t,q,s] <= 1 - m.iEL_sb[t-1,q,s]
+            if q == 1:
+                return m.iEL_off[t,q,s] <= 1 - m.iEL_sb[t-1,m.nQ,s]
+            else:
+                return m.iEL_off[t,q,s] <= 1 - m.iEL_sb[t,q-1,s]
         model.EL_no_sb_off1 = pyo.Constraint(model.T, model.Q, model.S, rule=EL_no_sb_off_rule)
 
-        def EL_no_off_sb_rule(m, t, q, s):                         
-            return  m.iEL_sb[t,q,s] <= 1 - m.iEL_off[t-1,q,s]
+        def EL_no_off_sb_rule(m, t, q, s):    
+            if q == 1:                     
+                return  m.iEL_sb[t,q,s] <= 1 - m.iEL_off[t-1,m.nQ,s]
+            else:
+                return  m.iEL_sb[t,q,s] <= 1 - m.iEL_off[t,q-1,s]
         model.EL_no_sb_off2 = pyo.Constraint(model.T, model.Q, model.S, rule=EL_no_off_sb_rule)
 
         # Warm/cold startup linking (linearized)
@@ -933,30 +942,30 @@ class ModelBuilder:
         # model.EL_cold_upper2 = pyo.Constraint(model.T, model.S, rule=EL_cold_start_upper2)
 
         # Reserve market constraints for the electrolyzer
-        def EL_RU_rule(m, t, s):
+        def EL_RU_rule(m, t, q, s):
             # the effective consumption (baseline minus reserve) must remain above the minimum. 
             # It can provide upward reserve only in on mode, because in standby the consumption is minimal
-            return m.eEL_on[t,s] - m.rU_EL[t,s] >= m.min_EL_frac * m.P_EL_nom * m.iEL_on[t,s]
+            return m.eEL_on[t,q,s] - m.rU_EL[t,q,s] >= m.min_EL_frac * m.P_EL_nom * m.iEL_on[t,q,s]
         model.EL_upward_reserve = pyo.Constraint(model.T, model.S, rule=EL_RU_rule)
 
-        def EL_RD_rule(m, t, s):
+        def EL_RD_rule(m, t, q, s):
             # the effective consumption (baseline plus reserve) must not exceed nominal power.
             # The eelctrolyzer can provide downward reserve not only in on mode but even in standby mode
-            return m.eEL[t,s] + m.rD_EL[t,s] <= m.P_EL_nom * (1 - m.iEL_off[t,s])
-        model.EL_downward_reserve = pyo.Constraint(model.T, model.S, rule=EL_RD_rule)
+            return m.eEL[t,q,s] + m.rD_EL[t,q,s] <= m.P_EL_nom * (1 - m.iEL_off[t,q,s])
+        model.EL_downward_reserve = pyo.Constraint(model.T, model.Q, model.S, rule=EL_RD_rule)
 
-        def EL_RD_LOH_rule(m, t, s):
+        def EL_RD_LOH_rule(m, t, q, s):
             # Tank capacity limit to be respected when providing downward reserve only if hydrogen can't be sold
             if m.can_sell_H2 == 0:
-                return m.LOH[t, s] + m.TSR * m.rD_EL[t, s] / (m.eta_EL * m.H_tank_cap) <= m.LOH_max
+                return m.LOH[t, q, s] + m.TSR * m.rD_EL[t, q, s] / (m.eta_EL * m.H_tank_cap) <= m.LOH_max
             else:
                 return pyo.Constraint.Skip
-        model.HEL_RD_LOH = pyo.Constraint(model.T, model.S, rule=EL_RD_LOH_rule)
+        model.HEL_RD_LOH = pyo.Constraint(model.T, model.Q, model.S, rule=EL_RD_LOH_rule)
 
-        def EL_RU_LOH_rule(m, t, s):
+        def EL_RU_LOH_rule(m, t, q, s):
             # Tank capacity limit to be respected when providing upward reserve
-            return m.LOH[t, s] - m.TSR * m.rU_EL[t, s] / (m.eta_EL * m.H_tank_cap) >= m.LOH_min
-        model.HEL_RU_LOH = pyo.Constraint(model.T, model.S, rule=EL_RU_LOH_rule)
+            return m.LOH[t, q, s] - m.TSR * m.rU_EL[t, q, s] / (m.eta_EL * m.H_tank_cap) >= m.LOH_min
+        model.HEL_RU_LOH = pyo.Constraint(model.T, model.Q, model.S, rule=EL_RU_LOH_rule)
 
         # =============================================================================
         # 7.2 Compressor
@@ -979,12 +988,12 @@ class ModelBuilder:
         # 7.3 Storage Tank
         # =============================================================================
 
-        def Tank_initial_rule(m, s):
-            return m.LOH[m.T0.first(), s] == m.LOH_ini
+        def Tank_initial_rule(m, q, s):
+            return m.LOH[m.T0.first(), q, s] == m.LOH_ini
         model.Tank_initial = pyo.Constraint(model.S, rule=Tank_initial_rule)
 
-        def Tank_final_rule(m, s):
-            return m.LOH[m.nT, s] == m.LOH_fin
+        def Tank_final_rule(m, q, s):
+            return m.LOH[m.nT, m.nQ, s] == m.LOH_fin
         model.Tank_final = pyo.Constraint(model.S, rule=Tank_final_rule)
 
         def Tank_charge_rate_rule(m, t, q, s):
@@ -1003,9 +1012,12 @@ class ModelBuilder:
         model.Tank_split = pyo.Constraint(model.T, model.Q, model.S, rule=Tank_split_rule)
 
         def Tank_storage_rule(m, t, q, s):
-            if t == m.T0.first() and q == 1:
+            if t == m.T0.first():
                 return pyo.Constraint.Skip
-            return m.LOH[t,q,s] == m.LOH[t-1,q,s] + (m.HC_TK[t,q,s] - m.HDISCH_TK[t,q,s] / m.eta_tank) / m.H_tank_cap
+            if q == 1:
+              return m.LOH[t,q,s] == m.LOH[t-1,m.nQ,s] + (m.HC_TK[t,q,s] - m.HDISCH_TK[t,q,s] / m.eta_tank) / m.H_tank_cap
+            else:
+              return m.LOH[t,q,s] == m.LOH[t,q-1,s] + (m.HC_TK[t,q,s] - m.HDISCH_TK[t,q,s] / m.eta_tank) / m.H_tank_cap
         model.Tank_storage = pyo.Constraint(model.T, model.Q, model.S, rule=Tank_storage_rule)
 
         # =============================================================================
@@ -1037,9 +1049,9 @@ class ModelBuilder:
         # sanity‐check for the initial state that they sum to one:
         model.FC_ini_sum = pyo.Constraint(expr=model.iFC_on_ini + model.iFC_sb_ini + model.iFC_off_ini == 1)                                                                                              
 
-        model.FC_on_ini  = pyo.Constraint(model.S, rule=lambda m,s: m.iFC_on[0,s]  == m.iFC_on_ini)
-        model.FC_sb_ini  = pyo.Constraint(model.S, rule=lambda m,s: m.iFC_sb[0,s]  == m.iFC_sb_ini)
-        model.FC_off_ini = pyo.Constraint(model.S, rule=lambda m,s: m.iFC_off[0,s] == m.iFC_off_ini)
+        model.FC_on_ini  = pyo.Constraint(model.S, rule=lambda m,s: m.iFC_on[0,m.Q,s]  == m.iFC_on_ini)
+        model.FC_sb_ini  = pyo.Constraint(model.S, rule=lambda m,s: m.iFC_sb[0,m.Q,s]  == m.iFC_sb_ini)
+        model.FC_off_ini = pyo.Constraint(model.S, rule=lambda m,s: m.iFC_off[0,m.Q,s] == m.iFC_off_ini)
 
         # Only one state per time
         def FC_one_state_rule(m, t, q, s):
@@ -1048,11 +1060,17 @@ class ModelBuilder:
 
         # no transition sb->off or off->sb
         def FC_no_sb_off_rule(m, t, q, s):
-            return m.iFC_off[t,q,s] <= 1 - m.iFC_sb[t-1,q,s]
+            if q == 1:
+                return m.iFC_off[t,q,s] <= 1 - m.iFC_sb[t-1,m.nQ,s]
+            else:
+                return m.iFC_off[t,q,s] <= 1 - m.iFC_sb[t,q-1,s]
         model.FC_no_sb_off1 = pyo.Constraint(model.T, model.Q, model.S, rule=FC_no_sb_off_rule)
 
         def FC_no_off_sb_rule(m, t, q, s):
-            return  m.iFC_sb[t,q,s] <= 1 - m.iFC_off[t-1,q,s]
+            if q == 1:
+                return  m.iFC_sb[t,q,s] <= 1 - m.iFC_off[t,m.nQ,s]
+            else: 
+                return  m.iFC_sb[t,q,s] <= 1 - m.iFC_off[t,q-q,s]
         model.FC_no_sb_off2 = pyo.Constraint(model.T, model.Q, model.S, rule=FC_no_off_sb_rule)
 
         # Warm/cold startup linking (linearized)
@@ -1081,27 +1099,27 @@ class ModelBuilder:
         #     return m.i_FC_cold[t,s] <= m.iFC_on[t,s]
         # model.FC_cold_upper2 = pyo.Constraint(model.T, model.S, rule=FC_cold_start_upper2)
 
-        def FC_RU_rule(m, t, s):
+        def FC_RU_rule(m, t, q, s):
             # When providing upward reserve, the effective production (production plus reserve) must not exceed nominal power.
             # The fuel cell can provide upward reserve not only in on mode but even in standby mode
-            return m.eFC_on[t,s] - m.eFC_sb[t,s] +  m.rU_FC[t,s] <= m.P_FC_nom * (1 - m.iFC_off[t,s])
-        model.FC_reserve_upward = pyo.Constraint(model.T, model.S, rule=FC_RU_rule)
+            return m.eFC_on[t,q,s] - m.eFC_sb[t,q,s] +  m.rU_FC[t,q,s] <= m.P_FC_nom * (1 - m.iFC_off[t,q,s])
+        model.FC_reserve_upward = pyo.Constraint(model.T, model.Q, model.S, rule=FC_RU_rule)
 
-        def FC_RD_rule(m, t, s):
+        def FC_RD_rule(m, t, q, s):
             # When providing downward reserve, the effective production (production minus reserve) must remain above the minimum.
             # It can provide downward reserve only in on mode, because in standby the consumption is minimal
-            return m.eFC_on[t,s] - m.rD_FC[t,s] >= m.min_FC_frac * m.P_FC_nom * m.iFC_on[t,s]
+            return m.eFC_on[t,q,s] - m.rD_FC[t,q,s] >= m.min_FC_frac * m.P_FC_nom * m.iFC_on[t,q,s]
         model.FC_reserve_downward = pyo.Constraint(model.T, model.S, rule=FC_RD_rule)
 
-        def FC_RU_LOH_rule(m, t, s):
+        def FC_RU_LOH_rule(m, t, q, s):
             # Minimum Tank capacity must always be guaranteed when providing upward reserve
-            return m.LOH[t, s] - m.TSR * m.rU_FC[t, s] * m.eta_FC / (m.eta_tank * m.H_tank_cap) >= m.LOH_min
-        model.HFC_RU_LOH = pyo.Constraint(model.T, model.S, rule=FC_RU_LOH_rule)
+            return m.LOH[t, q, s] - m.TSR * m.rU_FC[t, q, s] * m.eta_FC / (m.eta_tank * m.H_tank_cap) >= m.LOH_min
+        model.HFC_RU_LOH = pyo.Constraint(model.T, model.Q, model.S, rule=FC_RU_LOH_rule)
 
-        def FC_RD_LOH_rule(m, t, s):
+        def FC_RD_LOH_rule(m, t, q, s):
             # Minimum Tank capacity must always be guaranteed when providing upward reserve
-            return m.LOH[t, s] + m.TSR * m.rD_FC[t, s] * m.eta_FC / (m.eta_tank * m.H_tank_cap) <= m.LOH_max
-        model.HFC_RD_LOH = pyo.Constraint(model.T, model.S, rule=FC_RD_LOH_rule)
+            return m.LOH[t, q, s] + m.TSR * m.rD_FC[t, q, s] * m.eta_FC / (m.eta_tank * m.H_tank_cap) <= m.LOH_max
+        model.HFC_RD_LOH = pyo.Constraint(model.T, model.Q, model.S, rule=FC_RD_LOH_rule)
 
         # =============================================================================
         # 7.5 Hydrogen demand
@@ -1234,7 +1252,7 @@ class ModelBuilder:
         def stage1_nac_rule(m, var_name, t, q, k, l, l_next):
             var_obj = getattr(m, var_name)
             return var_obj[t,q, l] == var_obj[t,q, l_next]
-        model.NAC_stage1_index = pyo.Set(dimen=5, initialize=self._build_stage1_nac_index)
+        model.NAC_stage1_index = pyo.Set(dimen=6, initialize=self._build_stage1_nac_index)
         model.NAC_stage1 = pyo.Constraint(model.NAC_stage1_index, rule=stage1_nac_rule)
 
 
@@ -1270,7 +1288,7 @@ class ModelBuilder:
                 return pyo.Constraint.Skip
             return m.eIM[i, t, q, l] == m.eIM[i, t, q, l_next]
 
-        model.NAC_eIM_index = pyo.Set(dimen=5, initialize=_build_nac_eIM_index)
+        model.NAC_eIM_index = pyo.Set(dimen=6, initialize=_build_nac_eIM_index)
         model.NAC_eIM = pyo.Constraint(model.NAC_eIM_index, rule=_NAC_eIM_rule)
 
 
@@ -1300,7 +1318,7 @@ class ModelBuilder:
             var_obj = getattr(m, var_name)
             return var_obj[t, q, l] == var_obj[t, q, l_next]
 
-        model.NAC_imbal_index = pyo.Set(dimen=5, initialize=_build_nac_imbal_index)
+        model.NAC_imbal_index = pyo.Set(dimen=6, initialize=_build_nac_imbal_index)
         model.NAC_imbal = pyo.Constraint(model.NAC_imbal_index, rule=_nac_imbal_rule)
 
 
@@ -1359,7 +1377,7 @@ class ModelBuilder:
             var_obj = getattr(m, var_name)
             return var_obj[t, q, l] == var_obj[t, q, l_next]
 
-        model.NAC_fd_battery_index = pyo.Set(dimen=5, initialize=_build_nac_ac_asset_index)
+        model.NAC_fd_battery_index = pyo.Set(dimen=6, initialize=_build_nac_ac_asset_index)
         model.NAC_fd_battery = pyo.Constraint(model.NAC_fd_battery_index, rule=_nac_ec_asset_rule)
 
     def add_NAC(self):
