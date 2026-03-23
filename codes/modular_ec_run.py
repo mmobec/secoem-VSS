@@ -38,7 +38,7 @@ def run_day(sim, market, hydro = False):
 def main(market, hydro=False):
     sim_data = []
 
-    with mp.Pool(processes=64) as pool:  # choose a sensible number
+    with mp.Pool(processes=mp.cpu_count()) as pool:  # choose a sensible number processes = 64
         sim_data = pool.starmap(
             run_day,
             [(sim, market, hydro) for sim in run_config.SIMS]
@@ -59,8 +59,11 @@ if __name__ == "__main__":
     #main("EMS")
     #main("DA", hydro = True)
     run_day("001", "DA", hydro= False)
+    print("Running DA")
     main("DA")
+    print("Running RM")
     main("RM")
+    print("Running IMs")
     main("IM1")
     main("IM2")
     main("IM3")

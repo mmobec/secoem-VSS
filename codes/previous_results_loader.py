@@ -180,11 +180,12 @@ class PreviousMarketResultsLoader:
         e_da_m = {}
         e_da_p = {}
         for t in range(1, self.scenario_data["nT"] + 1):
-            for s in self.S_preserved:
-                e_da_m[t, s] = e_da_m_matched[t]
-                e_da_p[t, s] = e_da_p_matched[t]
-                ieDA_p[t,s] = ieDA_p_from_DAM_run[t,S[0]] # Because the values are the same for all scenarios of DA in the RM data
-                ieDA_m[t,s] = ieDA_m_from_DAM_run[t,S[0]]
+            for q in range(1, self.scenario_data["nQ"] + 1):
+                for s in self.S_preserved:
+                    e_da_m[(t, q, s)] = e_da_m_matched[t]
+                    e_da_p[(t, q, s)] = e_da_p_matched[t]
+                    ieDA_p[(t, q, s)] = ieDA_p_from_DAM_run[t,S[0]] # Because the values are the same for all scenarios of DA in the RM data
+                    ieDA_m[(t, q, s)] = ieDA_m_from_DAM_run[t,S[0]]
         self.scenario_data["eDA_p"] = e_da_p
         self.scenario_data["eDA_m"] = e_da_m
         self.scenario_data["ieDA_p"] = ieDA_p
@@ -229,10 +230,11 @@ class PreviousMarketResultsLoader:
         rD = {}
         lR_penalty = {}
         for t in range(1, self.scenario_data["nT"] + 1):
-            for s in self.S_preserved:
-                rU[t,s] = matched_rU[t]
-                rD[t,s] = matched_rD[t]
-                lR_penalty[(t,s)] = 1.5 * self.scenario_data["lR"][t,self.S_preserved[0]] # scenario doesn't matter
+            for q in range(1, self.scenario_data["nQ"] + 1):
+                for s in self.S_preserved:
+                    rU[(t, q, s)] = matched_rU[t]
+                    rD[(t, q, s)] = matched_rD[t]
+                    lR_penalty[(t, q, s)] = 1.5 * self.scenario_data["lR"][t, q, self.S_preserved[0]] # scenario doesn't matter
 
         self.scenario_data["rU"] = rU
         self.scenario_data["rD"] = rD
@@ -296,8 +298,12 @@ class PreviousMarketResultsLoader:
                 matched_eim1[i,t] = vol
 
         eIM_prev = {}
+        nQ = 4  # Number of subperiods per hour
         for i in range(1, im_no):
             for t in range(1, self.scenario_data["nT"] + 1):
+                for q in range(1, nQ + 1):  # Replicate for each subperiod
+                    for s in self.S_preserved:
+                        eIM_prev[(i, t, q, s)] = matched_eim1[i,t]
                 for s in self.S_preserved:
                     eIM_prev[i,t,s] = matched_eim1[i,t]
 
@@ -349,27 +355,29 @@ class PreviousMarketResultsLoader:
 
             if last_matched_scen == None:
                 last_matched_scen = S[0]
+            nQ = 4  # Number of subperiods per hour
             for t in range(1, self.scenario_data["nT"] + 1):
-                for s in  self.scenario_data["S"]:
-                    var_fd[t,s] = var_fd_from_im2[t, last_matched_scen]
-                    var_afd_p[t,s] = var_afd_p_from_im2[t,last_matched_scen]
-                    var_afd_m[t,s] = var_afd_m_from_im2[t,last_matched_scen]
-                    dv[t,s] = dv_from_im2[t,last_matched_scen]
-                    cv[t,s] = cv_from_im2[t,last_matched_scen]
-                    idv[t,s] = idv_from_im2[t,last_matched_scen]
-                    socv[t,s] = socv_from_im2[t,last_matched_scen]
-                    ru_penalty[t,s] = ru_penalty_from_im2[t,last_matched_scen]
-                    rd_penalty[t,s] = rd_penalty_from_im2[t,last_matched_scen]
-                    ru_b[t,s] = rU_B_from_im2[t,last_matched_scen]
-                    rd_b[t,s] = rD_B_from_im2[t,last_matched_scen]
-                    ru_fd[t,s] = rU_FD_from_im2[t,last_matched_scen]
-                    rd_fd[t,s] = rD_FD_from_im2[t,last_matched_scen]
-                    pib_p[t,s] = pib_p_from_im2[t,last_matched_scen]
-                    pib_m[t,s] = pib_m_from_im2[t,last_matched_scen]
+                for q in range(1, nQ + 1):  # Replicate for each subperiod
+                    for s in  self.scenario_data["S"]:
+                        var_fd[(t, q, s)] = var_fd_from_im2[t, last_matched_scen]
+                        var_afd_p[(t, q, s)] = var_afd_p_from_im2[t,last_matched_scen]
+                        var_afd_m[(t, q, s)] = var_afd_m_from_im2[t,last_matched_scen]
+                        dv[(t, q, s)] = dv_from_im2[t,last_matched_scen]
+                        cv[(t, q, s)] = cv_from_im2[t,last_matched_scen]
+                        idv[(t, q, s)] = idv_from_im2[t,last_matched_scen]
+                        socv[(t, q, s)] = socv_from_im2[t,last_matched_scen]
+                        ru_penalty[(t, q, s)] = ru_penalty_from_im2[t,last_matched_scen]
+                        rd_penalty[(t, q, s)] = rd_penalty_from_im2[t,last_matched_scen]
+                        ru_b[(t, q, s)] = rU_B_from_im2[t,last_matched_scen]
+                        rd_b[(t, q, s)] = rD_B_from_im2[t,last_matched_scen]
+                        ru_fd[(t, q, s)] = rU_FD_from_im2[t,last_matched_scen]
+                        rd_fd[(t, q, s)] = rD_FD_from_im2[t,last_matched_scen]
+                        pib_p[(t, q, s)] = pib_p_from_im2[t,last_matched_scen]
+                        pib_m[(t, q, s)] = pib_m_from_im2[t,last_matched_scen]
 
             #special case for socv because it is defined from 0-24:
             for s in self.scenario_data["S"]:
-                socv[0,s] = socv_from_im2[0,S[0]]
+                socv[(0, 0, s)] = socv_from_im2[0,S[0]]
 
             prev_vars["var_fd"] = var_fd
             prev_vars["var_afd_p"] = var_afd_p
@@ -410,8 +418,9 @@ class PreviousMarketResultsLoader:
             sorted_curve_with_energy = [(lI_from_im3_run[t_,s_], s_, eIM_from_im3[t_,s_]) for s_ in S]
             vol,scen = self.matched_volume(sorted_curve_with_energy, real_price)
             matched_eim1[t_] = vol
-            for s_ in self.S_preserved:
-                self.sim_ctx.eIM_prev[3,t_,s_] = matched_eim1[t_]  
+            for q in range(1, self.scenario_data["nQ"] + 1):
+                for s_ in self.S_preserved:
+                    self.sim_ctx.eIM_prev[(3, t_, q, s_)] = matched_eim1[t_]  
                   
 
     def load_results_ems(self):
@@ -447,28 +456,29 @@ class PreviousMarketResultsLoader:
         idx_im2 = S_IM2[0]
         for s in self.S_preserved:
             for t in range(1, self.scenario_data["nT"] + 1):
-                data_eDA_m[t, s] = e_da_m_from_DAM_run[t, idx_da]
-                data_eDA_p[t, s] = e_da_p_from_DAM_run[t, idx_da]
-                data_lD[t, s] = ld_from_DAM_run[t, idx_da]
-                data_ieDA_m[t, s] = ieDA_m_from_DAM_run[t, idx_da]
-                data_ieDA_p[t, s] = ieDA_p_from_DAM_run[t, idx_da]
+                for q in range(1, self.scenario_data["nQ"] + 1):
+                    data_eDA_m[(t, q, s)] = e_da_m_from_DAM_run[t, idx_da]
+                    data_eDA_p[(t, q, s)] = e_da_p_from_DAM_run[t, idx_da]
+                    data_lD[(t, q, s)] = ld_from_DAM_run[t, idx_da]
+                    data_ieDA_m[(t, q, s)] = ieDA_m_from_DAM_run[t, idx_da]
+                    data_ieDA_p[(t, q, s)] = ieDA_p_from_DAM_run[t, idx_da]
 
-                data_rU[t, s] = rU_from_rm_run[t, idx_rm]
-                data_rD[t, s] = rD_from_rm_run[t, idx_rm]
-                data_lR[t, s] = lR_from_rm_run[t, idx_rm]
+                    data_rU[(t, q, s)] = rU_from_rm_run[t, idx_rm]
+                    data_rD[(t, q, s)] = rD_from_rm_run[t, idx_rm]
+                    data_lR[(t, q, s)] = lR_from_rm_run[t, idx_rm]
 
-                self.sim_ctx.eIM_prev[1, t, s] = eIM_from_im1[t, idx_im2] #bc eIM can only be fixed after the istance is 
-                self.sim_ctx.eIM_prev[2, t, s] = eIM_from_im2[t, idx_im2]
-                data_lI_1[t, s] = lI_1_from_im2_run[t, idx_im2]
-                data_lI_2[t, s] = lI_2_from_im2_run[t, idx_im2]
+                    self.sim_ctx.eIM_prev[(1, t, q, s)] = eIM_from_im1[t, idx_im2] #bc eIM can only be fixed after the istance is 
+                    self.sim_ctx.eIM_prev[(2, t, q, s)] = eIM_from_im2[t, idx_im2]
+                    data_lI_1[(t, q, s)] = lI_1_from_im2_run[t, idx_im2]
+                    data_lI_2[(t, q, s)] = lI_2_from_im2_run[t, idx_im2]
 
-                """
-                IMPORTANT: IM3 is cleared on day D As well, so we can only use its results starting at hour 12!
-                Until then, we only have the anticipated IM3 volume from the IM2 model.
-                """
+                    """
+                    IMPORTANT: IM3 is cleared on day D As well, so we can only use its results starting at hour 12!
+                    Until then, we only have the anticipated IM3 volume from the IM2 model.
+                    """
 
-                if t >= self.scenario_data.data("TIM")[3][0]:  #If we are loading IM3 as well
-                    self.load_im3_matched()
+                    if t >= self.scenario_data.data("TIM")[3][0]:  #If we are loading IM3 as well
+                        self.load_im3_matched()
 
         self.scenario_data["eDA_m"] = data_eDA_m
         self.scenario_data["eDA_p"] = data_eDA_p

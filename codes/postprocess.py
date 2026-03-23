@@ -41,38 +41,41 @@ class PostProcess:
             var = getattr(self.instance, var_name)  # Get the variable dynamically
 
             for t in self.instance.T:
-                for k in self.instance.S0:
-                    for (l, l_next) in self.consecutive_scenarios(self.instance, 1, k): #ToDo: sg needs to change depending on the market run
-                        try:
-                            diff = abs(value(var[t, l]) - value(var[t, l_next]))
-                            if diff > 1e-6:
-                                print(f"Non-anticipativity violated: {var_name}[{t}, {l}] ≠ {var_name}[{t}, {l_next}]")
-                        except KeyError:
-                            print(f"Skipping {var_name}[{t}, {l}] or {var_name}[{t}, {l_next}] due to missing index")
+                for q in self.instance.Q:
+                    for k in self.instance.S0:
+                        for (l, l_next) in self.consecutive_scenarios(self.instance, 1, k): #ToDo: sg needs to change depending on the market run
+                            try:
+                                diff = abs(value(var[t, q, l]) - value(var[t, q, l_next]))
+                                if diff > 1e-6:
+                                    print(f"Non-anticipativity violated: {var_name}[{t}, {q}, {l}] ≠ {var_name}[{t}, {q}, {l_next}]")
+                            except KeyError:
+                                print(f"Skipping {var_name}[{t}, {q}, {l}] or {var_name}[{t}, {q}, {l_next}] due to missing index")
 
         print(f"Checking NAC for pIB_p:")
         for t in self.instance.T:
-            for k in self.instance.S0:
-                sg_for_t = self.instance.sgpw[t]  # use the same stage as in the constraint
-                for (l, l_next) in self.consecutive_scenarios(self.instance, sg_for_t, k):
-                    try:
-                        diff = abs(value(self.instance.pIB_p[t, l]) - value(self.instance.pIB_p[t, l_next]))
-                        if diff > 1e-6:
-                            print(f"Non-anticipativity violated: pIB_p[{t}, {l}] ≠ pIB_p[{t}, {l_next}]")
-                    except KeyError:
-                        print(f"Skipping pIB_p[{t}, {l}] or pIB_p[{t}, {l_next}] due to missing index")
+            for q in self.instance.Q:
+                for k in self.instance.S0:
+                    sg_for_t = self.instance.sgpw[t]  # use the same stage as in the constraint
+                    for (l, l_next) in self.consecutive_scenarios(self.instance, sg_for_t, k):
+                        try:
+                            diff = abs(value(self.instance.pIB_p[t, q, l]) - value(self.instance.pIB_p[t, q, l_next]))
+                            if diff > 1e-6:
+                                print(f"Non-anticipativity violated: pIB_p[{t}, {q}, {l}] ≠ pIB_p[{t}, {q}, {l_next}]")
+                        except KeyError:
+                            print(f"Skipping pIB_p[{t}, {q}, {l}] or pIB_p[{t}, {q}, {l_next}] due to missing index")
 
         print(f"Checking NAC for pIB_m:")
         for t in self.instance.T:
-            for k in self.instance.S0:
-                sg_for_t = self.instance.sgpw[t]  # use the same stage as in the constraint
-                for (l, l_next) in self.consecutive_scenarios(self.instance, sg_for_t, k):
-                    try:
-                        diff = abs(value(self.instance.pIB_m[t, l]) - value(self.instance.pIB_m[t, l_next]))
-                        if diff > 1e-6:
-                            print(f"Non-anticipativity violated: pIB_m[{t}, {l}] ≠ pIB_m[{t}, {l_next}]")
-                    except KeyError:
-                        print(f"Skipping pIB_m[{t}, {l}] or pIB_m[{t}, {l_next}] due to missing index")
+            for q in self.instance.Q:
+                for k in self.instance.S0:
+                    sg_for_t = self.instance.sgpw[t]  # use the same stage as in the constraint
+                    for (l, l_next) in self.consecutive_scenarios(self.instance, sg_for_t, k):
+                        try:
+                            diff = abs(value(self.instance.pIB_m[t, q, l]) - value(self.instance.pIB_m[t, q, l_next]))
+                            if diff > 1e-6:
+                                print(f"Non-anticipativity violated: pIB_m[{t}, {q}, {l}] ≠ pIB_m[{t}, {q}, {l_next}]")
+                        except KeyError:
+                            print(f"Skipping pIB_m[{t}, {q}, {l}] or pIB_m[{t}, {q}, {l_next}] due to missing index")
 
     def nac_demand_and_battery(self):
         # List of all variables in non-anticipativity constraints
@@ -91,33 +94,35 @@ class PostProcess:
             var = getattr(self.instance, var_name)  # Get the variable dynamically
 
             for t in self.instance.T:
-                for k in self.instance.S0:
-                    sg_for_t = self.instance.sgpw[t] - 1  # use the same stage as in the constraint
-                    for (l, l_next) in self.consecutive_scenarios(self.instance, sg_for_t, k):
-                        try:
-                            diff = abs(value(var[t, l]) - value(var[t, l_next]))
-                            if diff > 1e-6:
-                                print(f"Non-anticipativity violated: {var_name}[{t}, {l}] ≠ {var_name}[{t}, {l_next}]")
-                        except KeyError:
-                            print(f"Skipping {var_name}[{t}, {l}] or {var_name}[{t}, {l_next}] due to missing index")
+                for q in self.instance.Q:
+                    for k in self.instance.S0:
+                        sg_for_t = self.instance.sgpw[t] - 1  # use the same stage as in the constraint
+                        for (l, l_next) in self.consecutive_scenarios(self.instance, sg_for_t, k):
+                            try:
+                                diff = abs(value(var[t, q, l]) - value(var[t, q, l_next]))
+                                if diff > 1e-6:
+                                    print(f"Non-anticipativity violated: {var_name}[{t}, {q}, {l}] ≠ {var_name}[{t}, {q}, {l_next}]")
+                            except KeyError:
+                                print(f"Skipping {var_name}[{t}, {q}, {l}] or {var_name}[{t}, {q}, {l_next}] due to missing index")
 
         print(f"Checking NAC for all eIM:")
         # Check nonanticipativity for eIM using the same index logic as in build_nac_eIM_index:
         for i in self.instance.IM:
             for t in self.instance.TIM[i]:
-                for k in self.instance.S0:
-                    sg_for_i = self.instance.sgim[i] - 1
-                    for (l, l_next) in self.consecutive_scenarios(self.instance, sg_for_i, k):
-                        try:
-                            diff = abs(value(self.instance.eIM[i, t, l]) - value(self.instance.eIM[i, t, l_next]))
-                            if diff > 1e-6:
-                                print(f"Non-anticipativity violated: eIM[{i}, {t}, {l}] ≠ eIM[{i}, {t}, {l_next}]")
-                        except KeyError:
-                            print(f"Skipping eIM[{i}, {t}, {l}] or eIM[{i}, {t}, {l_next}] due to missing index")
+                for q in self.instance.Q:
+                    for k in self.instance.S0:
+                        sg_for_i = self.instance.sgim[i] - 1
+                        for (l, l_next) in self.consecutive_scenarios(self.instance, sg_for_i, k):
+                            try:
+                                diff = abs(value(self.instance.eIM[i, t, q, l]) - value(self.instance.eIM[i, t, q, l_next]))
+                                if diff > 1e-6:
+                                    print(f"Non-anticipativity violated: eIM[{i}, {t}, {q}, {l}] ≠ eIM[{i}, {t}, {q}, {l_next}]")
+                            except KeyError:
+                                print(f"Skipping eIM[{i}, {t}, {q}, {l}] or eIM[{i}, {t}, {q}, {l_next}] due to missing index")
 
     def save_ts_variable_group(self, output_dir, var_info_list, t_set=None, header=None):
         """
-        Generic method to save a group of (t, s)-indexed variables to individual files.
+        Generic method to save a group of (t, q, s)-indexed variables to individual files.
 
         Args:
             output_dir (str): Directory to save files into.
@@ -136,10 +141,11 @@ class PostProcess:
                 for s in self.instance.S:
                     f.write(f"{s} {value(self.instance.Prob[s])} ")
                     for t in t_set:
-                        try:
-                            f.write(f"{value(var[t, s])} ")
-                        except KeyError:
-                            f.write("0 ")  # fallback if variable missing
+                        for q in self.instance.Q:
+                            try:
+                                f.write(f"{value(var[t, q, s])} ")
+                            except KeyError:
+                                f.write("0 ")  # fallback if variable missing
                     f.write("\n")
 
     def print_ampl_console_output(self):
@@ -405,7 +411,7 @@ class PostProcess:
 
 
     def store_ib_var(self, var_name, ib_path):
-        file = os.path.join(ib_path, "{var_name}.txt")
+        file = os.path.join(ib_path, f"{var_name}.txt")
         atrribute = getattr(self.instance, var_name)   #this gets self.instance.PIB for example 
         with open(file, "w") as f:
             for s in self.instance.S:

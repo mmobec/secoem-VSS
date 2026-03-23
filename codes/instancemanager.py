@@ -26,6 +26,7 @@ class InstanceManager:
         if hasattr(self.instance, 'var_fd'):
             print(f"var_fd size: {len(list(self.instance.var_fd.keys()))}")  # Should be 24
         print(f"T size: {len(list(self.instance.T))}")  # Should be 24
+        print(f"Q size: {len(list(self.instance.Q))}")  # Should be 4
         print(f"S size: {len(list(self.instance.S))}")  # Should be 10
         return self.instance
 
@@ -59,39 +60,42 @@ class InstanceManager:
         sigma_pW_dict = {}
 
         for t in self.instance.T:
-            for s in self.instance.S:
-                # Fetch the correct random variable index from fRVSG
-                rv_index_wind = value(self.instance.fRVSG[value(self.instance.sgpw[t])])
-                rv_index_solar = rv_index_wind + 1  # Next variable corresponds to PV
-                # Compute wind power
-                pW_dict[(t, s)] = min(value(self.instance.Scen[rv_index_wind, s]), 1.0) * value(self.instance.Pavg)
-                # Compute PV power
-                pPV_dict[(t, s)] = min(value(self.instance.Scen[rv_index_solar, s]), 1.0) * value(self.instance.Pavg_PV)
+            for q in self.instance.Q:
+                for s in self.instance.S:
+                    # Fetch the correct random variable index from fRVSG
+                    rv_index_wind = value(self.instance.fRVSG[value(self.instance.sgpw[t])])
+                    rv_index_solar = rv_index_wind + 1  # Next variable corresponds to PV
+                    # Compute wind power
+                    pW_dict[(t, q, s)] = min(value(self.instance.Scen[rv_index_wind, s]), 1.0) * value(self.instance.Pavg)
+                    # Compute PV power
+                    pPV_dict[(t, q, s)] = min(value(self.instance.Scen[rv_index_solar, s]), 1.0) * value(self.instance.Pavg_PV)
         # Compute mean values
         for t in self.instance.T:
-            mean_pW_dict[t] = sum(value(self.instance.Prob[s]) * pW_dict[(t, s)] for s in self.instance.S)
-            mean_pPV_dict[t] = sum(value(self.instance.Prob[s]) * pPV_dict[(t, s)] for s in self.instance.S)
+            for q in self.instance.Q:
+                mean_pW_dict[(t, q)] = sum(value(self.instance.Prob[s]) * pW_dict[(t, q, s)] for s in self.instance.S)
+                mean_pPV_dict[(t, q)] = sum(value(self.instance.Prob[s]) * pPV_dict[(t, q, s)] for s in self.instance.S)
         # Compute sigma_pW (standard deviation)
         for t in self.instance.T:
-            variance_pW = sum(value(self.instance.Prob[s]) * (pW_dict[(t, s)] - mean_pW_dict[t]) ** 2 for s in self.instance.S)
-            sigma_pW_dict[t] = math.sqrt(variance_pW)
+            for q in self.instance.Q:
+                variance_pW = sum(value(self.instance.Prob[s]) * (pW_dict[(t, q, s)] - mean_pW_dict[(t, q)]) ** 2 for s in self.instance.S)
+                sigma_pW_dict[(t, q)] = math.sqrt(variance_pW)
         # Store values in Pyomo model
-        for (t, s), val in pW_dict.items():
-            self.instance.pW[t, s] = val
-        for (t, s), val in pPV_dict.items():
-            self.instance.pPV[t, s] = val
-        for t, val in mean_pW_dict.items():
-            self.instance.mean_pW[t] = val
-        for t, val in mean_pPV_dict.items():
-            self.instance.mean_pPV[t] = val
-        for t, val in sigma_pW_dict.items():
-            self.instance.sigma_pW[t] = val
+        for (t, q, s), val in pW_dict.items():
+            self.instance.pW[t, q, s] = val
+        for (t, q, s), val in pPV_dict.items():
+            self.instance.pPV[t, q, s] = val
+        for (t, q), val in mean_pW_dict.items():
+            self.instance.mean_pW[t, q] = val
+        for (t, q), val in mean_pPV_dict.items():
+            self.instance.mean_pPV[t, q] = val
+        for (t, q), val in sigma_pW_dict.items():
+            self.instance.sigma_pW[t, q] = val
 
         # Compute max values for wind and solar power
-        mean_pW_avg = sum(mean_pW_dict[t] for t in self.instance.T) / value(self.instance.nT)
-        mean_pPV_avg = sum(mean_pPV_dict[t] for t in self.instance.T) / value(self.instance.nT)
-        max_pW = max(value(self.instance.pW[t, s]) for t in self.instance.T for s in self.instance.S)
-        max_pPV = max(value(self.instance.pPV[t, s]) for t in self.instance.T for s in self.instance.S)
+        mean_pW_avg = sum(mean_pW_dict[(t, q)] for t in self.instance.T for q in self.instance.Q) / (value(self.instance.nT) * value(self.instance.nQ))
+        mean_pPV_avg = sum(mean_pPV_dict[(t, q)] for t in self.instance.T for q in self.instance.Q) / (value(self.instance.nT) * value(self.instance.nQ))
+        max_pW = max(value(self.instance.pW[t, q, s]) for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
+        max_pPV = max(value(self.instance.pPV[t, q, s]) for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
         # Store max values in Pyomo model
         self.instance.max_pW = max_pW
         self.instance.max_pPV = max_pPV
@@ -174,16 +178,17 @@ class InstanceManager:
         PIB_p_dict = {}
         PIB_m_dict = {}
         for t in self.instance.T:
-            for s in self.instance.S:
-                imbalance_p = value(self.instance.pW[t, s]) + value(self.instance.pPV[t, s]) - value(self.instance.mean_pW[t]) - value(
-                    self.instance.mean_pPV[t])
-                PIB_p_dict[(t, s)] = imbalance_p if imbalance_p >= 0 else 0.0
-                PIB_m_dict[(t, s)] = -imbalance_p if imbalance_p < 0 else 0.0
+            for q in self.instance.Q:
+                for s in self.instance.S:
+                    imbalance_p = value(self.instance.pW[t, q, s]) + value(self.instance.pPV[t, q, s]) - value(self.instance.mean_pW[t, q]) - value(
+                        self.instance.mean_pPV[t, q])
+                    PIB_p_dict[(t, q, s)] = imbalance_p if imbalance_p >= 0 else 0.0
+                    PIB_m_dict[(t, q, s)] = -imbalance_p if imbalance_p < 0 else 0.0
         # Store computed values into Pyomo model
-        for (t, s), val in PIB_p_dict.items():
-            self.instance.PIB_p[t, s] = val
-        for (t, s), val in PIB_m_dict.items():
-            self.instance.PIB_m[t, s] = val
+        for (t, q, s), val in PIB_p_dict.items():
+            self.instance.PIB_p[t, q, s] = val
+        for (t, q, s), val in PIB_m_dict.items():
+            self.instance.PIB_m[t, q, s] = val
 
     def compute_market_prices(self):
         # Compute market prices (Day-Ahead prices already defined before creating the self.instance)
@@ -197,50 +202,54 @@ class InstanceManager:
         lIB_dict = {}
         # Assign values to dictionaries
         for t in self.instance.T:
-            for s in self.instance.S:
-                # Reserve market prices
-                #lR_dict[t, s] = value(self.instance.Scen[value(self.instance.nT) + t, s])
-                # System imbalance prices
-                lIB_dict[t, s] = value(self.instance.Scen[value(self.instance.fRVSG[value(self.instance.nSG)]) + (t - 1), s])
+            for q in self.instance.Q:
+                for s in self.instance.S:
+                    # Reserve market prices
+                    #lR_dict[t, q, s] = value(self.instance.Scen[value(self.instance.nT) + t, s])
+                    # System imbalance prices
+                    lIB_dict[t, q, s] = value(self.instance.Scen[value(self.instance.fRVSG[value(self.instance.nSG)]) + (t - 1), s])
         # Assign Intraday Market prices
         for i in self.instance.IM:
             for t in self.instance.TIM[i]:
-                for s in self.instance.S:
-                    lI_dict[i, t, s] = value(
-                        self.instance.Scen[value(self.instance.fRVSG[value(self.instance.sgim[i])]) + t - min(self.instance.TIM[i]), s])
+                for q in self.instance.Q:
+                    for s in self.instance.S:
+                        lI_dict[i, t, q, s] = value(
+                            self.instance.Scen[value(self.instance.fRVSG[value(self.instance.sgim[i])]) + t - min(self.instance.TIM[i]), s])
         # Store values in Pyomo self.instance
-        #for (t, s), val in lR_dict.items():
-            #self.instance.lR[t, s] = val
-        #for (i, t, s), val in lI_dict.items():
-            #self.instance.lI[i, t, s] = val
-        for (t, s), val in lIB_dict.items():
-            self.instance.lIB[t, s] = val
+        #for (t, q, s), val in lR_dict.items():
+            #self.instance.lR[t, q, s] = val
+        #for (i, t, q, s), val in lI_dict.items():
+            #self.instance.lI[i, t, q, s] = val
+        for (t, q, s), val in lIB_dict.items():
+            self.instance.lIB[t, q, s] = val
 
     def compute_mean_market_prices(self):
-        # Compute mean market prices (the average value across all scenarios for each hour)
+        # Compute mean market prices (the average value across all scenarios for each quarter-hour)
         mean_lD_dict = {}
         mean_lR_dict = {}
         mean_lI_dict = {}
         mean_lIB_dict = {}
         # Compute mean values
         for t in self.instance.T:
-            mean_lD_dict[t] = sum(value(self.instance.Prob[s]) * value(self.instance.lD[t, s]) for s in self.instance.S)
-            mean_lR_dict[t] = sum(value(self.instance.Prob[s]) * value(self.instance.lR[t, s]) for s in self.instance.S)
-            mean_lIB_dict[t] = sum(value(self.instance.Prob[s]) * value(self.instance.lIB[t, s]) for s in self.instance.S)
+            for q in self.instance.Q:
+                mean_lD_dict[(t, q)] = sum(value(self.instance.Prob[s]) * value(self.instance.lD[t, q, s]) for s in self.instance.S)
+                mean_lR_dict[(t, q)] = sum(value(self.instance.Prob[s]) * value(self.instance.lR[t, q, s]) for s in self.instance.S)
+                mean_lIB_dict[(t, q)] = sum(value(self.instance.Prob[s]) * value(self.instance.lIB[t, q, s]) for s in self.instance.S)
         # Compute mean values for intraday markets
         for i in self.instance.IM:
             for t in self.instance.TIM[i]:
-                mean_lI_dict[i, t] = sum(value(self.instance.Prob[s]) * value(self.instance.lI[i, t, s]) for s in self.instance.S)
+                for q in self.instance.Q:
+                    mean_lI_dict[(i, t, q)] = sum(value(self.instance.Prob[s]) * value(self.instance.lI[i, t, q, s]) for s in self.instance.S)
 
         # Store values in Pyomo self.instance
-        for t, val in mean_lD_dict.items():
-            self.instance.mean_lD[t] = val
-        for t, val in mean_lR_dict.items():
-            self.instance.mean_lR[t] = val
-        for (i, t), val in mean_lI_dict.items():
-            self.instance.mean_lI[i, t] = val
-        for t, val in mean_lIB_dict.items():
-            self.instance.mean_lIB[t] = val
+        for (t, q), val in mean_lD_dict.items():
+            self.instance.mean_lD[t, q] = val
+        for (t, q), val in mean_lR_dict.items():
+            self.instance.mean_lR[t, q] = val
+        for (i, t, q), val in mean_lI_dict.items():
+            self.instance.mean_lI[i, t, q] = val
+        for (t, q), val in mean_lIB_dict.items():
+            self.instance.mean_lIB[t, q] = val
 
         # === PRINT RESULTS ===
         # print("\n##### mean_lD (Day-Ahead Prices) #####")
@@ -261,20 +270,20 @@ class InstanceManager:
         # for t, val in mean_lIB_dict.items():
         #     print(f"mean_lIB[{t}] = {val}")
 
-        # Compute and display mean values (the average value across all scenarios for all hours)
-        mean_lD_avg = sum(mean_lD_dict[t] for t in self.instance.T) / value(self.instance.nT)
-        mean_lR_avg = sum(mean_lR_dict[t] for t in self.instance.T) / value(self.instance.nT)
-        mean_lIB_avg = sum(mean_lIB_dict[t] for t in self.instance.T) / value(self.instance.nT)
+        # Compute and display mean values (the average value across all scenarios for all quarter-hours)
+        mean_lD_avg = sum(mean_lD_dict[(t, q)] for t in self.instance.T for q in self.instance.Q) / (value(self.instance.nT) * value(self.instance.nQ))
+        mean_lR_avg = sum(mean_lR_dict[(t, q)] for t in self.instance.T for q in self.instance.Q) / (value(self.instance.nT) * value(self.instance.nQ))
+        mean_lIB_avg = sum(mean_lIB_dict[(t, q)] for t in self.instance.T for q in self.instance.Q) / (value(self.instance.nT) * value(self.instance.nQ))
 
         # Compute average per intraday market (per i)
         mean_lI_avg_per_market = {}
         for i in self.instance.IM:
             t_list = list(self.instance.TIM[i])
-            mean_lI_avg_per_market[i] = sum(mean_lI_dict[i, t] for t in t_list) / len(t_list)
+            mean_lI_avg_per_market[i] = sum(mean_lI_dict[(i, t, q)] for t in t_list for q in self.instance.Q) / (len(t_list) * value(self.instance.nQ))
 
         # Compute total average across all intraday markets (global average)
-        total_sum_lI = sum(mean_lI_dict[i, t] for i in self.instance.IM for t in self.instance.TIM[i])
-        total_TIM = sum(len(self.instance.TIM[i]) for i in self.instance.IM)
+        total_sum_lI = sum(mean_lI_dict[(i, t, q)] for i in self.instance.IM for t in self.instance.TIM[i] for q in self.instance.Q)
+        total_TIM = sum(len(self.instance.TIM[i]) for i in self.instance.IM) * value(self.instance.nQ)
         mean_lI_global_avg = total_sum_lI / total_TIM
 
         # Write results to file
@@ -294,30 +303,31 @@ class InstanceManager:
         lPIB_dict = {}
         lNIB_dict = {}
         for t in self.instance.T:
-            for s in self.instance.S:
-                lIB_val = value(self.instance.lIB[t, s])
-                lD_val = value(self.instance.lD[t, s])
-                if lIB_val <= 1:
-                    lPIB_dict[(t, s)] = min(180.3, lIB_val * lD_val)
-                    lNIB_dict[(t, s)] = lD_val
-                else:
-                    lPIB_dict[(t, s)] = lD_val
-                    lNIB_dict[(t, s)] = min(180.3, lIB_val * lD_val)
+            for q in self.instance.Q:
+                for s in self.instance.S:
+                    lIB_val = value(self.instance.lIB[t, q, s])
+                    lD_val = value(self.instance.lD[t, q, s])
+                    if lIB_val <= 1:
+                        lPIB_dict[(t, q, s)] = min(180.3, lIB_val * lD_val)
+                        lNIB_dict[(t, q, s)] = lD_val
+                    else:
+                        lPIB_dict[(t, q, s)] = lD_val
+                        lNIB_dict[(t, q, s)] = min(180.3, lIB_val * lD_val)
         # Store computed values in Pyomo model
-        for (t, s), val in lPIB_dict.items():
-            self.instance.lPIB[t, s] = val
-        for (t, s), val in lNIB_dict.items():
-            self.instance.lNIB[t, s] = val
+        for (t, q, s), val in lPIB_dict.items():
+            self.instance.lPIB[t, q, s] = val
+        for (t, q, s), val in lNIB_dict.items():
+            self.instance.lNIB[t, q, s] = val
 
         # Compute mean values for imbalance prices
-        mean_lPIB_dict = {t: sum(value(self.instance.Prob[s]) * lPIB_dict[(t, s)] for s in self.instance.S) for t in self.instance.T}
-        mean_lNIB_dict = {t: sum(value(self.instance.Prob[s]) * lNIB_dict[(t, s)] for s in self.instance.S) for t in self.instance.T}
+        mean_lPIB_dict = {(t, q): sum(value(self.instance.Prob[s]) * lPIB_dict[(t, q, s)] for s in self.instance.S) for t in self.instance.T for q in self.instance.Q}
+        mean_lNIB_dict = {(t, q): sum(value(self.instance.Prob[s]) * lNIB_dict[(t, q, s)] for s in self.instance.S) for t in self.instance.T for q in self.instance.Q}
 
         # Store computed values in Pyomo model
-        for t, val in mean_lPIB_dict.items():
-            self.instance.mean_lPIB[t] = val
-        for t, val in mean_lNIB_dict.items():
-            self.instance.mean_lNIB[t] = val
+        for (t, q), val in mean_lPIB_dict.items():
+            self.instance.mean_lPIB[t, q] = val
+        for (t, q), val in mean_lNIB_dict.items():
+            self.instance.mean_lNIB[t, q] = val
 
         # === PRINT RESULTS ===
         # print("\n##### Positive imbalance prices #####")
@@ -329,8 +339,8 @@ class InstanceManager:
         #     print(f"mean_lNIB[{t}] = {val}")
 
         # Compute the average values
-        mean_lPIB_avg = sum(mean_lPIB_dict[t] for t in self.instance.T) / value(self.instance.nT)
-        mean_lNIB_avg = sum(mean_lNIB_dict[t] for t in self.instance.T) / value(self.instance.nT)
+        mean_lPIB_avg = sum(mean_lPIB_dict[(t, q)] for t in self.instance.T for q in self.instance.Q) / (value(self.instance.nT) * value(self.instance.nQ))
+        mean_lNIB_avg = sum(mean_lNIB_dict[(t, q)] for t in self.instance.T for q in self.instance.Q) / (value(self.instance.nT) * value(self.instance.nQ))
 
         print("\nMean Values:")
         print(f"mean_lD_avg  = {self.metrics.get('mean_lD_avg', 0):.6f}")

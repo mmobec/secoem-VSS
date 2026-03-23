@@ -97,9 +97,10 @@ class PreProcessor:
         # Extract `lD` values
         lD_preserved = {}
         for t in range(1, self.scenario_data["nT"] + 1):  # Iterate over T
-            for s in self.S_preserved:  # Only for preserved scenarios
-                lD_preserved[(t, s)] = self.scenario_data.data().get("Scen", {}).get((t, s),
-                                                                                0.0)  # Default to 0.0 if missing
+            for q in range(1, self.scenario_data["nQ"] + 1):  # Iterate over Q
+                for s in self.S_preserved:  # Only for preserved scenarios
+                    lD_preserved[(t, q, s)] = self.scenario_data.data().get("Scen", {}).get((t, q, s),
+                                                                                    0.0)  # Default to 0.0 if missing
         self.scenario_data.data()["lD"] = lD_preserved  # Assign `lD` values
 
 
@@ -109,14 +110,16 @@ class PreProcessor:
         nRVSG1 = nRVSG1_dict.get(1, 0)  # RVs in stage‑1
         rv0_RM = 1 + int(nRVSG1)  # first RM RV index
 
-        # --- copy 24 reserve‑market prices to lR ----------------------------
+        # --- copy reserve-market prices to lR ---
         lR_preserved = {}
         nT = int(self.scenario_data["nT"])
+        nQ = int(self.scenario_data["nQ"])
         for t in range(1, nT + 1):
             rv = rv0_RM + (t - 1)  # row that holds RM price for hour t
-            for s in self.S_preserved:  # or self.scenario_data["S0"]
-                price = self.scenario_data.data()["Scen"].get((rv, s), 0.0)
-                lR_preserved[(t, s)] = float(price)
+            for q in range(1, nQ + 1):  # Iterate over Q
+                for s in self.S_preserved:  # or self.scenario_data["S0"]
+                    price = self.scenario_data.data()["Scen"].get((rv, q, s), 0.0)
+                    lR_preserved[(t, q, s)] = float(price)
 
         self.scenario_data.data()["lR"] = lR_preserved
 
@@ -126,16 +129,18 @@ class PreProcessor:
 
         # Define the stage where each IM level starts
         IM_stage_map = self.scenario_data["sgim"]  # example: IM1 at stage 3, IM2 at stage 9, IM3 at stage 15
-        # --- copy 24 IM1 prices to lI ----------------------------
+        # --- copy IM prices to lI ---
         lI_preserved = {}
         nT = int(self.scenario_data["nT"])
+        nQ = int(self.scenario_data["nQ"])
         for t in range(1, nT + 1):
             for i in self.scenario_data["IMT"][t]:
                 rv0_IM = sum(int(nRVSG_dict.get(i, 0)) for i in range(1, IM_stage_map[i]))  + 1
                 rv = rv0_IM + (t - 1)  # row that holds IM price for hour t
-                for s in self.S_preserved:  # or self.scenario_data["S0"]
-                    price = self.scenario_data.data()["Scen"].get((rv, s), 0.0)
-                    lI_preserved[(i,t, s)] = float(price)
+                for q in range(1, nQ + 1):  # Iterate over Q
+                    for s in self.S_preserved:  # or self.scenario_data["S0"]
+                        price = self.scenario_data.data()["Scen"].get((rv, q, s), 0.0)
+                        lI_preserved[(i, t, q, s)] = float(price)
 
         self.scenario_data.data()["lI"] = lI_preserved
 
