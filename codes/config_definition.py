@@ -6,7 +6,7 @@ from pathlib import Path
 All static parameters for a simulation
 """
 
-PROJECT_ROOT = Path.home() / "mmobec-pyomo"   #This is the root directory
+PROJECT_ROOT = Path.home() / "OneDrive" / "Documentos" / "MESIO" / "TFM" / "Repos" / "mmobec-pyomo"   #This is the root directory
 
 MARKET_CHAIN = ["DA", "RM", "IM1", "IM2", "IM3", "IB"]
 
@@ -40,12 +40,12 @@ probl = 'ec'
 
 # Suppose we define a scenario family (famscen) & set of SIMS in Python:
 
-famscen_all = "FTC_202407_202412_c92_sc100"
+famscen_all = "FTC_20260201_20260228_c5_sc15_15min"
 #famscen_all = "FTC_10_2023_12_HYDRO"
 
 
 # Suppose we have SIMS = [001..031]
-n_days = 10
+n_days = 5
 SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days for brevity
 
 pathscen_all = f"scenarios/{famscen_all}"
