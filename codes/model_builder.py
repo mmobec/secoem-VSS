@@ -1327,12 +1327,15 @@ class ModelBuilder:
             We'll store (var_name, t, k, l, l_next).
             """
             idx = []
+            n_im = int(pyo.value(model.nIM))
+            im_first_t = int(model.TIM[n_im].first())
             for var_name in ec_asset_var:
                 var_obj = getattr(model, var_name)
                 for t in model.T:
-                    if (t < model.TIM[model.nIM].first()) and (market_no == model.nIM): #For IM3, we don't need nac for the first 10h, because they are revealed already
+                    t_int = int(t)
+                    if (t_int < im_first_t) and (market_no == n_im): # For IM3, we don't need NAC for the periods already revealed
                         continue
-                    sg_for_t_minus1 = model.sgpw[t] - 1
+                    sg_for_t_minus1 = int(pyo.value(model.sgpw[t])) - 1
                     if sg_for_t_minus1 < 0:
                         continue
                     if (sg_for_t_minus1, None) not in model.c.index_set():
@@ -1367,6 +1370,7 @@ class ModelBuilder:
         self.add_objective()
         self.add_constraints()
         self.add_NAC()
+        print("Modelo construido con parámetros:", [attr for attr in dir(self.model) if not attr.startswith('_')])
         return self.model
 
 

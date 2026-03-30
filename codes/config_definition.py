@@ -40,17 +40,17 @@ probl = 'ec'
 
 # Suppose we define a scenario family (famscen) & set of SIMS in Python:
 
-famscen_all = "FTC_20260201_20260228_c5_sc15_15min"
+famscen_all = "FTC_20260201_20260228_c5_sc15_15min_different_ren"
 #famscen_all = "FTC_10_2023_12_HYDRO"
 
 
 # Suppose we have SIMS = [001..031]
-n_days = 5
+n_days = 1
 SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days for brevity
 
-pathscen_all = f"scenarios/{famscen_all}"
-pathdem  = "data/demand/"
-pathdem_h2 = "data/demand_h2"
+pathscen_all = f"scenarios\\{famscen_all}"
+pathdem  = "data\\demand-15mins\\"
+pathdem_h2 = "data\\demand_h2"
 base_result_dir = Path("results")
 
 # Some log-file placeholders

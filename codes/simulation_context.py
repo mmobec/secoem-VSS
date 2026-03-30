@@ -51,10 +51,12 @@ class SimulationContext:
         self.pathmarketres = base / "results" /cfg.famscen_all / market_path_var / "market"   / str(sim)
         self.scenfile      = f"{cfg.famscen_all}-{sim}_{market_path_var}.dat"
         self.demfile       = f"demand-{sim}.dat"
+
         if self.include_hydro:
             self.demfile_h2 = f"demand_h2-{sim}.dat"
-        self.famscen = cfg.famscen_all+"/"+market_path_var
-        self.pathscen = cfg.pathscen_all+"/"+market_path_var
+        
+        self.famscen = cfg.famscen_all+"\\"+market_path_var
+        self.pathscen = cfg.pathscen_all+"\\"+market_path_var
         self.previous_results_path = self.get_previous_results_dir()
 
         # make sure resultfolders exist (relative to parent directory)
