@@ -30,24 +30,31 @@ def run_day(sim, market, hydro = False):
         postprocess.store_results()
 
         # Update initial conditions for next scenario
+        print("Updating initial conditions for next scenario...")
         instance_wrapper.next_initial_conditions()
+        print("Initial conditions updated.")
 
         return sim_ctx
 
 
 def main(market, hydro=False):
     sim_data = []
+    # to do: parametrize to select parallel or sequential execution
 
-    with mp.Pool(processes=64) as pool:  # choose a sensible number
+    print("Before pool")
+    with mp.Pool(processes=mp.cpu_count()) as pool: # CAMBIAR A 64 PROCESORS PARA EL SERVER
+        print("Before starmap")
         sim_data = pool.starmap(
             run_day,
             [(sim, market, hydro) for sim in run_config.SIMS]
         )
+        print("After starmap")
+    print("After pool")
 
     # Final Summary of all Simulation Runs
-
-
+    print("Starting final summary preparation...")
     summary_writer = SimulationSummaryWriter(sim_data)
+    print("Starting final summary writing...")
     summary_writer.write_all()
 
 
@@ -57,10 +64,10 @@ if __name__ == "__main__":
     #     result = run_day(i, "RM")
     #run_day("002", "EMS")
     #main("EMS")
-    #main("DA", hydro = True)
-    run_day("001", "DA", hydro= False)
-    main("DA")
-    main("RM")
-    main("IM1")
-    main("IM2")
-    main("IM3")
+    main("DA", hydro = False)
+    #run_day("001", "DA", hydro= False)
+    #main("DA")
+    #main("RM")
+    #main("IM1")
+    #main("IM2")
+    #main("IM3")

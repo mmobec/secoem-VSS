@@ -42,6 +42,7 @@ class SimulationSummaryWriter:
 
     def write_profit_file(self):
         table_path = os.path.join(PROJECT_ROOT, "results", famscen_all,self.sim_contexts[0].market, "tables/")
+        print(f"Table Path: {table_path}")
         os.makedirs(table_path, exist_ok=True)
         filepath = os.path.join(table_path, profitfile[probl])
 
@@ -112,9 +113,14 @@ class SimulationSummaryWriter:
         print("END")
 
     def write_all(self):
+        print("Console writing")
         self.print_console_summary()
+        print("Log writing")
         self.write_results_log()
+        print("Profit file writing")
         self.write_profit_file()
+        print("Time file writing")
         self.write_time_file()
+        print("Number of scenarios file writing")
         self.write_num_scen_file()
         self.write_out_file()
