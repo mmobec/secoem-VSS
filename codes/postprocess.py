@@ -210,11 +210,12 @@ class PostProcess:
             f.write(f"FI: {list(self.instance.FI)}\n")
 
             for t in self.instance.T:
-                f.write(f"FD[{t}]: {value(self.instance.FD[t])}\n")
-                f.write(f"FD_L[{t}]: {value(self.instance.FD_L[t])}\n")
-                f.write(f"FD_U[{t}]: {value(self.instance.FD_U[t])}\n")
-                f.write(f"RUFD[{t}]: {value(self.instance.RUFD[t])}\n")
-                f.write(f"RDFD[{t}]: {value(self.instance.RDFD[t])}\n")
+                for q in self.instance.Q:
+                    f.write(f"FD[{t},{q}]: {value(self.instance.FD[t, q])}\n")
+                    f.write(f"FD_L[{t},{q}]: {value(self.instance.FD_L[t, q])}\n")
+                    f.write(f"FD_U[{t},{q}]: {value(self.instance.FD_U[t, q])}\n")
+                    f.write(f"RUFD[{t},{q}]: {value(self.instance.RUFD[t, q])}\n")
+                    f.write(f"RDFD[{t},{q}]: {value(self.instance.RDFD[t, q])}\n")
 
 
             for f_ in self.instance.FI:
@@ -243,7 +244,8 @@ class PostProcess:
             for s in self.instance.S:
                 f.write(f"{s} {value(self.instance.Prob[s])} ")
                 for t in self.instance.T:
-                    f.write(f"{value(self.instance.pW[t, s])} ")
+                    for q in self.instance.Q:
+                        f.write(f"{value(self.instance.pW[t, q, s])} ")
                 f.write("\n")
 
 
@@ -269,7 +271,8 @@ class PostProcess:
             for s in self.instance.S:
                 f.write(f"{s} {value(self.instance.Prob[s])} ")
                 for t in self.instance.T:
-                    f.write(f"{value(self.instance.pPV[t, s])} ")
+                    for q in self.instance.Q:
+                        f.write(f"{value(self.instance.pPV[t, q, s])} ")
                 f.write("\n")
 
     def store_bess(self):
@@ -301,8 +304,9 @@ class PostProcess:
             for s in self.instance.S:
                 f.write(f"{s} {value(self.instance.Prob[s])} ")
                 for t in self.instance.T:
-                    net = value(self.instance.cV[t, s]) - value(self.instance.dV[t, s])
-                    f.write(f"{net} ")
+                    for q in self.instance.Q:
+                        net = value(self.instance.cV[t, q, s]) - value(self.instance.dV[t, q, s])
+                        f.write(f"{net} ")
                 f.write("\n")
 
         # Save (t0, s) indexed socV
@@ -310,8 +314,10 @@ class PostProcess:
         with open(soc_file, "w") as f:
             for s in self.instance.S:
                 f.write(f"{s} {value(self.instance.Prob[s])} ")
-                for t in self.instance.T0:
-                    f.write(f"{value(self.instance.socV[t, s])} ")
+                f.write(f"{value(self.instance.socV[0, 1, s])} ")
+                for t in self.instance.T:
+                    for q in self.instance.Q:
+                        f.write(f"{value(self.instance.socV[t, q, s])} ")
                 f.write("\n")
 
     def store_day_ahead(self):
@@ -370,11 +376,12 @@ class PostProcess:
                 for s in self.instance.S:
                     f.write(f"{s} {value(self.instance.Prob[s])} ")
                     for t in self.instance.T:
-                        if t in self.instance.TIM[i]:
-                            f.write(f"{value(self.instance.lI[i, t, s])} ")
-                        else:
-                            f.write("0 ")
-                    f.write("\n")
+                        for q in self.instance.Q:
+                            if t in self.instance.TIM[i]:
+                                    f.write(f"{value(self.instance.lI[i, t, q, s])} ")
+                            else:
+                                f.write("0 ")
+                        f.write("\n")
 
         # Store IM parameter maxTIM
         im_params_file = os.path.join(im_path, "IM_params.txt")
@@ -388,17 +395,19 @@ class PostProcess:
                 for s in self.instance.S:
                     f.write(f"{s} {value(self.instance.Prob[s])} ")
                     for t in self.instance.T:
-                        if t in self.instance.TIM[i]:
-                            f.write(f"{value(self.instance.eIM[i, t, s])} ")
-                        else:
-                            f.write("0 ")
-                    f.write("\n")
+                        for q in self.instance.Q:
+                            if t in self.instance.TIM[i]:
+                                f.write(f"{value(self.instance.eIM[i, t, q, s])} ")
+                            else:
+                                f.write("0 ")
+                        f.write("\n")
 
         # Compute total intraday market energy (eIM_TOT)
         eim_tot_dict = {}
         for t in self.instance.T:
-            for s in self.instance.S:
-                eim_tot_dict[(t, s)] = sum(value(self.instance.eIM[i, t, s]) for i in self.instance.IMT[t])
+            for q in self.instance.Q:
+                for s in self.instance.S:
+                    eim_tot_dict[(t, q, s)] = sum(value(self.instance.eIM[i, t, q, s]) for i in self.instance.IMT[t])
 
         # Store total IM energy (eIM_TOT)
         eim_tot_file = os.path.join(im_path, "eIM_TOT.txt")
@@ -406,7 +415,8 @@ class PostProcess:
             for s in self.instance.S:
                 f.write(f"{s} {value(self.instance.Prob[s])} ")
                 for t in self.instance.T:
-                    f.write(f"{eim_tot_dict[(t, s)]} ")
+                    for q in self.instance.Q:
+                        f.write(f"{eim_tot_dict[(t, q, s)]} ")
                 f.write("\n")
 
 
@@ -417,11 +427,12 @@ class PostProcess:
             for s in self.instance.S:
                 f.write(f"{s} {value(self.instance.Prob[s])} ")
                 for t in self.instance.T:
-                    val = pyo.value(atrribute[t, s], exception=False)
-                    if val == None:
-                        val = 0.0
-                    f.write(f"{val} ")
-                f.write("\n")
+                    for q in self.instance.Q:
+                        val = pyo.value(atrribute[t, q, s], exception=False)
+                        if val == None:
+                            val = 0.0
+                        f.write(f"{val} ")
+                    f.write("\n")
 
 
     def store_ib(self):
@@ -446,13 +457,14 @@ class PostProcess:
             for s in self.instance.S:
                 f.write(f"{s} {value(self.instance.Prob[s])} ")
                 for t in self.instance.T:
-                    val_pibp = pyo.value(self.instance.pIB_p[t, s], exception=False)
-                    val_pibm = pyo.value(self.instance.pIB_m[t, s], exception=False)
-                    if val_pibp == None:
-                        val_pibp = 0.0
-                    if val_pibm == None:
-                        val_pibm = 0.0
-                    pIB_net = val_pibp - val_pibm
+                    for q in self.instance.Q:
+                        val_pibp = pyo.value(self.instance.pIB_p[t, q, s], exception=False)
+                        val_pibm = pyo.value(self.instance.pIB_m[t, q, s], exception=False)
+                        if val_pibp == None:
+                            val_pibp = 0.0
+                        if val_pibm == None:
+                            val_pibm = 0.0
+                        pIB_net = val_pibp - val_pibm
                     f.write(f"{pIB_net} ")
                 f.write("\n")
         
@@ -574,87 +586,88 @@ class PostProcess:
         # Compute Objective Function Components
         obj_fun = value(self.instance.EECSW)
 
-        obj_DA_income = sum(value(self.instance.Prob[s]) * value(self.instance.lD[t, s]) *
-                            (value(self.instance.eDA_p[t, s]) - value(self.instance.eDA_m[t, s]))
-                            for t in self.instance.T for s in self.instance.S)
+        obj_DA_income = sum(value(self.instance.Prob[s]) * value(self.instance.lD[t, q, s]) *
+                            (value(self.instance.eDA_p[t, q, s]) - value(self.instance.eDA_m[t, q, s]))
+                            for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
 
         if "IM" in self.sim_ctx.market:
             obj_RM_income = sum(
                 value(self.instance.Prob[s]) * (
-                        (value(self.instance.rD[t, s]) + value(self.instance.rU[t, s])) * value(self.instance.lR[t, s])
-                        - value(self.instance.lR_penalty[t, s]) * (
-                                    value(self.instance.rU_penalty[t, s]) + value(self.instance.rD_penalty[t, s]))
+                        (value(self.instance.rD[t, q, s]) + value(self.instance.rU[t, q, s])) * value(self.instance.lR[t, q, s])
+                        - value(self.instance.lR_penalty[t, q, s]) * (
+                                    value(self.instance.rU_penalty[t, q, s]) + value(self.instance.rD_penalty[t, q, s]))
                 )
                 for t in self.instance.T
+                for q in self.instance.Q
                 for s in self.instance.S
             )
         else:
             obj_RM_income = sum(
-                value(self.instance.Prob[s]) * (value(self.instance.rD[t, s]) + value(self.instance.rU[t, s])) * value(
-                    self.instance.lR[t, s])
-                for t in self.instance.T for s in self.instance.S)
+                value(self.instance.Prob[s]) * (value(self.instance.rD[t, q, s]) + value(self.instance.rU[t, q, s])) * value(
+                    self.instance.lR[t, q, s])
+                for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
 
         obj_IM_income = sum(
             value(self.instance.Prob[s]) * sum(
-                value(self.instance.lI[i, t, s]) * value(self.instance.eIM[i, t, s]) for i in self.instance.IMT[t])
-            for t in self.instance.T for s in self.instance.S)
+                value(self.instance.lI[i, t, q, s]) * value(self.instance.eIM[i, t, q, s]) for i in self.instance.IMT[t])
+            for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
 
         obj_IB_income = sum(
-            value(self.instance.Prob[s]) * value(self.instance.lPIB[t, s]) * value(self.instance.pIB_p[t, s])
-            for t in self.instance.T for s in self.instance.S)
+            value(self.instance.Prob[s]) * value(self.instance.lPIB[t, q, s]) * value(self.instance.pIB_p[t, q, s])
+            for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
 
         obj_IB_costs = sum(
-            value(self.instance.Prob[s]) * value(self.instance.lNIB[t, s]) * value(self.instance.pIB_m[t, s])
-            for t in self.instance.T for s in self.instance.S)
+            value(self.instance.Prob[s]) * value(self.instance.lNIB[t, q, s]) * value(self.instance.pIB_m[t, q, s])
+            for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
 
         obj_IB_net = obj_IB_income - obj_IB_costs
 
         obj_FD_costs = sum(value(self.instance.Prob[s]) * value(self.instance.C_FD) *
-                           (value(self.instance.var_afd_p[t, s]) + value(self.instance.var_afd_m[t, s]))
-                           for t in self.instance.T for s in self.instance.S)
+                           (value(self.instance.var_afd_p[t, q, s]) + value(self.instance.var_afd_m[t, q, s]))
+                           for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
 
         if self.sim_ctx.include_hydro:
             obj_H2_income = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_H) * 
-                value(self.instance.Hsold[t, s]) * value(self.instance.can_sell_H2)
-                for t in self.instance.T for s in self.instance.S)    
-                                                                
-            obj_H2_DEM = sum(value(self.instance.lambda_H) * value(self.instance.HDEM[t])
-                for t in self.instance.T)
-            
+                value(self.instance.Hsold[t, q, s]) * value(self.instance.can_sell_H2)
+                for t in self.instance.T for q in self.instance.Q for s in self.instance.S)    
+                                                                 
+            obj_H2_DEM = sum(value(self.instance.lambda_H) * value(self.instance.HDEM[t, q])
+                for t in self.instance.T for q in self.instance.Q)
+             
             obj_BESS_costs = sum(value(self.instance.Prob[s]) * 
-            ((value(self.instance.dV[t, s]) + value(self.instance.cV[t, s]))/(2 * value(self.instance.Emax))) * (value(self.instance.B_sp_cost) * value(self.instance.Emax) / value(self.instance.cyc_max))
-            for t in self.instance.T for s in self.instance.S)
+            ((value(self.instance.dV[t, q, s]) + value(self.instance.cV[t, q, s]))/(2 * value(self.instance.Emax))) * (value(self.instance.B_sp_cost) * value(self.instance.Emax) / value(self.instance.cyc_max))
+            for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
 
             obj_wat_costs = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_wat) * value(self.instance.sp_wat_EL) *
-            value(self.instance.HEL[t, s])
-            for t in self.instance.T for s in self.instance.S)
+            value(self.instance.HEL[t, q, s])
+            for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
 
             obj_warm_st_costs = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_warm_st) * 
-                value(self.instance.P_EL_nom) * value(self.instance.i_EL_warm[t, s]) 
-                for t in self.instance.T for s in self.instance.S)
+                value(self.instance.P_EL_nom) * value(self.instance.i_EL_warm[t, q, s]) 
+                for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
 
             obj_cold_st_costs = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_cold_st) * 
-                value(self.instance.P_EL_nom) * value(self.instance.i_EL_cold[t, s]) 
-                for t in self.instance.T for s in self.instance.S)
+                value(self.instance.P_EL_nom) * value(self.instance.i_EL_cold[t, q, s]) 
+                for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
 
             obj_deg_EL_costs = sum(value(self.instance.Prob[s]) * value(self.instance.EL_repl_cost) * 
-                value(self.instance.P_EL_nom) / value(self.instance.EL_lifetime) * value(self.instance.iEL_on[t, s])
-                for t in self.instance.T for s in self.instance.S)
-            
+                value(self.instance.P_EL_nom) / value(self.instance.EL_lifetime) * value(self.instance.iEL_on[t, q, s])
+                for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
+             
             obj_warm_st_costs_FC = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_warm_st_FC) * 
-                value(self.instance.P_FC_nom) * value(self.instance.i_FC_warm[t, s]) 
-                for t in self.instance.T for s in self.instance.S)
+                value(self.instance.P_FC_nom) * value(self.instance.i_FC_warm[t, q, s]) 
+                for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
 
             obj_cold_st_costs_FC = sum(value(self.instance.Prob[s]) * value(self.instance.lambda_cold_st_FC) * 
-                value(self.instance.P_FC_nom) * value(self.instance.i_FC_cold[t, s]) 
-                for t in self.instance.T for s in self.instance.S)
-            
+                value(self.instance.P_FC_nom) * value(self.instance.i_FC_cold[t, q, s]) 
+                for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
+             
             obj_deg_FC_costs = sum(value(self.instance.Prob[s]) * value(self.instance.FC_repl_cost) * 
-                value(self.instance.P_FC_nom) / value(self.instance.FC_lifetime) * value(self.instance.iFC_on[t, s])
-                for t in self.instance.T for s in self.instance.S)
+                value(self.instance.P_FC_nom) / value(self.instance.FC_lifetime) * value(self.instance.iFC_on[t, q, s])
+                for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
 
-        obj_IB_costs = sum(value(self.instance.Prob[s]) * value(self.instance.lNIB[t, s]) * value(self.instance.pIB_m[t, s])
-            for t in self.instance.T for s in self.instance.S)
+        obj_IB_costs = sum(value(self.instance.Prob[s]) * value(self.instance.lNIB[t, q, s]) * value(self.instance.pIB_m[t, q, s])
+            for t in self.instance.T for q in self.instance.Q for s in self.instance.S)
 
         self.instance.obj_fun[run_config.probl, self.sim_ctx.sim] = obj_fun
         self.instance.obj_DA_income[run_config.probl, self.sim_ctx.sim] = obj_DA_income
@@ -737,17 +750,17 @@ class PostProcess:
     def print_incomes(self):
         instance = self.instance
         print(
-            f"DA Income: {sum(value(self.instance.Prob[s]) * value(self.instance.lD[t, s]) * (value(self.instance.eDA_p[t, s]) - value(self.instance.eDA_m[t, s])) for t in self.instance.T for s in self.instance.S)}")
+            f"DA Income: {sum(value(self.instance.Prob[s]) * value(self.instance.lD[t, q, s]) * (value(self.instance.eDA_p[t, q, s]) - value(self.instance.eDA_m[t, q, s])) for t in self.instance.T for q in self.instance.Q for s in self.instance.S)}")
         print(
-            f"RM Income: {sum(value(self.instance.Prob[s]) * (value(self.instance.rD[t, s]) + value(self.instance.rU[t, s])) * value(self.instance.lR[t, s]) for t in self.instance.T for s in self.instance.S)}")
+            f"RM Income: {sum(value(self.instance.Prob[s]) * (value(self.instance.rD[t, q, s]) + value(self.instance.rU[t, q, s])) * value(self.instance.lR[t, q, s]) for t in self.instance.T for q in self.instance.Q for s in self.instance.S)}")
         print(
-            f"IM Income: {sum(value(self.instance.Prob[s]) * sum(value(self.instance.lI[i, t, s]) * value(self.instance.eIM[i, t, s]) for i in self.instance.IMT[t]) for t in self.instance.T for s in self.instance.S)}")
+            f"IM Income: {sum(value(self.instance.Prob[s]) * sum(value(self.instance.lI[i, t, q, s]) * value(self.instance.eIM[i, t, q, s]) for i in self.instance.IMT[t]) for t in self.instance.T for q in self.instance.Q for s in self.instance.S)}")
         print(
-            f"IB Income: {sum(value(self.instance.Prob[s]) * value(self.instance.lPIB[t, s]) * value(self.instance.pIB_p[t, s]) for t in self.instance.T for s in self.instance.S)}")
+            f"IB Income: {sum(value(self.instance.Prob[s]) * value(self.instance.lPIB[t, q, s]) * value(self.instance.pIB_p[t, q, s]) for t in self.instance.T for q in self.instance.Q for s in self.instance.S)}")
         print(
-            f"IB Costs: {sum(value(self.instance.Prob[s]) * value(self.instance.lNIB[t, s]) * value(self.instance.pIB_m[t, s]) for t in self.instance.T for s in self.instance.S)}")
+            f"IB Costs: {sum(value(self.instance.Prob[s]) * value(self.instance.lNIB[t, q, s]) * value(self.instance.pIB_m[t, q, s]) for t in self.instance.T for q in self.instance.Q for s in self.instance.S)}")
         print(
-            f"FD Costs: {sum(value(self.instance.Prob[s]) * value(self.instance.C_FD) * (value(self.instance.var_afd_p[t, s]) + value(self.instance.var_afd_m[t, s])) for t in self.instance.T for s in self.instance.S)}")
+            f"FD Costs: {sum(value(self.instance.Prob[s]) * value(self.instance.C_FD) * (value(self.instance.var_afd_p[t, q, s]) + value(self.instance.var_afd_m[t, q, s])) for t in self.instance.T for q in self.instance.Q for s in self.instance.S)}")
 
 
     def store_results(self):
@@ -780,17 +793,18 @@ class PostProcess:
 
         curves = {}
         for t in self.instance.T:
-            up = sorted(
-                [(value(self.instance.lR[t, s]), value(self.instance.rU[t, s]))
-                 for s in self.instance.S],
-                key=lambda x: x[0]
-            )
-            down = sorted(
-                [(value(self.instance.lR[t, s]), value(self.instance.rD[t, s]))
-                 for s in self.instance.S],
-                key=lambda x: x[0]
-            )
-            curves[t] = {"up": up, "down": down}
+            for q in self.instance.Q:
+                up = sorted(
+                    [(value(self.instance.lR[t, q, s]), value(self.instance.rU[t, q, s]))
+                     for s in self.instance.S],
+                    key=lambda x: x[0]
+                )
+                down = sorted(
+                    [(value(self.instance.lR[t, q, s]), value(self.instance.rD[t, q, s]))
+                     for s in self.instance.S],
+                    key=lambda x: x[0]
+                )
+                curves[(t, q)] = {"up": up, "down": down}
         return curves
 
 def plot_rm_bid_curve(curves, t, *, cumulate=True, show=True, ax=None):

@@ -53,17 +53,4 @@ def main(market, hydro=False):
 
 if __name__ == "__main__":
 
-    #for i in run_config.SIMS:
-    #     result = run_day(i, "RM")
-    #run_day("002", "EMS")
-    #main("EMS")
-    #main("DA", hydro = True)
-    run_day("001", "DA", hydro= False)
-    print("Running DA")
-    main("DA")
-    print("Running RM")
-    main("RM")
-    print("Running IMs")
-    main("IM1")
-    main("IM2")
-    main("IM3")
+    main("DA", hydro=False)

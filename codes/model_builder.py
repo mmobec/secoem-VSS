@@ -25,8 +25,11 @@ class ModelBuilder:
         model.Q = pyo.RangeSet(1, model.nQ)                 # set of subperiods
 
         # Duration parameters
-        model.dT = pyo.Param(within=pyo.PositiveReals)      # duration of hourly step
-        model.dQ = pyo.Param(within=pyo.PositiveReals)      # duration of subperiod
+        model.dT = pyo.Param(within=pyo.PositiveReals,
+            initialize=lambda m: 24 / pyo.value(m.nT)) 
+        model.dQ = pyo.Param( within=pyo.PositiveReals,
+            initialize=lambda m: pyo.value(m.dT) / pyo.value(m.nQ),
+        )
 
         # >>> Intraday markets:
         model.nIM = pyo.Param(within=pyo.PositiveIntegers)      # number of intraday markets

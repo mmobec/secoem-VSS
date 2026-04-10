@@ -388,7 +388,7 @@ class InstanceManager:
         instance = self.instance
         sc = self.sim_ctx
         # Retrieve the results of the closest scenario as the next starting point
-        SOCini_next = value(instance.socV[max(instance.T0), int(value(instance.sOR))])
+        SOCini_next = value(instance.socV[max(instance.T0), max(instance.Q), int(value(instance.sOR))])
 
         # Update the Pyomo model's initial SOC value
         instance.SOCini = SOCini_next

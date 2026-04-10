@@ -107,7 +107,7 @@ class PreProcessor:
 
         im_stage_map = self.scenario_data["sgim"]
         lI_preserved = {}
-        for i in self.scenario_data["IM"]:
+        for i in range(1, int(self.scenario_data["nIM"]) + 1):
             first_t = min(self.scenario_data["TIM"][i])
             for t in self.scenario_data["TIM"][i]:
                 for q in range(1, nQ + 1):
