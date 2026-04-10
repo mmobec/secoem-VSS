@@ -30,6 +30,7 @@ class InstanceManager:
         print(f"S size: {len(list(self.instance.S))}")  # Should be 10
         return self.instance
 
+    # New function to compute the random variable index for a given stage, quarter, and time step
     def _stage_quarter_rv(self, stage, t, q, first_t=1):
         stage_start = value(self.instance.fRVSG[int(stage)])
         hour_offset = int(t) - int(first_t)
@@ -69,7 +70,7 @@ class InstanceManager:
                 for s in self.instance.S:
                     stage = value(self.instance.sgpw[t])
                     rv_index_wind = value(self.instance.fRVSG[stage]) + (q - 1)
-                    rv_index_solar = value(self.instance.fRVSG[stage]) + value(self.instance.nQ) + (q - 1)
+                    rv_index_solar = value(self.instance.fRVSG[stage]) + value(self.instance.nQ) + (q - 1) + self.instance.nQ  # Assuming solar RVs come after wind RVs in the indexing
                     # Compute wind power
                     pW_dict[(t, q, s)] = min(value(self.instance.Scen[rv_index_wind, s]), 1.0) * value(self.instance.Pavg)
                     # Compute PV power
