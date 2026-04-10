@@ -34,7 +34,7 @@ class ModelBuilder:
 
         # For sets of time periods in each intraday market:
         model.TIM = pyo.Set(model.IM, ordered=True)          # time periods in IM "i"
-        model.IMT = pyo.Set(model.T, model.Q, ordered=True)           # intraday markets that include time "t"
+        model.IMT = pyo.Set(model.T, ordered=True)           # intraday markets that include hour "t"
         model.sgim = pyo.Param(model.IM, within=pyo.PositiveIntegers)   # stage associated to each IM "i"
 
         # >>> Scenario tree and Electricity market parameters:
@@ -128,10 +128,10 @@ class ModelBuilder:
         model.mean_pPV = pyo.Param(model.T, model.Q, within=pyo.NonNegativeReals, mutable=True)     # average solar
 
         # Day-Ahead market
-        model.mean_lD = pyo.Param(model.T, within=pyo.Reals, mutable=True)        # average day-ahead price
+        model.mean_lD = pyo.Param(model.T, model.Q, within=pyo.Reals, mutable=True)        # average day-ahead price
         model.PDA_LB = pyo.Param(within=pyo.NonNegativeReals)  # Minimum bid size [MWh]
         # Reserve market
-        model.mean_lR = pyo.Param(model.T, within=pyo.Reals, mutable=True)          # average reserve price
+        model.mean_lR = pyo.Param(model.T, model.Q, within=pyo.Reals, mutable=True)          # average reserve price
 
         # Infraday market
         model.mean_lI = pyo.Param(model.IM, model.T, model.Q, within=pyo.Reals, mutable=True) # average IMs price
@@ -261,11 +261,12 @@ class ModelBuilder:
         model = self.model
         model.Ssd = pyo.Set(
             initialize=lambda m: [
-            (t, l, j)
+            (t, q, l, j)
             for t in m.T
+            for q in m.Q
             for l in m.S
             for j in m.S
-            if (pyo.value(m.lD[t, l]) <= pyo.value(m.lD[t, j]) and j != l)
+            if (pyo.value(m.lD[t, q, l]) <= pyo.value(m.lD[t, q, j]) and j != l)
             ]
         )
 
@@ -275,11 +276,12 @@ class ModelBuilder:
         model = self.model
         model.SsR = pyo.Set(
         initialize=lambda m: [
-            (t, l, j)
+            (t, q, l, j)
             for t in m.T
+            for q in m.Q
             for l in m.S
             for j in m.S
-            if (pyo.value(m.lR[t, l]) <= pyo.value(m.lR[t, j]) and j != l)
+            if (pyo.value(m.lR[t, q, l]) <= pyo.value(m.lR[t, q, j]) and j != l)
             ]
         )
 
@@ -309,14 +311,14 @@ class ModelBuilder:
         """
         model = self.model
         # DA
-        model.lD = pyo.Param(model.T, model.S, within=pyo.Reals, mutable = True)    # !!! Day-ahead prices TO BE DEFINED BEFORE CREATING INSTANCE because they re used to create Ssd set
+        model.lD = pyo.Param(model.T, model.Q, model.S, within=pyo.Reals, mutable = True)    # !!! Day-ahead prices TO BE DEFINED BEFORE CREATING INSTANCE because they re used to create Ssd set
         # RM
-        model.lR = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)  # secondary reserve price
+        model.lR = pyo.Param(model.T, model.Q, model.S, within=pyo.Reals, mutable=True)  # secondary reserve price
         model.TSR = pyo.Param(within=pyo.NonNegativeReals)        # time response of SR
-        model.rU_B = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)    # BESS upward reserve
-        model.rD_B = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)    # BESS downward reserve
-        model.rU_FD = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # FD upward reserve
-        model.rD_FD = pyo.Var(model.T, model.S, within=pyo.NonNegativeReals)   # FD downward reserve
+        model.rU_B = pyo.Var(model.T, model.Q, model.S, within=pyo.NonNegativeReals)    # BESS upward reserve
+        model.rD_B = pyo.Var(model.T, model.Q, model.S, within=pyo.NonNegativeReals)    # BESS downward reserve
+        model.rU_FD = pyo.Var(model.T, model.Q, model.S, within=pyo.NonNegativeReals)   # FD upward reserve
+        model.rD_FD = pyo.Var(model.T, model.Q, model.S, within=pyo.NonNegativeReals)   # FD downward reserve
         # IM
         model.eIM = pyo.Var(model.IM, model.T, model.Q, model.S)
         model.lI = pyo.Param(model.IM, model.T, model.Q, model.S, default=0.0, within=pyo.Reals, mutable=True)  
@@ -703,7 +705,7 @@ class ModelBuilder:
             if self.use_hydro:
                 return m.eDA_m[t, q, s] <= (m.Dmax*m.dQ + m.FD_U[t,q] + m.P_EL_nom*m.dQ + m.P_COMP_nom*m.dQ + m.SB_frac_FC*m.P_FC_nom) * m.ieDA_m[t, q, s]
             return m.eDA_m[t, q, s] <= (m.Dmax*m.dQ + m.FD_U[t,q]) * m.ieDA_m[t, q, s]
-        model.DA_buy_bid_UB = pyo.Constraint(model.T, model.S, rule=DA_buy_bid_UB_rule)
+        model.DA_buy_bid_UB = pyo.Constraint(model.T, model.Q, model.S, rule=DA_buy_bid_UB_rule)
 
         # Constraint to Ensure Either Buying or Selling, Not Both
         def DA_buy_or_sell_rule(m, t, q, s):
@@ -759,7 +761,7 @@ class ModelBuilder:
 
         # -cap ≤ Σ_i eIM ≤ +cap
         def IM_bounds_1_rule_pos(m, t, q, s):
-            return sum((m.eIM_pos[i, t, q, s] + m.eIM_neg[i,t,q,s]) for i in m.IMT[t,q]) <=  _cap20(m, t, q, s)
+            return sum((m.eIM_pos[i, t, q, s] + m.eIM_neg[i,t,q,s]) for i in m.IMT[t]) <=  _cap20(m, t, q, s)
         model.IM_bounds_1_pos = pyo.Constraint(model.T, model.Q, model.S, rule=IM_bounds_1_rule_pos)
 
         # Per-step bounds: -cap ≤ eIM[i] ≤ +cap
@@ -776,21 +778,21 @@ class ModelBuilder:
         market = self.sim_ctx.market 
         model = self.model
         if market == "DA":
-            def DA_bid_mono_1_rule(m, t, l, k):
-                return m.eDA_p[t, l] <= m.eDA_p[t, k]
+            def DA_bid_mono_1_rule(m, t, q, l, k):
+                return m.eDA_p[t, q, l] <= m.eDA_p[t, q, k]
             model.DA_bid_mono_1 = pyo.Constraint(model.Ssd, rule=DA_bid_mono_1_rule)
 
-            def DA_bid_mono_2_rule(m, t, l, k):
-                return m.eDA_m[t, l] >= m.eDA_m[t, k]
+            def DA_bid_mono_2_rule(m, t, q, l, k):
+                return m.eDA_m[t, q, l] >= m.eDA_m[t, q, k]
             model.DA_bid_mono_2 = pyo.Constraint(model.Ssd, rule=DA_bid_mono_2_rule)
 
         elif market == "RM":
-            def RM_bid_mono_1_rule(m, t, l, k):
-                return m.rU[t, l] <= m.rU[t, k]
+            def RM_bid_mono_1_rule(m, t, q, l, k):
+                return m.rU[t, q, l] <= m.rU[t, q, k]
             model.RM_bid_mono_1 = pyo.Constraint(model.SsR, rule=RM_bid_mono_1_rule)
 
-            def RM_bid_mono_2_rule(m, t, l, k):
-                return m.rD[t, l] <= m.rD[t, k]
+            def RM_bid_mono_2_rule(m, t, q, l, k):
+                return m.rD[t, q, l] <= m.rD[t, q, k]
             model.RM_bid_mono_2 = pyo.Constraint(model.SsR, rule=RM_bid_mono_2_rule)
 
         elif "IM" in market:
@@ -805,12 +807,12 @@ class ModelBuilder:
         def Imbalances_rule(m, t, q, s):
             lhs = m.pIB_p[t, q, s] - m.pIB_m[t, q, s]
             rhs = (
-                m.eDA_m[t, s]
+                m.eDA_m[t, q, s]
                 + m.pW[t, q, s]
                 + m.pPV[t, q, s]
                 + m.dV[t, q, s]*m.dQ
-                - m.eDA_p[t, s]
-                - sum(m.eIM[i, t, q, s] for i in m.IMT[t,q])
+                - m.eDA_p[t, q, s]
+                - sum(m.eIM[i, t, q, s] for i in m.IMT[t])
                 - m.var_fd[t, q, s]
                 - m.cV[t, q, s]*m.dQ
             )
@@ -823,18 +825,18 @@ class ModelBuilder:
                 )
             return lhs == rhs
         if self.sim_ctx.market == "IM3": 
-            model.Imbalances = pyo.Constraint(range(12,25), model.S, rule=Imbalances_rule)    #not a pretty solution bc hardcoded.. however this is necessary otherwise IM3 is infeasible
+            model.Imbalances = pyo.Constraint(range(12,25), model.Q, model.S, rule=Imbalances_rule)    #not a pretty solution bc hardcoded.. however this is necessary otherwise IM3 is infeasible
         else:
-            model.Imbalances = pyo.Constraint(model.T, model.S, rule=Imbalances_rule)
+            model.Imbalances = pyo.Constraint(model.T, model.Q, model.S, rule=Imbalances_rule)
 
         if self.sim_ctx.market == "DA":
-            def IB_pos_UB_rule(m, t, s):
-                return m.pIB_p[t, s] <= m.PIB_p[t, s]
-            model.IB_pos_UB = pyo.Constraint(model.T, model.S, rule=IB_pos_UB_rule)
+            def IB_pos_UB_rule(m, t, q, s):
+                return m.pIB_p[t, q, s] <= m.PIB_p[t, q, s]
+            model.IB_pos_UB = pyo.Constraint(model.T, model.Q, model.S, rule=IB_pos_UB_rule)
             # pIB_m[t,s] <= PIB_m[t,s];
-            def IB_neg_UB_rule(m, t, s):
-                return m.pIB_m[t, s] <= m.PIB_m[t, s]
-            model.IB_neg_UB = pyo.Constraint(model.T, model.S, rule=IB_neg_UB_rule)  
+            def IB_neg_UB_rule(m, t, q, s):
+                return m.pIB_m[t, q, s] <= m.PIB_m[t, q, s]
+            model.IB_neg_UB = pyo.Constraint(model.T, model.Q, model.S, rule=IB_neg_UB_rule)  
 
         elif (self.sim_ctx.market == "RM") or ("IM" in self.sim_ctx.market):
             # For RM and IM, we consider the imbalance slack variable to ensure feasibility

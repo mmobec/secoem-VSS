@@ -6,6 +6,7 @@
 # General
 param nT :=24;      # Number of time periods
 param nIM := 3;     # Number of intraday markets
+param nQ := 4;      # Number of subperiods
 
 # Day Ahead Market
 param PDA_LB := 0.1;    # DA minimum bid size [MWh].	

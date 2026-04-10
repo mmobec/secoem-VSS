@@ -110,7 +110,7 @@ class PreviousMarketResultsLoader:
         ieDA_m = {}
         ieDA_p = {}
         for t in range(1, self.scenario_data["nT"] + 1):
-            real_price = self.scenario_data["lD"][t,self.S_preserved[0]] # scenario doesn't matter
+            real_price = self.scenario_data["lD"][t, 1, self.S_preserved[0]] # scenario doesn't matter here; keep first quarter as reference
 
             sorted_bid_curve = self.get_sorted_bid_curve(ld_from_DAM_run, S, t)
             # There are 5 cases that can occur:
@@ -209,7 +209,7 @@ class PreviousMarketResultsLoader:
 
         for t in range(1, self.scenario_data["nT"] + 1):
 
-            real_price = self.scenario_data["lR"][t,self.S_preserved[0]] # scenario doesn't matter
+            real_price = self.scenario_data["lR"][t, 1, self.S_preserved[0]] # scenario doesn't matter here; keep first quarter as reference
             # There is a single price for up and down reserve
             sorted_bid_curve = self.get_sorted_bid_curve(lR_from_rm_run, S, t)
             sorted_bid_curve_prices_only = [i[0] for i in sorted_bid_curve]

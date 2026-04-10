@@ -7,6 +7,7 @@ import importlib
 import re
 from model_builder import ModelBuilder
 
+
 class PreProcessor:
     def __init__(self, sim_ctx):
         self.sim_ctx = sim_ctx
@@ -31,7 +32,6 @@ class PreProcessor:
 
     def prepare_scenario_data(self):
         sc = self.sim_ctx
-        # Print messages like AMPL:
         print("\n########################")
         print(f"#### Instance {cfg.probl}-{sc.sim}")
         print(f"#### of Market {self.sim_ctx.market}")
@@ -44,106 +44,78 @@ class PreProcessor:
         print(f"pathres        = {sc.pathres}")
 
         abstract_model = self.abstract_model
-        # Load the "base" data
-        #ToDo: Should these be loaded according to market?
         self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, "data", cfg.market_datfile), model=abstract_model)
         self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, "data", cfg.BESS_datfile), model=abstract_model)
         self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, "data", cfg.wind_datfile), model=abstract_model)
         if self.sim_ctx.include_hydro:
             self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, "data", cfg.hydro_datfile), model=abstract_model)
             self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, cfg.pathdem_h2, sc.demfile_h2), model=abstract_model)
-        # Then load scenario & demand data
-        self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, sc.pathscen, sc.scenfile), model=abstract_model)
-        #ToDo: demand data should also be loaded according  to  market?
-        self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, cfg.pathdem, sc.demfile), model=abstract_model)
 
+        self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, sc.pathscen, sc.scenfile), model=abstract_model)
+        self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, cfg.pathdem, sc.demfile), model=abstract_model)
 
         print(f"\nT = {self.scenario_data['nT']}, nS = {self.scenario_data['nS']}, nIM = {self.scenario_data['nIM']}")
 
-
     def preprocess_data(self):
-        # Before creating the instance
-        # Some Data Preprocess needed before creating the instance because these values are used to build sets in model.py, so they must be defined before creating the instance
-
         sc = self.sim_ctx
 
-        ### S and Prob allocation (S is used in a lot of sets definition in ec_DA_model.py, so it must be known before creating the instance, prob is used in the objective function)
-        Prob0_raw = self.scenario_data.data().get("Prob0", {})  # Extract raw probabilities
-        # Compute number of preserved scenarios BEFORE creating the instance
+        Prob0_raw = self.scenario_data.data().get("Prob0", {})
         self.S_preserved = [s for s in Prob0_raw if Prob0_raw[s] > 0]
         Prob_preserved = {s: Prob0_raw[s] for s in self.S_preserved}
         print(f"Probabilities at Day {sc.sim}: {Prob_preserved}")
         print(f"Preserved Scenarios (S): {self.S_preserved}")
         print(f"Sum of Probabilities: {sum(Prob_preserved.values())}")
-        # Inject `S_preserved` and `Prob_preserved` into `scenario_data`
-        self.scenario_data.data()["S"] = {None: self.S_preserved}  # Ensure correct S
-        self.scenario_data.data()["Prob"] = Prob_preserved  # Assign Probabilities correctly
+        self.scenario_data.data()["S"] = {None: self.S_preserved}
+        self.scenario_data.data()["Prob"] = Prob_preserved
 
+    def _stage_first_rv(self, stage):
+        nrvsg = self.scenario_data.data().get("nRVSG", {})
+        return 1 + sum(int(nrvsg.get(sg, 0)) for sg in range(1, int(stage)))
+
+    def _stage_quarter_rv(self, stage, t, q, first_t=1):
+        nQ = int(self.scenario_data["nQ"])
+        hour_offset = int(t) - int(first_t)
+        return self._stage_first_rv(stage) + hour_offset * nQ + (int(q) - 1)
 
     def allocate_market_prices(self):
-
-        ### lD allocation (necessary to define Ssd set in ec_DA_model.py which is necessary to build bidding curves)
-        # Scen values are needed to define lD values
-        Scen0_raw = self.scenario_data.data().get("Scen0", {})  # Extract full scenario data
-        # Compute preserved scenarios BEFORE creating the instance
-        Scen_preserved = {}
+        scen0_raw = self.scenario_data.data().get("Scen0", {})
+        scen_preserved = {}
         nRV_value = sum(self.scenario_data.data()["nRVSG"].values())
-        # Only keep `Scen0` values that belong to preserved scenarios
-        for rv in range(1, nRV_value + 1):  # Loop over random variables
+        for rv in range(1, nRV_value + 1):
             for s in self.S_preserved:
-                Scen_preserved[(rv, s)] = Scen0_raw.get((rv, s), 0.0)  # Default to 0.0 if missing
-        # Inject preserved `Scen` values before `create_instance()`
-        self.scenario_data.data()["Scen"] = Scen_preserved
-        # Extract `lD` values
-        lD_preserved = {}
-        for t in range(1, self.scenario_data["nT"] + 1):  # Iterate over T
-            for q in range(1, self.scenario_data["nQ"] + 1):  # Iterate over Q
-                for s in self.S_preserved:  # Only for preserved scenarios
-                    lD_preserved[(t, q, s)] = self.scenario_data.data().get("Scen", {}).get((t, q, s),
-                                                                                    0.0)  # Default to 0.0 if missing
-        self.scenario_data.data()["lD"] = lD_preserved  # Assign `lD` values
+                scen_preserved[(rv, s)] = scen0_raw.get((rv, s), 0.0)
+        self.scenario_data.data()["Scen"] = scen_preserved
 
-
-        #same thing for lR:
-        # --- figure out the first RV of stage‑2 -----------------------------
-        nRVSG1_dict = self.scenario_data.data().get("nRVSG", {})
-        nRVSG1 = nRVSG1_dict.get(1, 0)  # RVs in stage‑1
-        rv0_RM = 1 + int(nRVSG1)  # first RM RV index
-
-        # --- copy reserve-market prices to lR ---
-        lR_preserved = {}
         nT = int(self.scenario_data["nT"])
         nQ = int(self.scenario_data["nQ"])
-        for t in range(1, nT + 1):
-            rv = rv0_RM + (t - 1)  # row that holds RM price for hour t
-            for q in range(1, nQ + 1):  # Iterate over Q
-                for s in self.S_preserved:  # or self.scenario_data["S0"]
-                    price = self.scenario_data.data()["Scen"].get((rv, q, s), 0.0)
-                    lR_preserved[(t, q, s)] = float(price)
 
+        lD_preserved = {}
+        for t in range(1, nT + 1):
+            for q in range(1, nQ + 1):
+                rv = self._stage_quarter_rv(1, t, q)
+                for s in self.S_preserved:
+                    lD_preserved[(t, q, s)] = float(self.scenario_data.data()["Scen"].get((rv, s), 0.0))
+        self.scenario_data.data()["lD"] = lD_preserved
+
+        lR_preserved = {}
+        for t in range(1, nT + 1):
+            for q in range(1, nQ + 1):
+                rv = self._stage_quarter_rv(2, t, q)
+                for s in self.S_preserved:
+                    lR_preserved[(t, q, s)] = float(self.scenario_data.data()["Scen"].get((rv, s), 0.0))
         self.scenario_data.data()["lR"] = lR_preserved
 
-        #lI
-        # --- figure out the first RV of stage‑2 -----------------------------
-        nRVSG_dict = self.scenario_data.data().get("nRVSG", {})  # maps stage -> num RVs
-
-        # Define the stage where each IM level starts
-        IM_stage_map = self.scenario_data["sgim"]  # example: IM1 at stage 3, IM2 at stage 9, IM3 at stage 15
-        # --- copy IM prices to lI ---
+        im_stage_map = self.scenario_data["sgim"]
         lI_preserved = {}
-        nT = int(self.scenario_data["nT"])
-        nQ = int(self.scenario_data["nQ"])
-        for t in range(1, nT + 1):
-            for i in self.scenario_data["IMT"][t]:
-                rv0_IM = sum(int(nRVSG_dict.get(i, 0)) for i in range(1, IM_stage_map[i]))  + 1
-                rv = rv0_IM + (t - 1)  # row that holds IM price for hour t
-                for q in range(1, nQ + 1):  # Iterate over Q
-                    for s in self.S_preserved:  # or self.scenario_data["S0"]
-                        price = self.scenario_data.data()["Scen"].get((rv, q, s), 0.0)
-                        lI_preserved[(i, t, q, s)] = float(price)
+        for i in self.scenario_data["IM"]:
+            first_t = min(self.scenario_data["TIM"][i])
+            for t in self.scenario_data["TIM"][i]:
+                for q in range(1, nQ + 1):
+                    rv = self._stage_quarter_rv(im_stage_map[i], t, q, first_t=first_t)
+                    for s in self.S_preserved:
+                        lI_preserved[(i, t, q, s)] = float(self.scenario_data.data()["Scen"].get((rv, s), 0.0))
 
         self.scenario_data.data()["lI"] = lI_preserved
-
 
     def run_preprocessing(self):
         """

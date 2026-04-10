@@ -30,6 +30,11 @@ class InstanceManager:
         print(f"S size: {len(list(self.instance.S))}")  # Should be 10
         return self.instance
 
+    def _stage_quarter_rv(self, stage, t, q, first_t=1):
+        stage_start = value(self.instance.fRVSG[int(stage)])
+        hour_offset = int(t) - int(first_t)
+        return stage_start + hour_offset * value(self.instance.nQ) + (int(q) - 1)
+
 
     def compute_scenario_cluster(self):
         "After creating the self.instance but before running the solver other parameters must be allocated"
@@ -62,9 +67,9 @@ class InstanceManager:
         for t in self.instance.T:
             for q in self.instance.Q:
                 for s in self.instance.S:
-                    # Fetch the correct random variable index from fRVSG
-                    rv_index_wind = value(self.instance.fRVSG[value(self.instance.sgpw[t])])
-                    rv_index_solar = rv_index_wind + 1  # Next variable corresponds to PV
+                    stage = value(self.instance.sgpw[t])
+                    rv_index_wind = value(self.instance.fRVSG[stage]) + (q - 1)
+                    rv_index_solar = value(self.instance.fRVSG[stage]) + value(self.instance.nQ) + (q - 1)
                     # Compute wind power
                     pW_dict[(t, q, s)] = min(value(self.instance.Scen[rv_index_wind, s]), 1.0) * value(self.instance.Pavg)
                     # Compute PV power
@@ -204,17 +209,16 @@ class InstanceManager:
         for t in self.instance.T:
             for q in self.instance.Q:
                 for s in self.instance.S:
-                    # Reserve market prices
-                    #lR_dict[t, q, s] = value(self.instance.Scen[value(self.instance.nT) + t, s])
-                    # System imbalance prices
-                    lIB_dict[t, q, s] = value(self.instance.Scen[value(self.instance.fRVSG[value(self.instance.nSG)]) + (t - 1), s])
+                    rv_lib = self._stage_quarter_rv(value(self.instance.nSG), t, q)
+                    lIB_dict[t, q, s] = value(self.instance.Scen[rv_lib, s])
         # Assign Intraday Market prices
         for i in self.instance.IM:
+            first_t = min(self.instance.TIM[i])
             for t in self.instance.TIM[i]:
                 for q in self.instance.Q:
                     for s in self.instance.S:
-                        lI_dict[i, t, q, s] = value(
-                            self.instance.Scen[value(self.instance.fRVSG[value(self.instance.sgim[i])]) + t - min(self.instance.TIM[i]), s])
+                        rv_li = self._stage_quarter_rv(value(self.instance.sgim[i]), t, q, first_t=first_t)
+                        lI_dict[i, t, q, s] = value(self.instance.Scen[rv_li, s])
         # Store values in Pyomo self.instance
         #for (t, q, s), val in lR_dict.items():
             #self.instance.lR[t, q, s] = val
