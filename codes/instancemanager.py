@@ -522,6 +522,13 @@ class InstanceManager:
         self.compute_imbalance_prices()
         self.fix_eIM()
         self.log_metrics()
+        # Dimension check
+        print("Variables")
+        for v in self.instance.component_objects(pyo.Var, active=True):
+            print(v.name, len(v))
+        print("Constraints")
+        for v in self.instance.component_objects(pyo.Constraint, active=True):
+            print(v.name, len(v))
 
 
 
