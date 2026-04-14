@@ -507,6 +507,14 @@ class InstanceManager:
         self.compute_imbalance_prices()
         self.fix_eIM()
         self.log_metrics()
+        print("\nVARIABLE SIZES")
+        print("--------------")
+        for c in self.instance.component_objects(pyo.Var, active=True):
+            print(c.name, len(c))
+        print("\nCONSTRAINT SIZES")
+        print("--------------")
+        for c in self.instance.component_objects(pyo.Constraint, active=True):
+            print(c.name, len(c))
 
 
 
