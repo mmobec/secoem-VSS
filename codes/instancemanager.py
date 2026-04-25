@@ -33,8 +33,8 @@ class InstanceManager:
     # New function to compute the random variable index for a given stage, quarter, and time step
     def _stage_quarter_rv(self, stage, t, q, first_t=1):
         stage_start = value(self.instance.fRVSG[int(stage)])
-        hour_offset = int(t) - int(first_t)
-        return stage_start + hour_offset * value(self.instance.nQ) + (int(q) - 1)
+        hour_offset = int(t) - int(first_t) # All the prices of IB market are in the last stage of the problem, and we need to order them in a dictionary that can be accessed using t and q.
+        return stage_start + hour_offset*value(self.instance.nQ) + (int(q) - 1)
 
 
     def compute_scenario_cluster(self):
@@ -70,7 +70,7 @@ class InstanceManager:
                 for s in self.instance.S:
                     stage = value(self.instance.sgpw[t])
                     rv_index_wind = value(self.instance.fRVSG[stage]) + (q - 1)
-                    rv_index_solar = value(self.instance.fRVSG[stage]) + value(self.instance.nQ) + (q - 1) + self.instance.nQ  # Assuming solar RVs come after wind RVs in the indexing
+                    rv_index_solar = value(self.instance.fRVSG[stage]) + value(self.instance.nQ) + (q - 1) # Assuming solar RVs come after wind RVs in the indexing
                     # Compute wind power
                     pW_dict[(t, q, s)] = min(value(self.instance.Scen[rv_index_wind, s]), 1.0) * value(self.instance.Pavg)
                     # Compute PV power
@@ -195,18 +195,14 @@ class InstanceManager:
             self.instance.PIB_p[t, q, s] = val
         for (t, q, s), val in PIB_m_dict.items():
             self.instance.PIB_m[t, q, s] = val
-
+    """
     def compute_market_prices(self):
         # Compute market prices (Day-Ahead prices already defined before creating the self.instance)
-
-        """
-        Commented Out RM because it is defined similarly to DAM in preprocessing
-        """
-        #ToDo: Perhaps do all of them like lR and lD are done?
+        #ToDo: Perhaps do all of them like lR and lD are done? DONE
         #lR_dict = {}
         lI_dict = {}
         lIB_dict = {}
-        # Assign values to dictionaries
+        # Assign values of price of IB market: lIB are in the last stage of the problem.
         for t in self.instance.T:
             for q in self.instance.Q:
                 for s in self.instance.S:
@@ -221,12 +217,13 @@ class InstanceManager:
                         rv_li = self._stage_quarter_rv(value(self.instance.sgim[i]), t, q, first_t=first_t)
                         lI_dict[i, t, q, s] = value(self.instance.Scen[rv_li, s])
         # Store values in Pyomo self.instance
-        #for (t, q, s), val in lR_dict.items():
-            #self.instance.lR[t, q, s] = val
-        #for (i, t, q, s), val in lI_dict.items():
-            #self.instance.lI[i, t, q, s] = val
+        for (t, q, s), val in lR_dict.items():
+            self.instance.lR[t, q, s] = val
+        for (i, t, q, s), val in lI_dict.items():
+            self.instance.lI[i, t, q, s] = val
         for (t, q, s), val in lIB_dict.items():
             self.instance.lIB[t, q, s] = val
+    """
 
     def compute_mean_market_prices(self):
         # Compute mean market prices (the average value across all scenarios for each quarter-hour)
@@ -517,7 +514,7 @@ class InstanceManager:
         self.compute_nearest_tree()
         self.compute_representative_scenarios()
         self.compute_imbalance_bounds()
-        self.compute_market_prices()
+        #self.compute_market_prices()
         self.compute_mean_market_prices()
         self.compute_imbalance_prices()
         self.fix_eIM()

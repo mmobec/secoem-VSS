@@ -114,8 +114,15 @@ class PreProcessor:
                     rv = self._stage_quarter_rv(im_stage_map[i], t, q, first_t=first_t)
                     for s in self.S_preserved:
                         lI_preserved[(i, t, q, s)] = float(self.scenario_data.data()["Scen"].get((rv, s), 0.0))
-
         self.scenario_data.data()["lI"] = lI_preserved
+
+        lIB_preserved = {}
+        for t in range(1, nT + 1):
+            for q in range(1, nQ + 1):
+                rv = self._stage_quarter_rv(self.scenario_data["nS"], t, q)
+                for s in self.instance.S:
+                    lIB_preserved[(t, q, s)] = float(self.scenario_data.data()["Scen"].get((rv, s), 0.0))
+        self.scenario_data.data()["lIB"] = lIB_preserved
 
     def run_preprocessing(self):
         """
