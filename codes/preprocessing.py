@@ -116,22 +116,39 @@ class PreProcessor:
                         lI_preserved[(i, t, q, s)] = float(self.scenario_data.data()["Scen"].get((rv, s), 0.0))
         self.scenario_data.data()["lI"] = lI_preserved
 
-        lIB_preserved = {}
+        ib_stage = self.scenario_data["nSG"]
+        ib_block_size = nT * nQ
+        ib_stage_rvs = int(self.scenario_data.data()["nRVSG"].get(ib_stage, 0))
+        if ib_stage_rvs < 2 * ib_block_size:
+            raise ValueError(
+                f"Stage {ib_stage} must contain at least {2 * ib_block_size} IB price RVs "
+                f"({ib_block_size} for lPIB and {ib_block_size} for lNIB), found {ib_stage_rvs}."
+            )
+        lPIB_preserved = {}
+        lNIB_preserved = {}
         for t in range(1, nT + 1):
             for q in range(1, nQ + 1):
-                rv = self._stage_quarter_rv(self.scenario_data["nSG"], t, q)
+                rv_lpib = self._stage_quarter_rv(ib_stage, t, q)
+                rv_lnib = rv_lpib + ib_block_size
                 for s in self.S_preserved:
-                    lIB_preserved[(t, q, s)] = float(self.scenario_data.data()["Scen"].get((rv, s), 0.0))
-        self.scenario_data.data()["lIB"] = lIB_preserved
+                    lPIB_preserved[(t, q, s)] = float(self.scenario_data.data()["Scen"].get((rv_lpib, s), 0.0))
+                    lNIB_preserved[(t, q, s)] = float(self.scenario_data.data()["Scen"].get((rv_lnib, s), 0.0))
+        self.scenario_data.data()["lPIB"] = lPIB_preserved
+        self.scenario_data.data()["lNIB"] = lNIB_preserved
 
         # En allocate_market_prices, después de calcular lIB_preserved
-        sample_values = [(t, q, s, lIB_preserved[(t,q,s)]) 
-                        for t in [1,12,24] for q in [1] for s in [1,2,3]]
-        print("lIB sample values:", sample_values)
+        sample_times = [t for t in [1, 12, 24] if t <= nT]
+        sample_scenarios = self.S_preserved[:3]
+        sample_lPIB = [(t, q, s, lPIB_preserved[(t, q, s)])
+                       for t in sample_times for q in [1] for s in sample_scenarios]
+        sample_lNIB = [(t, q, s, lNIB_preserved[(t, q, s)])
+                       for t in sample_times for q in [1] for s in sample_scenarios]
+        print("lPIB sample values:", sample_lPIB)
+        print("lNIB sample values:", sample_lNIB)
 
         # Y también para lD para comparar
-        sample_lD = [(t, q, s, lD_preserved[(t,q,s)]) 
-                    for t in [1,12,24] for q in [1] for s in [1,2,3]]
+        sample_lD = [(t, q, s, lD_preserved[(t, q, s)])
+                    for t in sample_times for q in [1] for s in sample_scenarios]
         print("lD sample values:", sample_lD)
 
     def run_preprocessing(self):

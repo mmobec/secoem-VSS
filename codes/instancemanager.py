@@ -231,13 +231,11 @@ class InstanceManager:
         mean_lD_dict = {}
         mean_lR_dict = {}
         mean_lI_dict = {}
-        mean_lIB_dict = {}
         # Compute mean values
         for t in self.instance.T:
             for q in self.instance.Q:
                 mean_lD_dict[(t, q)] = sum(value(self.instance.Prob[s]) * value(self.instance.lD[t, q, s]) for s in self.instance.S)
                 mean_lR_dict[(t, q)] = sum(value(self.instance.Prob[s]) * value(self.instance.lR[t, q, s]) for s in self.instance.S)
-                mean_lIB_dict[(t, q)] = sum(value(self.instance.Prob[s]) * value(self.instance.lIB[t, q, s]) for s in self.instance.S)
         # Compute mean values for intraday markets
         for i in self.instance.IM:
             for t in self.instance.TIM[i]:
@@ -251,9 +249,6 @@ class InstanceManager:
             self.instance.mean_lR[t, q] = val
         for (i, t, q), val in mean_lI_dict.items():
             self.instance.mean_lI[i, t, q] = val
-        for (t, q), val in mean_lIB_dict.items():
-            self.instance.mean_lIB[t, q] = val
-
         # === PRINT RESULTS ===
         # print("\n##### mean_lD (Day-Ahead Prices) #####")
         # for t, val in mean_lD_dict.items():
@@ -276,8 +271,6 @@ class InstanceManager:
         # Compute and display mean values (the average value across all scenarios for all quarter-hours)
         mean_lD_avg = sum(mean_lD_dict[(t, q)] for t in self.instance.T for q in self.instance.Q) / (value(self.instance.nT) * value(self.instance.nQ))
         mean_lR_avg = sum(mean_lR_dict[(t, q)] for t in self.instance.T for q in self.instance.Q) / (value(self.instance.nT) * value(self.instance.nQ))
-        mean_lIB_avg = sum(mean_lIB_dict[(t, q)] for t in self.instance.T for q in self.instance.Q) / (value(self.instance.nT) * value(self.instance.nQ))
-
         # Compute average per intraday market (per i)
         mean_lI_avg_per_market = {}
         for i in self.instance.IM:
@@ -296,7 +289,6 @@ class InstanceManager:
         self.metrics['mean_lR_avg'] = mean_lR_avg
         self.metrics['mean_lI_global_avg'] = mean_lI_global_avg
         self.metrics['mean_lI_avg_per_market'] = mean_lI_avg_per_market
-        self.metrics['mean_lIB_avg'] = mean_lIB_avg
         #with open(os.path.join(run_config.PROJECT_ROOT, self.sim_ctx.pathres, run_config.resfile), "a") as res_out:
         #    res_out.write("\nMean Values:\n")
         #    res_out.write(f"mean_lD_avg  = {mean_lD_avg:.6f}\n")
@@ -306,31 +298,14 @@ class InstanceManager:
         #    res_out.write(f"mean_pPV_avg  = {mean_pW_avg:.6f}\n")
 
     def compute_imbalance_prices(self):
-        # Compute positive and negative imbalance prices
+        # Positive and negative imbalance prices are read directly from the scenario data.
         lPIB_dict = {}
         lNIB_dict = {}
         for t in self.instance.T:
             for q in self.instance.Q:
                 for s in self.instance.S:
-                    lIB_val = value(self.instance.lIB[t, q, s])
-                    lD_val = value(self.instance.lD[t, q, s])
-                    """"
-                    Usage if lIB are assumed to be ratios of LD (as in the original formulation of the problem):
-                    if lIB_val <= 1:
-                        lPIB_dict[(t, q, s)] = min(180.3, lIB_val * lD_val)
-                        lNIB_dict[(t, q, s)] = lD_val
-                    else:
-                        lPIB_dict[(t, q, s)] = lD_val
-                        lNIB_dict[(t, q, s)] = min(180.3, lIB_val * lD_val)
-                    """
-                    # For the new formulation where lIB are absolute prices:
-                    lPIB_dict[(t, q, s)] = abs(min(180.3, lIB_val))
-                    lNIB_dict[(t, q, s)] = abs(min(180.3, lIB_val))
-        # Store computed values in Pyomo model
-        for (t, q, s), val in lPIB_dict.items():
-            self.instance.lPIB[t, q, s] = val
-        for (t, q, s), val in lNIB_dict.items():
-            self.instance.lNIB[t, q, s] = val
+                    lPIB_dict[(t, q, s)] = value(self.instance.lPIB[t, q, s])
+                    lNIB_dict[(t, q, s)] = value(self.instance.lNIB[t, q, s])
 
         # Compute mean values for imbalance prices
         mean_lPIB_dict = {(t, q): sum(value(self.instance.Prob[s]) * lPIB_dict[(t, q, s)] for s in self.instance.S) for t in self.instance.T for q in self.instance.Q}
@@ -358,7 +333,6 @@ class InstanceManager:
         print("\nMean Values:")
         print(f"mean_lD_avg  = {self.metrics.get('mean_lD_avg', 0):.6f}")
         print(f"mean_lR_avg  = {self.metrics.get('mean_lR_avg', 0):.6f}")
-        print(f"mean_lIB_avg = {self.metrics.get('mean_lIB_avg', 0):.6f} (used to calculate pos. and neg. imb. prices)")
         for i, val in self.metrics.get('mean_lI_avg_per_market', {}).items():
             print(f"mean_lI_avg for IM[{i}] = {val:.6f}")
         print(f"mean_lI_global_avg (all IMs combined) = {self.metrics.get('mean_lI_global_avg', 0):.6f}")
@@ -366,6 +340,8 @@ class InstanceManager:
         # Print average imbalances prices
         print(f"mean_lPIB_avg  = {mean_lPIB_avg:.6f}")
         print(f"mean_lNIB_avg  = {mean_lNIB_avg:.6f}")
+        self.metrics['mean_lPIB_avg'] = mean_lPIB_avg
+        self.metrics['mean_lNIB_avg'] = mean_lNIB_avg
 
     def log_metrics(self):
         """

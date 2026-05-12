@@ -138,10 +138,10 @@ class ModelBuilder:
 
         # Infraday market
         model.mean_lI = pyo.Param(model.IM, model.T, model.Q, within=pyo.Reals, mutable=True) # average IMs price
-        model.lIB  = pyo.Param(model.T, model.Q, model.S, within=pyo.Reals, mutable=True)             # imbalances price
-        model.mean_lPIB = pyo.Param(model.T, model.Q, within=pyo.Reals, mutable=True)
-        model.mean_lNIB = pyo.Param(model.T, model.Q, within=pyo.Reals, mutable=True)
-        model.mean_lIB  = pyo.Param(model.T, model.Q, within=pyo.Reals, mutable=True)
+        model.lIB  = pyo.Param(model.T, model.Q, model.S, within=pyo.Reals, mutable=True, default=0.0)             # legacy imbalance price
+        model.mean_lPIB = pyo.Param(model.T, model.Q, within=pyo.Reals, mutable=True, default=0.0)
+        model.mean_lNIB = pyo.Param(model.T, model.Q, within=pyo.Reals, mutable=True, default=0.0)
+        model.mean_lIB  = pyo.Param(model.T, model.Q, within=pyo.Reals, mutable=True, default=0.0)
 
         # Parameters for the VSS Calculation
         model.ScenF = pyo.Param(pyo.RangeSet(1, model.nRV), within=pyo.Reals)           # Forecasted scenario
