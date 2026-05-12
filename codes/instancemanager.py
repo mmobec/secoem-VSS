@@ -28,6 +28,7 @@ class InstanceManager:
         print(f"T size: {len(list(self.instance.T))}")  # Should be 24
         print(f"Q size: {len(list(self.instance.Q))}")  # Should be 4
         print(f"S size: {len(list(self.instance.S))}")  # Should be 10
+
         return self.instance
 
     # New function to compute the random variable index for a given stage, quarter, and time step
@@ -286,11 +287,15 @@ class InstanceManager:
         # Compute total average across all intraday markets (global average)
         total_sum_lI = sum(mean_lI_dict[(i, t, q)] for i in self.instance.IM for t in self.instance.TIM[i] for q in self.instance.Q)
         total_TIM = sum(len(self.instance.TIM[i]) for i in self.instance.IM) * value(self.instance.nQ)
+        print(total_sum_lI)
+        print(total_TIM)
         mean_lI_global_avg = total_sum_lI / total_TIM
 
         # Write results to file
         self.metrics['mean_lD_avg'] = mean_lD_avg
         self.metrics['mean_lR_avg'] = mean_lR_avg
+        self.metrics['mean_lI_global_avg'] = mean_lI_global_avg
+        self.metrics['mean_lI_avg_per_market'] = mean_lI_avg_per_market
         self.metrics['mean_lIB_avg'] = mean_lIB_avg
         #with open(os.path.join(run_config.PROJECT_ROOT, self.sim_ctx.pathres, run_config.resfile), "a") as res_out:
         #    res_out.write("\nMean Values:\n")
@@ -309,12 +314,18 @@ class InstanceManager:
                 for s in self.instance.S:
                     lIB_val = value(self.instance.lIB[t, q, s])
                     lD_val = value(self.instance.lD[t, q, s])
+                    """"
+                    Usage if lIB are assumed to be ratios of LD (as in the original formulation of the problem):
                     if lIB_val <= 1:
                         lPIB_dict[(t, q, s)] = min(180.3, lIB_val * lD_val)
                         lNIB_dict[(t, q, s)] = lD_val
                     else:
                         lPIB_dict[(t, q, s)] = lD_val
                         lNIB_dict[(t, q, s)] = min(180.3, lIB_val * lD_val)
+                    """
+                    # For the new formulation where lIB are absolute prices:
+                    lPIB_dict[(t, q, s)] = abs(min(180.3, lIB_val))
+                    lNIB_dict[(t, q, s)] = abs(min(180.3, lIB_val))
         # Store computed values in Pyomo model
         for (t, q, s), val in lPIB_dict.items():
             self.instance.lPIB[t, q, s] = val

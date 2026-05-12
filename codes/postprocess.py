@@ -786,7 +786,7 @@ class PostProcess:
 
     def perform_nac_checks(self):
         # Perform Non-Anticipativity Constraint (NAC) checks
-        #self.nac_DAM_and_RM()
+        self.nac_DAM_and_RM()
         self.nac_demand_and_battery()
 
     def get_RM_bid_curves(self):

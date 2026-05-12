@@ -767,6 +767,10 @@ class ModelBuilder:
             return sum((m.eIM_pos[i, t, q, s] + m.eIM_neg[i,t,q,s]) for i in m.IMT[t]) <=  _cap20(m, t, q, s)
         model.IM_bounds_1_pos = pyo.Constraint(model.T, model.Q, model.S, rule=IM_bounds_1_rule_pos)
 
+        def IM_bounds_2_rule(m, t, q, s):
+            return sum((m.eIM_pos[i, t, q, s] + m.eIM_neg[i,t,q,s]) for i in m.IMT[t]) >=  -_cap20(m, t, q, s)
+        model.IM_bounds_2 = pyo.Constraint(model.T, model.Q, model.S, rule=IM_bounds_2_rule)
+
         # Per-step bounds: -cap ≤ eIM[i] ≤ +cap
         def IM_bounds_3_rule(m, i, t, q, s):
             return m.eIM[i, t, q, s] >= -_cap20(m, t, q, s)
@@ -1192,7 +1196,6 @@ class ModelBuilder:
         self._add_reserve_constraints()
         self._add_im_constraints()
         self._add_monotonicity_constraints()
-        self._add_im_constraints()
         self._add_risk_aversion()
         self._add_imbalance_constraints()
         if self.use_hydro:
@@ -1264,12 +1267,14 @@ class ModelBuilder:
     def _add_im_nac(self):
         market = self.sim_ctx.market
         model = self.model
-        #if market == "DA":
-         #   return
+        """
+        if market == "DA":
+            return
         
-        #elif market == "RM":
-         #   return
-
+        elif market == "RM":
+            return
+        """
+    
         if "IM" in market:
             market_no = int(market[-1])
         else: 
@@ -1343,7 +1348,7 @@ class ModelBuilder:
                 ec_asset_var = [
                 "var_fd", "var_afd_p", "var_afd_m",
                 "dV", "cV", "idV", "socV",
-                "rU_B", "rU_FD",
+                "rU_B", "rD_B",
                 "rU_FD", "rD_FD"]
 
         if self.use_hydro:
@@ -1389,6 +1394,7 @@ class ModelBuilder:
         self._add_stage1_nac()
         self._add_imbalance_nac()
         self._add_ec_asset_nac()
+        self._add_im_nac()
 
 
     def build_model(self):

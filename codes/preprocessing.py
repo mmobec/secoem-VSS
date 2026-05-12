@@ -119,10 +119,20 @@ class PreProcessor:
         lIB_preserved = {}
         for t in range(1, nT + 1):
             for q in range(1, nQ + 1):
-                rv = self._stage_quarter_rv(self.scenario_data["nS"], t, q)
-                for s in self.instance.S:
+                rv = self._stage_quarter_rv(self.scenario_data["nSG"], t, q)
+                for s in self.S_preserved:
                     lIB_preserved[(t, q, s)] = float(self.scenario_data.data()["Scen"].get((rv, s), 0.0))
         self.scenario_data.data()["lIB"] = lIB_preserved
+
+        # En allocate_market_prices, después de calcular lIB_preserved
+        sample_values = [(t, q, s, lIB_preserved[(t,q,s)]) 
+                        for t in [1,12,24] for q in [1] for s in [1,2,3]]
+        print("lIB sample values:", sample_values)
+
+        # Y también para lD para comparar
+        sample_lD = [(t, q, s, lD_preserved[(t,q,s)]) 
+                    for t in [1,12,24] for q in [1] for s in [1,2,3]]
+        print("lD sample values:", sample_lD)
 
     def run_preprocessing(self):
         """
