@@ -136,6 +136,14 @@ class PreProcessor:
         self.scenario_data.data()["lPIB"] = lPIB_preserved
         self.scenario_data.data()["lNIB"] = lNIB_preserved
 
+        print("\nLoaded IB price values from scenario data:")
+        print(f"Scenarios in S: {self.S_preserved}")
+        for t in range(1, nT + 1):
+            for q in range(1, nQ + 1):
+                lpib_values = [lPIB_preserved[(t, q, s)] for s in self.S_preserved]
+                lnib_values = [lNIB_preserved[(t, q, s)] for s in self.S_preserved]
+                print(f"t={t:02d}, q={q}: lPIB={lpib_values}, lNIB={lnib_values}")
+
         # En allocate_market_prices, después de calcular lIB_preserved
         sample_times = [t for t in [1, 12, 24] if t <= nT]
         sample_scenarios = self.S_preserved[:3]

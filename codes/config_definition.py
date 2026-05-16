@@ -40,7 +40,7 @@ probl = 'ec'
 
 # Suppose we define a scenario family (famscen) & set of SIMS in Python:
 
-famscen_all = "FTC_20260201_20260228_c5_sc15_15min_ren_same"
+famscen_all = "FTC_20260201_20260228_c10_sc15_15min_ren_same"
 #famscen_all = "FTC_10_2023_12_HYDRO"
 
 

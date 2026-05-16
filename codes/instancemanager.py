@@ -66,6 +66,9 @@ class InstanceManager:
         mean_pPV_dict = {}
         sigma_pW_dict = {}
 
+        def renewable_output(scenario_factor, installed_capacity):
+            return min(max(value(scenario_factor), 0.0), 1.0) * value(installed_capacity)
+
         for t in self.instance.T:
             for q in self.instance.Q:
                 for s in self.instance.S:
@@ -73,9 +76,9 @@ class InstanceManager:
                     rv_index_wind = value(self.instance.fRVSG[stage]) + (q - 1)
                     rv_index_solar = value(self.instance.fRVSG[stage]) + value(self.instance.nQ) + (q - 1) # Assuming solar RVs come after wind RVs in the indexing
                     # Compute wind power
-                    pW_dict[(t, q, s)] = min(value(self.instance.Scen[rv_index_wind, s]), 1.0) * value(self.instance.Pavg)
+                    pW_dict[(t, q, s)] = renewable_output(self.instance.Scen[rv_index_wind, s], self.instance.Pavg)
                     # Compute PV power
-                    pPV_dict[(t, q, s)] = min(value(self.instance.Scen[rv_index_solar, s]), 1.0) * value(self.instance.Pavg_PV)
+                    pPV_dict[(t, q, s)] = renewable_output(self.instance.Scen[rv_index_solar, s], self.instance.Pavg_PV)
         # Compute mean values
         for t in self.instance.T:
             for q in self.instance.Q:
