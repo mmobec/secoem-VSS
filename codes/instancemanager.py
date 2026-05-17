@@ -58,15 +58,19 @@ class InstanceManager:
         mean_pPV_dict = {}
         sigma_pW_dict = {}
 
+        def renewable_output(scenario_factor, installed_capacity):
+            return min(max(value(scenario_factor), 0.0), 1.0) * value(installed_capacity)
+
+
         for t in self.instance.T:
             for s in self.instance.S:
                 # Fetch the correct random variable index from fRVSG
                 rv_index_wind = value(self.instance.fRVSG[value(self.instance.sgpw[t])])
                 rv_index_solar = rv_index_wind + 1  # Next variable corresponds to PV
                 # Compute wind power
-                pW_dict[(t, s)] = min(value(self.instance.Scen[rv_index_wind, s]), 1.0) * value(self.instance.Pavg)
+                pW_dict[(t, s)] = renewable_output(self.instance.Scen[rv_index_wind, s], self.instance.Pavg)
                 # Compute PV power
-                pPV_dict[(t, s)] = min(value(self.instance.Scen[rv_index_solar, s]), 1.0) * value(self.instance.Pavg_PV)
+                pPV_dict[(t, s)] = renewable_output(self.instance.Scen[rv_index_solar, s], self.instance.Pavg_PV)
         # Compute mean values
         for t in self.instance.T:
             mean_pW_dict[t] = sum(value(self.instance.Prob[s]) * pW_dict[(t, s)] for s in self.instance.S)
@@ -221,12 +225,10 @@ class InstanceManager:
         mean_lD_dict = {}
         mean_lR_dict = {}
         mean_lI_dict = {}
-        mean_lIB_dict = {}
         # Compute mean values
         for t in self.instance.T:
             mean_lD_dict[t] = sum(value(self.instance.Prob[s]) * value(self.instance.lD[t, s]) for s in self.instance.S)
             mean_lR_dict[t] = sum(value(self.instance.Prob[s]) * value(self.instance.lR[t, s]) for s in self.instance.S)
-            mean_lIB_dict[t] = sum(value(self.instance.Prob[s]) * value(self.instance.lIB[t, s]) for s in self.instance.S)
         # Compute mean values for intraday markets
         for i in self.instance.IM:
             for t in self.instance.TIM[i]:
@@ -239,8 +241,7 @@ class InstanceManager:
             self.instance.mean_lR[t] = val
         for (i, t), val in mean_lI_dict.items():
             self.instance.mean_lI[i, t] = val
-        for t, val in mean_lIB_dict.items():
-            self.instance.mean_lIB[t] = val
+
 
         # === PRINT RESULTS ===
         # print("\n##### mean_lD (Day-Ahead Prices) #####")
@@ -264,7 +265,6 @@ class InstanceManager:
         # Compute and display mean values (the average value across all scenarios for all hours)
         mean_lD_avg = sum(mean_lD_dict[t] for t in self.instance.T) / value(self.instance.nT)
         mean_lR_avg = sum(mean_lR_dict[t] for t in self.instance.T) / value(self.instance.nT)
-        mean_lIB_avg = sum(mean_lIB_dict[t] for t in self.instance.T) / value(self.instance.nT)
 
         # Compute average per intraday market (per i)
         mean_lI_avg_per_market = {}
@@ -280,7 +280,9 @@ class InstanceManager:
         # Write results to file
         self.metrics['mean_lD_avg'] = mean_lD_avg
         self.metrics['mean_lR_avg'] = mean_lR_avg
-        self.metrics['mean_lIB_avg'] = mean_lIB_avg
+        self.metrics['mean_lIB_avg'] = mean_lI_global_avg
+        self.metrics['mean_lI_avg_per_market'] = mean_lI_avg_per_market
+
         #with open(os.path.join(run_config.PROJECT_ROOT, self.sim_ctx.pathres, run_config.resfile), "a") as res_out:
         #    res_out.write("\nMean Values:\n")
         #    res_out.write(f"mean_lD_avg  = {mean_lD_avg:.6f}\n")
@@ -290,25 +292,13 @@ class InstanceManager:
         #    res_out.write(f"mean_pPV_avg  = {mean_pW_avg:.6f}\n")
 
     def compute_imbalance_prices(self):
-        # Compute positive and negative imbalance prices
+        # Positive and negative imbalance prices are read directly from the scenario data.
         lPIB_dict = {}
         lNIB_dict = {}
         for t in self.instance.T:
             for s in self.instance.S:
-                lIB_val = value(self.instance.lIB[t, s])
-                lD_val = value(self.instance.lD[t, s])
-                if lIB_val <= 1:
-                    lPIB_dict[(t, s)] = min(180.3, lIB_val * lD_val)
-                    lNIB_dict[(t, s)] = lD_val
-                else:
-                    lPIB_dict[(t, s)] = lD_val
-                    lNIB_dict[(t, s)] = min(180.3, lIB_val * lD_val)
-        # Store computed values in Pyomo model
-        for (t, s), val in lPIB_dict.items():
-            self.instance.lPIB[t, s] = val
-        for (t, s), val in lNIB_dict.items():
-            self.instance.lNIB[t, s] = val
-
+                lPIB_dict[(t, s)] = value(self.instance.lPIB[t, s])
+                lNIB_dict[(t, s)] = value(self.instance.lNIB[t, s])
         # Compute mean values for imbalance prices
         mean_lPIB_dict = {t: sum(value(self.instance.Prob[s]) * lPIB_dict[(t, s)] for s in self.instance.S) for t in self.instance.T}
         mean_lNIB_dict = {t: sum(value(self.instance.Prob[s]) * lNIB_dict[(t, s)] for s in self.instance.S) for t in self.instance.T}
@@ -335,7 +325,6 @@ class InstanceManager:
         print("\nMean Values:")
         print(f"mean_lD_avg  = {self.metrics.get('mean_lD_avg', 0):.6f}")
         print(f"mean_lR_avg  = {self.metrics.get('mean_lR_avg', 0):.6f}")
-        print(f"mean_lIB_avg = {self.metrics.get('mean_lIB_avg', 0):.6f} (used to calculate pos. and neg. imb. prices)")
         for i, val in self.metrics.get('mean_lI_avg_per_market', {}).items():
             print(f"mean_lI_avg for IM[{i}] = {val:.6f}")
         print(f"mean_lI_global_avg (all IMs combined) = {self.metrics.get('mean_lI_global_avg', 0):.6f}")
@@ -343,6 +332,8 @@ class InstanceManager:
         # Print average imbalances prices
         print(f"mean_lPIB_avg  = {mean_lPIB_avg:.6f}")
         print(f"mean_lNIB_avg  = {mean_lNIB_avg:.6f}")
+        self.metrics['mean_lPIB_avg'] = mean_lPIB_avg
+        self.metrics['mean_lNIB_avg'] = mean_lNIB_avg
 
     def log_metrics(self):
         """
@@ -507,14 +498,14 @@ class InstanceManager:
         self.compute_imbalance_prices()
         self.fix_eIM()
         self.log_metrics()
-        print("\nVARIABLE SIZES")
-        print("--------------")
-        for c in self.instance.component_objects(pyo.Var, active=True):
-            print(c.name, len(c))
-        print("\nCONSTRAINT SIZES")
-        print("--------------")
-        for c in self.instance.component_objects(pyo.Constraint, active=True):
-            print(c.name, len(c))
+        # Dimension check
+        print("Variables")
+        for v in self.instance.component_objects(pyo.Var, active=True):
+            print(v.name, len(v))
+        print("Constraints")
+        for v in self.instance.component_objects(pyo.Constraint, active=True):
+            print(v.name, len(v))
+
 
 
 
