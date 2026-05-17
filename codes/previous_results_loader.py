@@ -298,7 +298,7 @@ class PreviousMarketResultsLoader:
                 matched_eim1[i,t] = vol
 
         eIM_prev = {}
-        nQ = 4  # Number of subperiods per hour
+        nQ = self.scenario_data["nQ"]  # Number of subperiods per hour
         for i in range(1, im_no):
             for t in range(1, self.scenario_data["nT"] + 1):
                 for q in range(1, nQ + 1):  # Replicate for each subperiod
@@ -355,7 +355,7 @@ class PreviousMarketResultsLoader:
 
             if last_matched_scen == None:
                 last_matched_scen = S[0]
-            nQ = 4  # Number of subperiods per hour
+            nQ = self.scenario_data["nQ"]  # Number of subperiods per hour
             for t in range(1, self.scenario_data["nT"] + 1):
                 for q in range(1, nQ + 1):  # Replicate for each subperiod
                     for s in  self.scenario_data["S"]:
