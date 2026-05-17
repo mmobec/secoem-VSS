@@ -45,86 +45,17 @@ class PreProcessor:
         print(f"pathres        = {sc.pathres}")
 
         abstract_model = self.abstract_model
-    
-        # Load market data
-        market_file = os.path.join(cfg.PROJECT_ROOT, "data", cfg.market_datfile)
-        print(f"[1/6] Loading market.dat from: {market_file}")
-        try:
-            self.scenario_data.load(filename=market_file, model=abstract_model)
-            print(f"      ✓ Success")
-        except Exception as e:
-            print(f"      ✗ FAILED: {e}")
-            raise
-        
-        # Load BESS data
-        bess_file = os.path.join(cfg.PROJECT_ROOT, "data", cfg.BESS_datfile)
-        print(f"[2/6] Loading BESS.dat from: {bess_file}")
-        try:
-            self.scenario_data.load(filename=bess_file, model=abstract_model)
-            print(f"      ✓ Success")
-        except Exception as e:
-            print(f"      ✗ FAILED: {e}")
-            raise
-        
-        # Load wind data
-        wind_file = os.path.join(cfg.PROJECT_ROOT, "data", cfg.wind_datfile)
-        print(f"[3/6] Loading wind.dat from: {wind_file}")
-        try:
-            self.scenario_data.load(filename=wind_file, model=abstract_model)
-            print(f"      ✓ Success")
-        except Exception as e:
-            print(f"      ✗ FAILED: {e}")
-            raise
+        self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, "data", cfg.market_datfile), model=abstract_model)
+        self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, "data", cfg.BESS_datfile), model=abstract_model)
+        self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, "data", cfg.wind_datfile), model=abstract_model)
         
         # Load hydro data (if enabled)
         if self.sim_ctx.include_hydro:
-            hydro_file = os.path.join(cfg.PROJECT_ROOT, "data", cfg.hydro_datfile)
-            print(f"[4a/6] Loading hydro.dat from: {hydro_file}")
-            try:
-                self.scenario_data.load(filename=hydro_file, model=abstract_model)
-                print(f"       ✓ Success")
-            except Exception as e:
-                print(f"       ✗ FAILED: {e}")
-                raise
-            
-            h2_file = os.path.join(cfg.PROJECT_ROOT, cfg.pathdem_h2, sc.demfile_h2)
-            print(f"[4b/6] Loading demand_h2.dat from: {h2_file}")
-            try:
-                self.scenario_data.load(filename=h2_file, model=abstract_model)
-                print(f"       ✓ Success")
-            except Exception as e:
-                print(f"       ✗ FAILED: {e}")
-                raise
-        
-        # Load scenario data
-        scen_file = os.path.join(cfg.PROJECT_ROOT, sc.pathscen, sc.scenfile)
-        print(f"[5/6] Loading scenarios from: {scen_file}")
-        print(f"      File exists: {os.path.exists(scen_file)}")
-        try:
-            load_path = self._prepare_pyomo_compatible_scenario_file(scen_file)
-            self.scenario_data.load(filename=load_path, model=abstract_model)
-            print(f"      ✓ Success")
-        except Exception as e:
-            print(f"      ✗ FAILED at scenario loading:")
-            print(f"      Error: {type(e).__name__}: {e}")
-            import traceback
-            traceback.print_exc()
-            raise
-        
-        # Load demand data
-        dem_file = os.path.join(cfg.PROJECT_ROOT, cfg.pathdem, sc.demfile)
-        print(f"[6/6] Loading demand from: {dem_file}")
-        print(f"      File exists: {os.path.exists(dem_file)}")
-        try:
-            self.scenario_data.load(filename=dem_file, model=abstract_model)
-            print(f"      ✓ Success")
-        except Exception as e:
-            print(f"      ✗ FAILED: {e}")
-            import traceback
-            traceback.print_exc()
-            raise
-
-        print(f"\n✓ All files loaded successfully")
+            self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, "data", cfg.hydro_datfile), model=abstract_model)
+            self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, cfg.pathdem_h2, sc.demfile_h2), model=abstract_model)
+        self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, sc.pathscen, sc.scenfile), model=abstract_model)
+        self.scenario_data.load(filename=os.path.join(cfg.PROJECT_ROOT, cfg.pathdem, sc.demfile), model=abstract_model)
+        print(f"\nT = {self.scenario_data['nT']}, nS = {self.scenario_data['nS']}, nIM = {self.scenario_data['nIM']}")
 
     def preprocess_data(self):
         # Before creating the instance
@@ -214,28 +145,3 @@ class PreProcessor:
         self.allocate_market_prices()
         self.scenario_data = PreviousMarketResultsLoader(self.sim_ctx, self.scenario_data).load_results()
         return self.scenario_data, self.abstract_model
-
-    @staticmethod
-    def _prepare_pyomo_compatible_scenario_file(scen_file):
-        """
-        Normalize 1-D wildcard param declarations that recent Pyomo versions
-        can fail to parse in .dat files.
-        """
-        with open(scen_file, "r", encoding="utf-8") as f:
-            raw_text = f.read()
-
-        normalized_text = (
-            raw_text.replace("param nRVSG [*] :=", "param nRVSG :=")
-            .replace("param ScenF [*] :=", "param ScenF :=")
-            .replace("param ScenO [*] :=", "param ScenO :=")
-        )
-
-        if normalized_text == raw_text:
-            return scen_file
-
-        tmp = tempfile.NamedTemporaryFile(
-            mode="w", suffix=".dat", delete=False, encoding="utf-8"
-        )
-        with tmp:
-            tmp.write(normalized_text)
-        return tmp.name

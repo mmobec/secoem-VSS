@@ -19,8 +19,9 @@ class ModelBuilder:
         model.nT = pyo.Param(within=pyo.PositiveIntegers)       # number of time periods
         model.T = pyo.RangeSet(1, model.nT)                 # set of time periods
         model.T0 = pyo.RangeSet(0, model.nT)                # T union {0}
-        model.dT = pyo.Param(within=pyo.PositiveReals, default=1.0)  # time step duration [hours]
-
+        model.dT = pyo.Param(within=pyo.PositiveReals,
+                    initialize=lambda m: 24 / pyo.value(m.nT)) 
+                
         # >>> Intraday markets:
         model.nIM = pyo.Param(within=pyo.PositiveIntegers)      # number of intraday markets
         model.IM = pyo.RangeSet(1, model.nIM)               # set of intraday markets
@@ -128,7 +129,7 @@ class ModelBuilder:
 
         # Infraday market
         model.mean_lI = pyo.Param(model.IM, model.T, within=pyo.Reals, mutable=True) # average IMs price
-        model.lIB  = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)             # imbalances price
+        model.lIB  = pyo.Param(model.T, model.S, within=pyo.Reals, mutable=True)             # legacy imbalances price
         model.mean_lPIB = pyo.Param(model.T, within=pyo.Reals, mutable=True)
         model.mean_lNIB = pyo.Param(model.T, within=pyo.Reals, mutable=True)
         model.mean_lIB  = pyo.Param(model.T, within=pyo.Reals, mutable=True)
@@ -749,6 +750,11 @@ class ModelBuilder:
             return sum((m.eIM_pos[i, t, s] + m.eIM_neg[i,t,s]) for i in m.IMT[t]) <=  _cap20(m, t, s)
         model.IM_bounds_1_pos = pyo.Constraint(model.T, model.S, rule=IM_bounds_1_rule_pos)
 
+        def IM_bounds_2_rule(m, t, s):
+            return sum((m.eIM_pos[i, t, s] + m.eIM_neg[i,t,s]) for i in m.IMT[t]) >=  -_cap20(m, t, s)
+        model.IM_bounds_2 = pyo.Constraint(model.T, model.S, rule=IM_bounds_2_rule)
+
+
         # Per-step bounds: -cap ≤ eIM[i] ≤ +cap
         def IM_bounds_3_rule(m, i, t, s):
             return m.eIM[i, t, s] >= -_cap20(m, t, s)
@@ -1163,7 +1169,6 @@ class ModelBuilder:
         self._add_reserve_constraints()
         self._add_im_constraints()
         self._add_monotonicity_constraints()
-        self._add_im_constraints()
         self._add_risk_aversion()
         self._add_imbalance_constraints()
         if self.use_hydro:
@@ -1311,7 +1316,7 @@ class ModelBuilder:
                 ec_asset_var = [
                 "var_fd", "var_afd_p", "var_afd_m",
                 "dV", "cV", "idV", "socV",
-                "rU_B", "rU_FD",
+                "rU_B", "rD_B",
                 "rU_FD", "rD_FD"]
 
         if self.use_hydro:
@@ -1359,7 +1364,7 @@ class ModelBuilder:
         self._add_stage1_nac()
         self._add_imbalance_nac()
         self._add_ec_asset_nac()
-
+        self._add_im_nac()
 
     def build_model(self):
         self.add_fundamentals()
@@ -1370,7 +1375,6 @@ class ModelBuilder:
         self.add_objective()
         self.add_constraints()
         self.add_NAC()
-        print("Modelo construido con parámetros:", [attr for attr in dir(self.model) if not attr.startswith('_')])
         return self.model
 
 
