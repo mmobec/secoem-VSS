@@ -9,3 +9,9 @@ pre_process_AMPL_to_Pyomo_scenario_data/Python format scenario data/
 /model_formulation/ec_model_formulation.out
 /model_formulation/ec_model_formulation.run.xml
 /model_formulation/ec_model_formulation.synctex.gz
+/.venv
+/codes/__pycache__/
+/codes/models/__pycache__
+/data/demand/demand_h2
+
+/data/demand_profiles
