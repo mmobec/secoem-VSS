@@ -6,8 +6,7 @@ from pathlib import Path
 All static parameters for a simulation
 """
 
-PROJECT_ROOT = Path.home() / "OneDrive" / "Documentos" / "MESIO" / "TFM" / "Repos" / "mmobec-pyomo" #This is the root directory
-
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 MARKET_CHAIN = ["DA", "RM", "IM1", "IM2", "IM3", "IB"]
 
 # For PreviousResultsLoader:
@@ -40,7 +39,7 @@ probl = 'ec'
 
 # Suppose we define a scenario family (famscen) & set of SIMS in Python:
 
-famscen_all = "FTC_20251031_20251130_c30_sc10_15min_ren_same"
+famscen_all = "FTC_20251031_20251130_c30_sc300_15min_ren_same"
 #famscen_all = "FTC_10_2023_12_HYDRO"
 
 
@@ -49,7 +48,7 @@ n_days = 1
 SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days for brevity
 
 pathscen_all = f"scenarios/{famscen_all}"
-pathdem  = "data/demand-15mins/"
+pathdem  = "data/demand/2025-10-31_2025-11-30/quarterly_same_ren"
 pathdem_h2 = "data/demand_h2"
 base_result_dir = Path("results")
 
@@ -70,6 +69,6 @@ SOLVER_OPTIONS = {
 
     # --- Logging & run control ---
     "DisplayInterval": 2,
-    "TimeLimit":       3600,     # seconds
+    "TimeLimit":       14400,     # seconds
     "Seed":            2,
 }
