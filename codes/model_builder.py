@@ -796,6 +796,11 @@ class ModelBuilder:
     def _add_imbalance_constraints(self):
         model = self.model
         def Imbalances_rule(m, t, s):
+            if self.sim_ctx.market == "IM3" and t < m.TIM[m.nIM].first():
+                # Periods already revealed/fixed before IM3's gate closure are excluded,
+                # otherwise the constraint over-determines variables fixed by fix_eIM()
+                # and the problem becomes infeasible.
+                return pyo.Constraint.Skip
             lhs = m.pIB_p[t, s] - m.pIB_m[t, s]
             rhs = (
                 m.eDA_m[t, s]
@@ -808,15 +813,15 @@ class ModelBuilder:
                 - m.cV[t, s]
             )
             if self.use_hydro:
-                rhs = (rhs 
+                rhs = (rhs
                     + m.eFC_on[t,s]
                     - m.eEL[t,s]
                     - m.eCOMP[t,s]
                     + m.eFC_sb[t,s]
                 )
             return lhs == rhs
-        if self.sim_ctx.market == "IM3": 
-            model.Imbalances = pyo.Constraint(range(12,25), model.S, rule=Imbalances_rule)    #not a pretty solution bc hardcoded.. however this is necessary otherwise IM3 is infeasible
+        if self.sim_ctx.market == "IM3":
+            model.Imbalances = pyo.Constraint(model.T, model.S, rule=Imbalances_rule)
         else:
             model.Imbalances = pyo.Constraint(model.T, model.S, rule=Imbalances_rule)
 
