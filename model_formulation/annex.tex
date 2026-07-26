@@ -1,0 +1,1127 @@
+This section presents additional material to complement the project.
+
+\section{Original model}
+
+\subsection{Introduction}
+
+We consider an energy community with the following elements:
+\begin{enumerate}
+	\item (Implicit) Flexible Demand.
+	\item Wind Farm.
+	\item Solar Farm.
+	\item Battery Energy Storage System (BESS).
+\end{enumerate}
+
+In the following sections we present the proposed problem formulation. Since it is quite a large model,
+the sets, parameters, variables, and constraints are defined on separate sections.
+
+\begin{notation}
+	In the definition of sets, parameters, and variables, we use parenthesis to denote the name of that element in the code. For example, we use $\mathcal{T}$ (\verb|T|) to denote that the set $\mathcal{T}$ has the name \verb|T| in the code.  
+\end{notation}
+
+\begin{note} \label{NOTE:ScenarioTreatment}
+	We do not distinguish in this formulation between ``complete set of scenarios'' and ``preserved set of scenarios''. This is a pre-processing step, and does not affect the formulation. 
+\end{note}
+
+\subsection{Fundamental Elements}
+\label{SEC:FundamentalElements}
+
+\begin{tabularx}{\textwidth}{l X}
+    \textbf{Sets:} \\
+    $\mathcal{T}$ (\texttt{T}) & set of $T$ time periods $\{ 1, \dots, T \}$ [hours]. \\
+    $\mathcal{T}_0$ (\texttt{T0}) & extended set of time periods $\{ 0, \dots, T \}$ [hours]. \\     
+    $\mathcal{I}$ (\texttt{IM}) & set of $I$ intraday markets $\{1, \dots, I \}$. \\    
+    $\mathcal{T}_i$ (\texttt{TIM}) & set of time periods in intraday market $i \in \mathcal{I}$ [hours]. \\
+    $\mathcal{I}_t$ (\texttt{IMT}) & set of intraday markets where $t \in \mathcal{T}$ is a time period. \\    
+    $\Omega$ (\texttt{S}) & set of scenarios. \\
+    $\mathcal{SG}$ (\texttt{SG}) & set of stages $\{1, \dots, nSG \}$. \\
+    $\mathcal{SG}_0$ (\texttt{SG0}) & extended set of stages $\{0, \dots, nSG \}$. \\     
+    $\mathcal{C}_{sg, \omega}$ (\texttt{c}) & scenario cluster of scenario $\omega \in \Omega$ at stage $sg \in \mathcal{SG}_0$. \\
+    $\mathcal{RV}$ (\texttt{RV}) & set of random variables $\{1, \dots, nRV \}$. \\
+    \\
+   
+    \textbf{Parameters:} \\
+    $T$ (\texttt{nT}) & number of time periods [hours]. \\ 
+    $\Delta T$ (\texttt{dT}) & duration of the period [hours]. \\
+    $I$ (\texttt{nIM}) & number of intraday markets. \\
+    $nSG$ (\texttt{nSG}) & number of stages. \\
+    $SG^{IM}_i$ (\texttt{sgim}) & stage in which the price of intraday market $i \in \mathcal{I}$ is revealed. \\
+    $nRV$ (\texttt{nRV}) & number of random variables. \\
+    $nRVSG_{sg}$ (\texttt{nRVSG}) & number of random variables revealed at stage $sg \in \mathcal{SG}$. \\
+    $\Pi_{\omega}$ (\texttt{Prob}) & probability of scenario $\omega \in \Omega$. \\
+    $S_{rv, \omega}$ (\texttt{Scen}) & value of random variable $rv \in \mathcal{RV}$ in scenario $\omega \in \Omega$. \\    
+       
+\end{tabularx}
+
+\subsection{Flexible Demand}
+\label{SEC:FlexibleDemand}
+
+\begin{tabularx}{\textwidth}{l X}
+\textbf{Sets:} \\
+$\mathcal{F}$ (\texttt{FI}) & set of time intervals where a fraction of demand $c_f$ has to be met. \\
+\\
+
+\textbf{Parameters:} \\
+$n_F$ (\texttt{nFI}) & number of intervals in $\mathcal{F}$. \\
+$D_t$ (\texttt{FD}) & central demand at $t \in \mathcal{T}$ [MWh]. \\
+$\underline{D}_t$ (\texttt{FD\_L}) & minimum demand at $t \in \mathcal{T}$ (inflexible demand) [MWh]. \\
+$\overline{D}_t$ (\texttt{FD\_U}) & maximum demand at $t \in \mathcal{T}$ [MWh]. \\
+$T_f^-$ (\texttt{TF\_L}) & first time step of interval $f \in \mathcal{F}$ [hour]. \\
+$T_f^+$ (\texttt{TF\_U}) & last time step of interval $f \in \mathcal{F}$ [hour]. \\
+$c_f$ (\texttt{coef\_FD}) & fraction of demand that needs to be consumed during interval $f \in \mathcal{F}$. \\
+$C^{FD}$ (\texttt{C\_FD}) & cost per unit of flexible demand used [\euro/MWh]. \\
+\\
+
+\textbf{Variables:} \\
+$fd_{t,\omega}$ (\texttt{var\_fd}) & flexible demand at $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ (after flexibility is considered) [MWh]. \\
+$afd_{t,\omega}^+$ (\texttt{var\_afd\_p}) & auxiliary variable: positive part of flexible demand shift from central demand $D_t$ [MWh]. \\
+$afd_{t,\omega}^-$ (\texttt{var\_afd\_m}) & auxiliary variable: negative part of flexible demand shift from central demand $D_t$ [MWh]. \\
+\end{tabularx}
+
+First, we introduce nonnegativity constraints to the flexible demand variables (\verb|at variable| \verb|definition|)
+\begin{equation} \label{EQ:FlexDemandPos}
+	fd_{t, \omega} \geq 0, \ afd_{t, \omega}^+ \geq 0, \ afd_{t, \omega}^- \geq 0 \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega.
+\end{equation}
+
+The flexible demand is bounded by the minimum demand and maximum demand at every time step. This is
+\begin{equation} \label{EQ:FlexDemand_UB_preliminary}
+	fd_{t, \omega} \leq \overline{D}_t \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega
+\end{equation}
+and 
+\begin{equation} \label{EQ:FlexDemand_LB_preliminary}
+	\underline{D}_t \leq fd_{t, \omega} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega.
+\end{equation}
+These two constraints are weaker than their counterparts \eqref{EQ:FlexDemand_UB} and \eqref{EQ:FlexDemand_LB}. \eqref{EQ:FlexDemand_UB} and \eqref{EQ:FlexDemand_LB} guarantee that, if reserve has to be activated, flexible demand's behaviour plus reserve commitments still result in feasible actions at any time period. Hence, we do not introduce \eqref{EQ:FlexDemand_UB_preliminary} nor \eqref{EQ:FlexDemand_LB_preliminary} in the model's implementation, but only describe them here to present the model.
+
+Moreover, the total daily demand has to meet the central estimate of the demand over the day (\verb|DailyDem|): 
+\begin{equation} \label{EQ:DailyDem}
+	\sum_{t \in \mathcal{T}} fd_{t, \omega} = \sum_{t \in \mathcal{T}} D_t \quad \forall \omega \in \Omega.
+\end{equation}
+This is done to avoid meeting a lower demand over the full time horizon of the problem ($24$h), or a higher demand if the reward for downward reserve is consistently high and/or electricity prices are consistently negative. We also introduce time intervals where a certain percentage of the central demand needs to be met over that interval (\verb|InterDem|):
+\begin{equation} \label{EQ:InterDem}
+	\sum_{T_f^- \leq t \leq T_f^+} fd_{t, \omega} \geq c_f \sum_{T_f^- \leq t \leq T_f^+} D_t \quad \forall f \in \mathcal{F}, \ \forall \omega \in \Omega.
+\end{equation}
+
+To model the cost of implicit flexible demand, we introduce a penalty in the objective function to use it. This requires to split the variables $fd_{t, \omega}$ into its positive and negative parts, which is done in the following constraints (\verb|FlexDemDisplace|)
+\begin{equation} \label{EQ:FlexDemDisplace}
+	D_t - fd_{t, \omega} = afd_{t, \omega}^+ - afd_{t, \omega}^- \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega.
+\end{equation}
+
+
+\subsection{Wind Farm}
+\label{SEC:WindFarm}
+
+\begin{tabularx}{\textwidth}{l X}
+    
+    \textbf{Parameters:} \\
+	$SG^{WP}_t$ (\texttt{sgpw}) & stage in which the wind production at time $t \in \mathcal{T}$ is revealed. \\
+	$W_{t, \omega}$ (\texttt{pW}) & wind production at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [MWh]. \\
+	$\overline{P}^W$ (\texttt{max\_pW}) & wind nameplate capacity [MW]. \\
+	\\  
+\end{tabularx}
+
+\subsection{Solar Farm}
+\label{SEC:SolarFarm}
+
+\begin{tabularx}{\textwidth}{l X}
+    
+    \textbf{Parameters:} \\
+	$PV_{t, \omega}$ (\texttt{pPV}) & solar production at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [MWh]. \\
+	$\overline{P}^{PV}$ (\texttt{max\_pPV}) & solar nameplate capacity [MW]. \\
+	\\  
+\end{tabularx}
+
+We assume that observations of the solar random variable at time $t \in \mathcal{T}$ is made at the same stage as the wind random variable at time $t \in \mathcal{T}$.
+
+\subsection{Battery Energy Storage System}
+\label{SEC:BatteryEnergyStorageSystem}
+
+\begin{tabularx}{\textwidth}{l X}
+
+\textbf{Parameters:} \\
+$E^B$ (\texttt{Emax}) & BESS energy capacity [MWh]. \\ 
+$P^B$ (\texttt{Dmax}) & BESS maximum charging/discharging rate [MW]. \\ 
+$\eta^B$ (\texttt{RTE}) & BESS round-trip efficiency. \\ 
+$\overline{\SOC}$ (\texttt{SOCmax}) & BESS maximum state of charge. Unitless, values in $[0, 1]$. \\ 
+$\underline{\SOC}$ (\texttt{SOCmin}) & BESS minimum state of charge. Unitless, values in $[0, 1]$. \\ 
+$\SOC_0$ (\texttt{SOCini}) & BESS initial state of charge. Unitless, values in $[0, 1]$. \\ 
+$\SOC_T$ (\texttt{SOCfin}) & BESS final state of charge. Unitless, values in $[0, 1]$. \\
+\\
+\textbf{Variables:} \\
+$c_{t, \omega}$ (\texttt{cV}) & BESS charge rate at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [MW]. \\ 
+$d_{t, \omega}$ (\texttt{dV}) & BESS discharge rate at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [MW]. \\ 
+$id_{t, \omega}$ (\texttt{idV}) & binary. Indicates the charging ($id_{t, \omega} = 0$) or discharging ($id_{t, \omega}= 1$) state of the BESS at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$. \\ 
+$\soc_{t, \omega}$ (\texttt{socV}) & state of charge of BESS at time $t \in \mathcal{T}_0$ under scenario $\omega \in \Omega$. Unitless, values in $[0, 1]$. \\
+\end{tabularx}
+
+First, we introduce the following nonnegativity  constraints, and define $id_{t, \omega}$ as a binary (\verb|at variable| \verb|definition|):
+\begin{equation} \label{dVdCPos}
+	c_{t, \omega} \geq 0, \quad d_{t, \omega} \geq 0, \quad id_{t, \omega} \in \{ 0, 1 \} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega.
+\end{equation}
+
+We introduce limits in the charged and discharged quantities of the battery, as well as not allowing simultaneous charging and discharging in every time step (\verb|VPP_state_dV|):
+\begin{equation} \label{EQ:VPP_state_dV}
+	d_{t, \omega} \leq P^B id_{t, \omega} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega
+\end{equation}
+and (\verb|VPP_state_cV|)
+\begin{equation} \label{EQ:VPP_state_cV}
+	c_{t, \omega} \leq P^B (1 - id_{t, \omega}) \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega.
+\end{equation}
+
+We define the variable state of charge $\soc_{t, s}$ of the BESS with constraints (\verb|SOCV|): 
+\begin{equation} \label{EQ:SOCV}
+	\soc_{t, \omega} = \soc_{t - 1, \omega} + \frac{(c_{t, \omega} - \frac{d_{t, \omega}}{\eta^B})\Delta T}{E^B} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega. 
+\end{equation} 
+They have to be within the operational limits of the BESS (\verb|at variable definition|):
+\begin{equation} \label{EQ:socVOperLimits}
+	\underline{\SOC} \leq \soc_{t, \omega} \leq \overline{\SOC} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega.
+\end{equation}
+The initial and final states of charge of the BESS are defined with (\verb|SOCV_ini|):
+\begin{equation} \label{EQ:SOCV_ini}
+	\soc_{0, \omega} = \SOC_0 \quad \forall \omega \in \Omega
+\end{equation}
+and (\verb|SOCV_fin|)
+\begin{equation} \label{EQ:SOCV_fin}
+	\soc_{T, \omega} = \SOC_T \quad \forall \omega \in \Omega.
+\end{equation}
+
+
+\subsection{Market Participation}
+\label{SEC:MarketParticipation}
+
+\subsubsection{Day Ahead Market}
+
+\begin{tabularx}{\textwidth}{l X}
+\textbf{Sets:} \\
+$\mathcal{SSD}$ (\texttt{Ssd}) & $\{(t, l, j) \in \mathcal{T} \times \Omega \times \Omega \mid l \neq j, \lambda^D_{t, l} \leq \lambda^D_{t, j} \}$. Rather technical, \\
+& For every $t \in \mathcal{T}$ provides the scenario pairs $(l, j)$ s.t. $\lambda^D_{t, l} \leq \lambda^D_{t, j}$ (order is important). \\ 
+& Used to ensure monotonicity of day-ahead bids w.r.t. day-ahead price realizations. \\
+\\
+
+\textbf{Parameters:} \\
+$\lambda^D_{t, \omega}$ (\texttt{lD}) & day-ahead market price at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [\euro/MWh]. \\ 
+$\underline{E}^{DA}$ (\texttt{PDA\_LB}) & minimum bid size to day-ahead market [MWh]. \\
+\\
+
+\textbf{Variables:} \\
+$e^{DA+}_{t, \omega}$ (\texttt{eDA\_p}) & energy matched in the day-ahead market of a selling bid by EC at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [MWh]. \\ 
+$e^{DA-}_{t, \omega}$ (\texttt{eDA\_m}) & energy matched in the day-ahead market of a buying bid by EC at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [MWh]. \\ 
+$ie^{DA+}_{t, \omega}$ (\texttt{ieDA\_p}) & binary. $ie^{DA+}_{t, \omega} = 1$ if the EC sells electricity at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$, $0$ otherwise. \\ 
+$ie^{DA-}_{t, \omega}$ (\texttt{ieDA\_m}) & binary. $ie^{DA-}_{t, \omega} = 1$ if the EC buys electricity at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$, $0$ otherwise. \\
+\end{tabularx}
+
+First, we impose that the variables $e^{DA+}_{t, \omega}, e^{DA-}_{t, \omega}$ are nonegative, and that $ie^{DA+}_t, ie^{DA-}_t$ are binary (\verb|at variable definition|):
+\begin{equation} \label{EQ:DAVarDef}
+	e^{DA+}_{t, \omega} \geq 0, \ e^{DA-}_{t, \omega} \geq 0, \ ie^{DA+}_t, ie^{DA-}_t \in \{0, 1 \} \quad \forall t \in \mathcal{T} \quad \forall \omega \in \Omega.
+\end{equation}
+
+We introduce lower and upper bounds on the selling and buying energy matched quantities represented by the variables $e^{DA+}_{t, \omega}$ and $e^{DA-}_{t, \omega}$. Moreover, at every scenario $\omega \in \Omega$, the market position of the EC has to be to sell, buy or neither of the two. This is guaranteed with the binary variables $ie^{DA+}_{t, \omega}$ and $ie^{DA-}_{t, \omega}$. The lower bounds of \eqref{EQ:DA_sell_bid_LB} and \eqref{EQ:DA_buy_bid_LB} represent the minimum bid size. The upper bounds of \eqref{EQ:DA_sell_bid_LB} and \eqref{EQ:DA_buy_bid_LB} are such that all elements of the energy community can contribute towards the day-ahead market bid. Note also that speculative behaviour is controlled because quantity bids cannot be larger than the technical capacity of the energy community. For selling energy matched, we have (\verb|DA_sell_bid_LB| and \verb|DA_sell_bid_UB|)
+\begin{equation} \label{EQ:DA_sell_bid_LB}
+    \underline{E}^{DA} ie^{DA+}_{t, \omega} \leq e^{DA+}_{t, \omega} \leq (\overline{P}^W \Delta T + \overline{P}^{PV} \Delta T + P^B \Delta T - \underline{D}_t) ie^{DA+}_{t, \omega}  \quad \forall t \in \mathcal{T}, \quad \forall \omega \in \Omega.
+\end{equation}
+and for buying energy matched (\verb|DA_buy_bid_LB| and \verb|DA_buy_bid_UB|)
+\begin{equation} \label{EQ:DA_buy_bid_LB}
+	\underline{E}^{DA} ie^{DA-}_{t, \omega} \leq e^{DA-}_{t, \omega} \leq (P^B \Delta T + \overline{D}_t) ie^{DA-}_{t, \omega} \quad \forall t \in \mathcal{T}, \quad \forall \omega \in \Omega.
+\end{equation}
+
+At every scenario, we also impose that it is not possible to simultaneously have matched bought and sold energy quantities (\verb|DA_buy_or_sell|)
+\begin{equation} \label{EQ:DA_buy_or_sell}
+	ie^{DA+}_{t, \omega} + ie^{DA-}_{t, \omega} \leq 1 \quad \forall t \in \mathcal{T}, \quad \forall \omega \in \Omega.
+\end{equation}
+Note that this allows the EC to submit neither of the two.
+
+Finally, to be able to construct a bidding curve for the EC from the results obtained at every scenario, the quantities offered in electricity markets have to be monotone w.r.t. the scenario prices. For the day-ahead market, this is guaranteed with the following constraints (\verb|DA_bid_mono_1|)
+\begin{equation} \label{EQ:DA_bid_mono_1}
+	e^{DA+}_{t, \omega} \leq e^{DA+}_{t, \omega'} \quad \forall (t, \omega, \omega') \in \mathcal{SSD}
+\end{equation}
+and (\verb|DA_bid_mono_2|)
+\begin{equation} \label{EQ:DA_bid_mono_2}
+	e^{DA-}_{t, \omega} \geq e^{DA-}_{t, \omega'} \quad \forall (t, \omega, \omega') \in \mathcal{SSD}.
+\end{equation}
+More specifically, in scenarios where the EC sells electricity, the higher the electricity price gets, the larger the selling electricity matched should be. Symmetrically, in scenarios where the EC buys electricity, the higher the electricity price gets, the smaller the buying electricity matched should be. 
+
+\subsubsection{Reserve Market}
+
+We assume that the wind and solar farms cannot contribute to provide reserve. The other elements of the energy community (Battery and Flexible Demand) can. This follows the approach by \textcite{Heredia2018}, where VPP's bid to reserve markets is limited by the battery capabilities only.
+
+We model the participation of the EC in the reserve market with a unique price-accepting bid for all scenarios. This is different to the modelling of day-ahead, where we are interested in obtaining day-ahead bid curves, which require a more detailed modelling.
+
+%To model reserve bids, we use recourse variables only because price-accepting reserve bids do not seem to have a clear motivation. From these recourse variables, we build buying and selling bid curves a posteriori, from the results obtained at each scenario. The role of first stage variables is represented in the reserve by the binary variable indicating if the EC submitted a bid to the day-ahead market. Recall that  MIBEL market rules establish that a market participant needs to have an accepted day-ahead market bid to participate in the reserve market.
+
+\begin{tabularx}{\textwidth}{l X}
+
+\textbf{Parameters:} \\
+$\lambda^R_{t, \omega}$ (\texttt{lR}) & reserve market price at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [\euro/MWh]. \\
+$T^R$ (\texttt{TSR}) & duration of reserve response [h]. \\
+$R^{U, FD}_t$ (\texttt{RUFD}) & upper bound on the upwards reserve provided by flexible demand [MW]. \\
+$R^{D, FD}_t$ (\texttt{RDFD}) & upper bound on the downwards reserve provided by flexible demand [MW]. \\[1mm]
+
+\textbf{Variables:} \\
+$r^U_{t, \omega}$ (\texttt{rU}) & upward reserve matched by the EC at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [MW]. \\
+$r^D_{t, \omega}$ (\texttt{rD}) & downward reserve matched by the EC at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [MW]. \\
+$r^{U, B}_{t, \omega}$ (\texttt{rU\_B}) & BESS component of upward reserve matched at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [MW]. \\
+$r^{D, B}_{t, \omega}$ (\texttt{rD\_B}) & BESS component of downward reserve matched at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [MW]. \\
+$r^{U, FD}_{t, \omega}$ (\texttt{rU\_FD}) & flexible demand component of upward reserve matched at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [MW]. \\
+$r^{D, FD}_{t, \omega}$ (\texttt{rD\_FD}) & flexible demand component of downward reserve matched at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [MW]. \\
+\end{tabularx}
+
+First, we impose that the reserve variables are nonnegative (\verb|at variable definition|)
+\begin{equation} \label{EQ:RVarDef}
+    r^{U}_{t, \omega} \geq 0, \quad r^{D}_{t, \omega} \geq 0, \quad r^{U, B}_{t, \omega} \geq 0, \quad r^{D, B}_{t, \omega} \geq 0, \quad r^{U, FD}_{t, \omega} \geq 0, \quad r^{D, FD}_{t, \omega} \geq 0
+\end{equation}
+for all $u \in \mathcal{U}$, $t \in \mathcal{T}$, and $\omega \in \Omega$. 
+
+The reserve provided by the EC is the sum of the reserve provided by those elements able to provide reserve. This is (\verb|RM_components_U|)
+\begin{equation} \label{EQ:RUcomp}
+    r^{U}_{t, \omega} = r^{U, B}_{t, \omega} +  r^{U, FD}_{t, \omega} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega
+\end{equation}
+and (\verb|RM_components_D|)
+\begin{equation} \label{EQ:RDcomp}
+	r^{D}_{t, \omega} = r^{D, B}_{t, \omega} +  r^{D, FD}_{t, \omega} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega.
+\end{equation}
+
+%To be able to construct a bidding curve for the EC from the results obtained at every scenario, the quantities offered in electricity markets have to be monotonically increasing w.r.t. the scenario prices. For the reserve market, this is guaranteed with the following constraints (\verb|RM_bid_mono_1|)
+%\begin{equation} \label{EQ:RUmono}
+%	r^{U}_{t, \omega} \leq r^{U}_{t, \omega'} \quad \forall (t, \omega, \omega') \in \mathcal{SSR}
+%\end{equation}
+%and (\verb|RM_bid_mono_2|)
+%\begin{equation} \label{EQ:RDmono}
+%	r^{D}_{t, \omega} \leq r^{D}_{t, \omega'} \quad \forall (t, \omega, \omega') \in \mathcal{SSR}.
+%\end{equation}
+
+We ensure that the elements of the energy community capable of providing reserve would be capable to satisfy their reserve commitments if instructed to do so. 
+
+For flexible demand, we ensure that there is enough flexibility (in energy terms) at every time step to satisfy the reserve requirements through (\verb|FlexDem_UB|)
+\begin{equation} \label{EQ:FlexDemand_UB}
+	fd_{t, \omega} + T^R r^{D, FD}_{t, \omega} \leq \overline{D}_t \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega
+\end{equation}
+and (\verb|FlexDem_LB|)
+\begin{equation} \label{EQ:FlexDemand_LB}
+	\underline{D}_t \leq fd_{t, \omega} - T^R r^{U, FD}_{t, \omega} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega.
+\end{equation}
+
+We also ensure that there is enough flexibility (in power terms) at every time step to satisfy the reserve requirements using (\verb|FlexDemP_DReserve|)
+\begin{equation} \label{EQ:FlexDemP_DReserve}
+	r^{D, FD}_{t, \omega} \leq R^{D, FD}_t \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega
+\end{equation}
+and (\verb|FlexDemP_UReserve|)
+\begin{equation} \label{EQ:FlexDemP_UReserve}
+	r^{U, FD}_{t, \omega} \leq R^{U, FD}_t \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega.
+\end{equation}
+
+The operation of the battery also needs to take into account the committed reserve. For the charging and discharging rates, we have (\verb|VPP_RU2s|):
+\begin{equation} \label{EQ:VPP_RU2s}
+	r^{U, B} _{t, \omega} - c_{t, \omega} + d_{t, \omega}  \leq P^B \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega
+\end{equation}
+and (\verb|VPP_RD2s|)
+\begin{equation} \label{EQ:VPP_RD2s}
+	r^{D, B}_{t, \omega} + c_{t, \omega} - d_{t, \omega} \leq P^B \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega.
+\end{equation}
+
+The reserve provided by the battery also requires a sufficiently high (resp. low) state of charge so that the upwards (resp. downards) reserve can be provided, if needed. The following constraints ensure it for one time step (\verb|VPP_RU_SOCV|):
+\begin{equation} \label{EQ:VPP_RU_SOCV}
+	\underline{\SOC} \leq \soc_{t, \omega} - \frac{T^R r^{U, B}_{t, \omega}}{\eta^B E^B} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega
+\end{equation}
+and  (\verb|VPP_RD_SOCV|)
+\begin{equation} \label{EQ:VPP_RD_SOCV}
+	\soc_{t, \omega} + \frac{T^R r^{D, B}_{t, \omega} }{E^B} \leq \overline{\SOC} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega.
+\end{equation}
+
+\subsubsection{Intraday Markets}
+
+We model the participation of the EC in intraday markets with a unique price-accepting bid for all scenarios. This is different to the modelling of day-ahead, where we are interested in obtaining day-ahead bid curves, which require a more detailed modelling.
+
+%To model intraday markets, we use recourse variables only. The role of first stage variables is played by the binary variables indicating whether the EC submitted a bid (buying or selling) to the day ahead market at that time.
+
+\begin{tabularx}{\textwidth}{l X}
+%    	$\mathcal{SSI}$ (\verb|Ssi|) & $\{(i, t, l, j) \in \mathcal{I} \times \mathcal{T}_i \times \Omega \times \Omega \hspace{2mm} | \hspace{2mm} l \neq j, \hspace{2mm} \lambda^I_{i, t, l} \leq \lambda^I_{i, t, l}, \hspace{2mm}$ \\ 
+%	& $\exists k \in \Omega \hspace{2mm} \text{s.t.} \hspace{2mm} \# \mathcal{C}_{SG^{IM}_i - 1, k} > 1 \hspace{2mm} \text{and} \hspace{2mm} l, j \in \mathcal{C}_{1, k} \}$     \\
+%	& Rather technical. Used to ensure monotonicity of intraday market bids \\
+%	& w.r.t. intraday market price realisations. \\
+%	& For every $i \in \mathcal{I}$ and $t \in \mathcal{T}$ provides the scenario pairs $(l, j)$ in the previous stage \\
+%	& cluster s.t. $\lambda^I_{i, t, l} \leq \lambda^I_{i, t, j}$ (order is important). The use of previous stage clusters is \\
+%	& due to the assumption that the parameters in that cluster are revealed \\
+%	& before IM gate clousure.\\	 
+    
+    \textbf{Parameters:} \\
+    	$\lambda^I_{i, t, \omega}$ (\texttt{lI}) & intraday market $i \in \mathcal{I}$ price at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [\euro/MWh]. \\
+	$R^{IDA}$ (\texttt{maxTIM}) & bound on the ratio of energy traded in intraday markets and day ahead \\
+	& market (to avoid speculation).\\
+    \\ 
+       
+    \textbf{Variables:} \\
+    $e^{IM}_{i, t, \omega}$ (\texttt{eIM}) & energy matched by the EC at intraday market $i \in \mathcal{I}$ at time $t \in \mathcal{T}$ \\
+    & under scenario $\omega \in \Omega$ [MWh]. \\
+	\\
+\end{tabularx}
+
+To avoid speculative behaviour, the bid of the EC to intraday markets should be small compared to the day ahead market (\verb|IM_bounds_1| and \verb|IM_bounds_2|)
+\begin{equation} \label{EQ:DM_IM_1}
+	-R^{IDA} (e^{DA+}_{t, \omega} + e^{DA-}_{t, \omega})  \leq \sum_{i \in \mathcal{I}_t} e^{IM}_{i, t, \omega} \leq R^{IDA} (e^{DA+}_{t, \omega} + e^{DA-}_{t, \omega}) \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega
+\end{equation}
+and (\verb|IM_bounds_3| and \verb|IM_bounds_4|)
+\begin{equation} \label{EQ:IM_bounds_3-4}
+	-R^{IDA} (e^{DA+}_{t, \omega} + e^{DA-}_{t, \omega}) \leq e^{IM}_{i, t, \omega} \leq R^{IDA} (e^{DA+}_{t, \omega} + e^{DA-}_{t, \omega}) \quad \forall i \in \mathcal{I}, \ \forall t \in \mathcal{T}_i, \ \forall \omega \in \Omega.
+\end{equation}
+
+%To build a bidding curve for every intraday market from the results obtained at each scenario, the quantities matched in intraday markets have to be monotonically increasing w.r.t. the scenario prices. This is guaranteed with the following constraints (\verb|lI_bid|):
+%\begin{equation} \label{EQ:lI_bid}
+%	e^{IM}_{i, t, \omega} \leq e^{IM}_{i, t, \omega'} \quad \forall (i, t, \omega, \omega') \in \mathcal{SSI}.
+%\end{equation}
+
+\subsubsection{System Imbalances}
+
+\begin{tabularx}{\textwidth}{l X}
+\textbf{Parameters:} \\
+$\lambda^{IB+}_{t, \omega}$ (\texttt{lPIB}) & positive imbalance price at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [\euro/MWh]. \\
+$\lambda^{IB-}_{t, \omega}$ (\texttt{lNIB}) & negative imbalance price at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [\euro/MWh]. \\
+$E^{IB+}_{t, \omega}$ (\texttt{PIB\_p}) & upper bound on the positive imbalance at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [MWh]. \\
+$E^{IB-}_{t, \omega}$ (\texttt{PIB\_m}) & upper bound on the negative imbalance at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [MWh]. \\
+\\
+
+\textbf{Variables:} \\
+$e^{IB-}_{t, \omega}$ (\texttt{pIB\_m}) & negative imbalance of EC at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [MWh]. \\
+$e^{IB+}_{t, \omega}$ (\texttt{pIB\_p}) & positive imbalance of EC at time $t \in \mathcal{T}$ under scenario $\omega \in \Omega$ [MWh]. \\
+\end{tabularx}
+
+First, we impose that the imbalance variables are nonnegative (\verb|at variable definition|)
+\begin{equation} \label{EQ:IBVarDef}
+    e_{t, \omega}^{IB+} \geq 0, \quad e_{t, \omega}^{IB-} \geq 0 \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega.
+\end{equation}
+
+The imbalances of the EC are defined in the following equation (\verb|Imbalances|)
+\begin{equation} \label{EQ:IBDef}
+    e^{IB+}_{t, \omega} - e^{IB-}_{t, \omega} = e^{DA-}_{t, \omega} + W_{t, \omega} + PV_{t, \omega} + d_{t, \omega} \Delta T - \Big (e^{DA+}_{t, \omega} + \sum_{i \in \mathcal{I}_t} e^{IM}_{i, t, \omega} + fd_{t, \omega} + c_{t, \omega} \Delta T \Big ) \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega.
+\end{equation}
+
+We introduce upper and lower bounds to the imbalances, to avoid speculative behaviour (\verb|IB_pos_UB|):
+\begin{equation} \label{EQ:VPP_IB_MAX}
+	e_{t, \omega}^{IB+} \leq E_{t, \omega}^{IB+} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega
+\end{equation}
+and (\verb|IB_neg_UB|)
+\begin{equation} \label{EQ:VPP_IB_MIN}
+	e_{t, \omega}^{IB-} \leq E_{t, \omega}^{IB-} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega.
+\end{equation}
+
+
+
+\subsection{Nonanticipativity Constraints}
+\label{SEC:NonanticipativityConstraints}
+
+The nonanticipativity constraints ensure that every decision is made with the amount of information available at the time of making that decision.
+
+For day ahead matched energy variables $e^{DA+}_{t, \omega}$ and $e^{DA-}_{t, \omega}$, we have (\verb|NAC_eDA_p|)
+\begin{equation} \label{EQ:NAC_eDA_p}
+	e^{DA+}_{t, \omega} = e^{DA+}_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega}, \ \omega \neq \omega',
+\end{equation}
+and (\verb|NAC_eDA_m|)
+\begin{equation} \label{EQ:NAC_eDA_m}
+	e^{DA-}_{t, \omega} = e^{DA-}_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega} , \ \omega \neq \omega'.
+\end{equation}
+For day ahead binary variables $ie^{DA+}_{t, \omega}$, we have (\verb|NAC_ieDA_p|)
+\begin{equation} \label{EQ:NAC_ieDA_p}
+	ie^{DA+}_{t, \omega} = ie^{DA+}_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega} , \ \omega \neq \omega'.
+\end{equation}
+and (\verb|NAC_ieDA_m|)
+\begin{equation} \label{EQ:NAC_ieDA_m}
+	ie^{DA-}_{t, \omega} = ie^{DA-}_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega} , \ \omega \neq \omega'.
+\end{equation}
+
+
+For upward reserve variables, we have (\verb|NAC_rU|)
+\begin{equation} \label{EQ:NAC_pVRU}
+	r^U_{t, \omega} = r^U_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega}, \ \omega \neq \omega',
+\end{equation}
+(\verb|NAC_rU_B|)
+\begin{equation} \label{EQ:NAC_rUB}
+	r^{U, B}_{t, \omega} = r^{U, B}_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega}, \ \omega \neq \omega',
+\end{equation}
+and (\verb|NAC_rU_FD|)
+\begin{equation} \label{EQ:NAC_rUFD}
+	r^{U, FD}_{t, \omega} = r^{U, FD}_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega}, \ \omega \neq \omega'.
+\end{equation}
+
+For downward reserve variables, we have (\verb|NAC_rD|)
+\begin{equation} \label{EQ:NAC_pVRD}
+	r^D_{t, \omega} = r^D_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega}, \ \omega \neq \omega',
+\end{equation}
+(\verb|NAC_rD_B|)
+\begin{equation} \label{EQ:NAC_rDB}
+	r^{D, B}_{t, \omega} = r^{D, B}_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega}, \ \omega \neq \omega',
+\end{equation}
+and (\verb|NAC_rD_FD|)
+\begin{equation} \label{EQ:NAC_rDFD}
+	r^{D, FD}_{t, \omega} = r^{D, FD}_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega}, \ \omega \neq \omega'.
+\end{equation}
+
+
+For intraday market variables, we have (\verb|NAC_eIM|)
+\begin{equation} \label{EQ:NAC_mUC}
+	e^{IM}_{i, t, \omega} = e^{IM}_{i, t, \omega'} \quad \forall i \in \mathcal{I}, \ \forall t \in \mathcal{T}_i, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{IM}_i -1, \omega}, \ \omega \neq \omega'.
+\end{equation}
+
+
+For imbalance variables, we have (\verb|NAC_pIB_p|):
+\begin{equation} \label{EQ:NAC_pPIB}
+	e^{IB+}_{t, \omega} = e^{IB+}_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t, \omega}, \ \omega \neq \omega',
+\end{equation}
+and for negative imbalances (\verb|NAC_pIB_m|):
+\begin{equation} \label{EQ:NAC_pNIB}
+	e^{IB-}_{t, \omega} = e^{IB-}_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t, \omega}, \ \omega \neq \omega'.
+\end{equation}
+
+
+For flexible demand variables, we have (\verb|NAC_var_fd|)
+\begin{equation} \label{EQ:NAC_var_fd}
+	fd_{t, \omega} = fd_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t - 1, \omega}, \ \omega \neq \omega',
+\end{equation}
+and (\verb|NAC_var_afd_p|)
+\begin{equation} \label{EQ:NAC_var_afd_p}
+	afd^+_{t, \omega} = afd^+_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t - 1, \omega}, \ \omega \neq \omega',
+\end{equation}
+and (\verb|NAC_var_afd_m|)
+\begin{equation} \label{EQ:NAC_var_afd_m}
+	afd^-_{t, \omega} = afd^-_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t - 1, \omega}, \ \omega \neq \omega'.
+\end{equation}
+
+
+For BESS operational variables, we have (\verb|NAC_cV|)
+\begin{equation} \label{EQ:NAC_cV}
+	c_{t, \omega} = c_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t - 1, \omega}, \ \omega \neq \omega',
+\end{equation}
+and (\verb|NAC_dV|)
+\begin{equation} \label{EQ:NAC_dV}
+	d_{t, \omega} = d_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t - 1, \omega}, \ \omega \neq \omega',
+\end{equation}
+and (\verb|NAC_idV|)
+\begin{equation} \label{EQ:NAC_idV}
+	id_{t, \omega} = id_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t - 1, \omega}, \ \omega \neq \omega',
+\end{equation}
+and (\verb|NAC_socV|)
+\begin{equation} \label{EQ:NAC_socV}
+	\soc_{t, \omega} = \soc_{t, \omega'} \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t - 1, \omega}, \ \omega \neq \omega'.
+\end{equation}
+
+\begin{note}
+Observe that each of the nonanticipativity constraints \eqref{EQ:NAC_eDA_p}-\eqref{EQ:NAC_socV} might define the same constraint multiple times. This is not necessary in the implementation of the model, and in fact, we do not include them multiple times in our implementation.
+	
+Moreover, it is possible to reduce the number of constraints further. For example, let $a_{\omega}$ be a decision variable of stage $sg$ and consider the cluster $\mathcal{C}_{sg, \omega_1} = \{ \omega_1, \omega_2, \omega_3 \}$. We just need the following nonanticipativity constraints 
+$$
+a_{\omega_1} = a_{\omega_2}, \ a_{\omega_2} = a_{\omega_3},
+$$
+instead of the full set of nonanticipativity constraints (without repetitions)
+$$
+a_{\omega_1} = a_{\omega_2}, \ a_{\omega_1} = a_{\omega_3}, a_{\omega_2} = a_{\omega_3}.
+$$
+
+In practise, a presolver might also take care of this if not implemented efficiently.	
+\end{note}
+
+
+\subsection{Objective Function}
+\label{SEC:ObjectiveFunction}
+
+We define the objective function Expected Energy Community Social Welfare (EECSW) as follows:
+\begin{subequations}
+	\begin{align}
+		EECSW & := \sum_{t \in \mathcal{T}} \sum_{\omega \in \Omega} \Pi_{\omega} \lambda^D_{t, \omega} (e^{DA+}_{t, \omega} - e^{DA-}_{t, \omega}) \label{EQ:DAincome} \\
+		& + \sum_{t \in \mathcal{T}} \sum_{\omega \in \Omega} \Pi_{\omega} \lambda^R_{t, \omega} (r^D_{t, \omega} + r^U_{t, \omega}) T^R \label{EQ:RESincome} \\
+		& + \sum_{t \in \mathcal{T}} \sum_{\omega \in \Omega} \Pi_{\omega} \sum_{i \in \mathcal{I}_t} \lambda^{I}_{i, t, \omega} e^{IM}_{i, t, \omega} \label{EQ:IMincome} \\
+		& + \sum_{t \in \mathcal{T}} \sum_{\omega \in \Omega} \Pi_{\omega} \lambda^{IB+}_{t, \omega} e^{IB+}_{t, \omega} \label{EQ:PosIBcollectRights} \\
+		& - \sum_{t \in \mathcal{T}} \sum_{\omega \in \Omega} \Pi_{\omega} \lambda^{IB-}_{t, \omega} e^{IB-}_{t, \omega} \label{EQ:NegIBPayObligations} \\
+		& - \sum_{t \in \mathcal{T}} \sum_{\omega \in \Omega} \Pi_{\omega} C^{FD} (afd^+_{t, \omega} + afd^-_{t, \omega}). \label{EQ:DemFlexPenalty}
+	\end{align}
+	\label{EQ:EECSW}
+\end{subequations}
+
+The first term \eqref{EQ:DAincome} represents the EC's expected income or costs from the day-ahead market. The second term \eqref{EQ:RESincome} represents the EC's expected income from the reserve market. The third term \eqref{EQ:IMincome} represents the EC's expected income from intraday markets. The forth term \eqref{EQ:PosIBcollectRights} represents the EC's expected positive imbalances collection rights. The fifth term \eqref{EQ:NegIBPayObligations} represents the EC's expected imbalance payment obligations. The last term \eqref{EQ:DemFlexPenalty} is a penalty on the use of demand flexibility.
+
+\subsection{Complete Model Formulation}
+\label{SEC:CompleteModelFormulation}
+
+In this section, we summarise the complete model formulation. The objective is to maximize the social welfare of the energy community.
+
+{\small
+\begin{tabularx}{\textwidth}{c >{\raggedright\arraybackslash}X r}
+
+% Objetivo
+max & $EECSW$ & \\[0.5em]
+
+% Restricciones
+s.t. & \eqref{EQ:FlexDemandPos}, \eqref{EQ:DailyDem}, \eqref{EQ:InterDem}, \eqref{EQ:FlexDemDisplace} & Flex. Demand Op. \\[0.2em]
+
+& \eqref{dVdCPos}, \eqref{EQ:VPP_state_dV}, \eqref{EQ:VPP_state_cV}, \eqref{EQ:SOCV}, \eqref{EQ:socVOperLimits}, \eqref{EQ:SOCV_ini}, \eqref{EQ:SOCV_fin} & BESS Op. \\[0.2em]
+
+& \eqref{EQ:DAVarDef}, \eqref{EQ:DA_sell_bid_LB}, \eqref{EQ:DA_buy_bid_LB}, \eqref{EQ:DA_buy_or_sell}, \eqref{EQ:DA_bid_mono_1}, \eqref{EQ:DA_bid_mono_2} & EC DA \\[0.2em]
+
+& \eqref{EQ:RVarDef}, \eqref{EQ:RUcomp}, \eqref{EQ:RDcomp}, \eqref{EQ:FlexDemand_UB}, \eqref{EQ:FlexDemand_LB}, \eqref{EQ:FlexDemP_DReserve}, \eqref{EQ:FlexDemP_UReserve}, \eqref{EQ:VPP_RU2s}, \eqref{EQ:VPP_RD2s}, \eqref{EQ:VPP_RU_SOCV}, \eqref{EQ:VPP_RD_SOCV} & EC RM \\[0.2em]
+
+& \eqref{EQ:DM_IM_1}, \eqref{EQ:IM_bounds_3-4} & EC IM \\[0.2em]
+
+& \eqref{EQ:IBVarDef}, \eqref{EQ:IBDef}, \eqref{EQ:VPP_IB_MAX}, \eqref{EQ:VPP_IB_MIN} & EC IB \\[0.2em]
+
+& \eqref{EQ:NAC_eDA_p}, \eqref{EQ:NAC_eDA_m}, \eqref{EQ:NAC_ieDA_p}, \eqref{EQ:NAC_ieDA_m} & NAC DA \\[0.2em]
+
+& \eqref{EQ:NAC_pVRU}, \eqref{EQ:NAC_rUB}, \eqref{EQ:NAC_rUFD}, \eqref{EQ:NAC_pVRD}, \eqref{EQ:NAC_rDB}, \eqref{EQ:NAC_rDFD} & NAC RM \\[0.2em]
+
+& \eqref{EQ:NAC_mUC} & NAC IM \\[0.2em]
+
+& \eqref{EQ:NAC_pPIB}, \eqref{EQ:NAC_pNIB} & NAC Imbalances \\[0.2em]
+
+& \eqref{EQ:NAC_var_fd}, \eqref{EQ:NAC_var_afd_p}, \eqref{EQ:NAC_var_afd_m} & NAC Flex. Demand \\[0.2em]
+
+& \eqref{EQ:NAC_cV}, \eqref{EQ:NAC_dV}, \eqref{EQ:NAC_idV}, \eqref{EQ:NAC_socV} & NAC BESS Op. \\
+
+\end{tabularx}
+}
+
+\subsection{\texorpdfstring{Summary of Stages for $T = 24$ (hourly)}{Summary of Stages for T = 24 (hourly)}}
+
+In Table \ref{TABLE:stages-rv-dv}, we present a summary of the stages considered. Each stage can contain decision variables, observations and recourse variables. Note that, in terms of the optimization model, recourse variables of one stage are equivalent to decision variables of the next stage.
+
+\begin{table}[H]
+\begin{tabular}{c c c c}
+	Stage & Decision Variables & Observations & Recourse Variables \\
+	1 & & $\lambda^D \in \R^{T}$& $e^{DA+}_{t, \omega}, e^{DA-}_{t, \omega}, ie^{DA+}_{t, \omega}, ie^{DA-}_{t, \omega}$\\
+	2 & $r^U_{t, \omega}, r^{U, B}_{t, \omega}, r^{U, FD}_{t, \omega}, r^{D}_{t, \omega}, r^{D, B}_{t, \omega}, r^{D, FD}_{t, \omega}$ & $\lambda^R \in \R^{T}$& \\
+	3 & $e^{IM}_{1, t, \omega}$ & $\lambda^I_1 \in \R^{T_1}$&  \\
+	4 & $e^{IM}_{2, t, \omega}$ & $\lambda^I_2 \in \R^{T_2}$&  \\
+	5 & $fd_1, afd^{\pm}_1, c_{1, \omega}, d_{1, \omega}, id_{1, \omega}, \soc_{1, \omega}$ & $W_1, PV_1, \lambda^{IB\pm}_{1, \omega} \in \R$ & $e^{IB+}_{1, \omega}, e^{IB-}_{1, \omega}$\\
+	6 & $fd_2, afd^{\pm}_2, c_{2, \omega}, d_{2, \omega}, id_{2, \omega}, \soc_{2, \omega}$ & $W_2, PV_2, \lambda^{IB\pm}_{2, \omega} \in \R$ & $e^{IB+}_{2, \omega}, e^{IB-}_{2, \omega}$\\
+	7& $fd_3, afd^{\pm}_3, c_{3, \omega}, d_{3, \omega}, id_{3, \omega}, \soc_{3, \omega}$  & $W_3, PV_3, \lambda^{IB\pm}_{3, \omega} \in \R$ & $e^{IB+}_{3, \omega}, e^{IB-}_{3, \omega}$\\
+	8& $fd_4, afd^{\pm}_4, c_{4, \omega}, d_{4, \omega}, id_{4, \omega}, \soc_{4, \omega}$ & $W_4, PV_4, \lambda^{IB\pm}_{4, \omega} \in \R$ & $e^{IB+}_{4, \omega}, e^{IB-}_{4, \omega}$\\
+	9& $fd_5, afd^{\pm}_5, c_{5, \omega}, d_{5, \omega}, id_{5, \omega}, \soc_{5, \omega}$ & $W_5, PV_5, \lambda^{IB\pm}_{5, \omega} \in \R$ & $e^{IB+}_{5, \omega}, e^{IB-}_{5, \omega}$\\
+	10& $fd_6, afd^{\pm}_6, c_{6, \omega}, d_{6, \omega}, id_{6, \omega}, \soc_{6, \omega}$ & $W_6, PV_6, \lambda^{IB\pm}_{6, \omega} \in \R$ & $e^{IB+}_{6, \omega}, e^{IB-}_{6, \omega}$\\
+	11& $fd_7, afd^{\pm}_7, c_{7, \omega}, d_{7, \omega}, id_{7, \omega}, \soc_{7, \omega}$ & $W_7, PV_7, \lambda^{IB+}_{7, \omega} \in \R$ & $e^{IB+}_{7, \omega}, e^{IB-}_{7, \omega}$\\
+	12& $fd_8, afd^{\pm}_8, c_{8, \omega}, d_{8, \omega}, id_{8, \omega}, \soc_{8, \omega}$ & $W_8, PV_8, \lambda^{IB+}_{8, \omega} \in \R$ & $p^{IB+}_{8, \omega}, p^{IB-}_{8, \omega}$ \\
+	13& $fd_9, afd^{\pm}_9, c_{9, \omega}, d_{9, \omega}, id_{9, \omega}, \soc_{9, \omega}$ & $W_9, PV_9, \lambda^{IB+}_{9, \omega} \in \R$ & $e^{IB+}_{9, \omega}, e^{IB-}_{9, \omega}$\\
+	14& $fd_{10}, afd^{\pm}_{10}, c_{10, \omega}, d_{10, \omega}, id_{10, \omega}, \soc_{10, \omega}$ & $W_{10}, PV_{10}, \lambda^{IB\pm}_{10, \omega} \in \R$ & $e^{IB+}_{10, \omega}, e^{IB-}_{10, \omega}$\\
+ 15& $e^{IM}_{3, t, \omega}$ & $\lambda^I_3 \in \R^{T_3}$&\\
+	16& $fd_{11}, afd^{\pm}_{11}, c_{11, \omega}, d_{11, \omega}, id_{11, \omega}, \soc_{11, \omega}$ & $W_{11}, PV_{11}, \lambda^{IB\pm}_{11, \omega} \in \R$ & $e^{IB+}_{11, \omega}, e^{IB-}_{11, \omega}$\\
+	17& $fd_{12}, afd^{\pm}_{12}, c_{12, \omega}, d_{12, \omega}, id_{12, \omega}, \soc_{12, \omega}$ & $W_{12}, PV_{12}, \lambda^{IB\pm}_{12, \omega} \in \R$ & $p^{IB+}_{12, \omega}, p^{IB-}_{12, \omega}$ \\
+	18& $fd_{13}, afd^{\pm}_{13}, c_{13, \omega}, d_{13, \omega}, id_{13, \omega}, \soc_{13, \omega}$ & $W_{13}, PV_{13}, \lambda^{IB\pm}_{13, \omega} \in \R$ & $p^{IB+}_{13, \omega}, p^{IB-}_{13, \omega}$ \\
+	19& $fd_{14}, afd^{\pm}_{14}, c_{14, \omega}, d_{14, \omega}, id_{14, \omega}, \soc_{14, \omega}$ & $W_{14}, PV_{14}, \lambda^{IB\pm}_{14, \omega} \in \R$ & $e^{IB+}_{14, \omega}, e^{IB-}_{14, \omega}$\\
+	20& $fd_{15}, afd^{\pm}_{15}, c_{15, \omega}, d_{15, \omega}, id_{15, \omega}, \soc_{15, \omega}$ & $W_{15}, PV_{15}, \lambda^{IB\pm}_{15, \omega} \in \R$ & $e^{IB+}_{15, \omega}, e^{IB-}_{15, \omega}$\\
+	21& $fd_{16}, afd^{\pm}_{16}, c_{16, \omega}, d_{16, \omega}, id_{16, \omega}, \soc_{16, \omega}$ & $W_{16}, PV_{16}, \lambda^{IB\pm}_{16, \omega} \in \R$ & $e^{IB+}_{16, \omega}, e^{IB-}_{16, \omega}$\\
+	22& $fd_{17}, afd^{\pm}_{17}, c_{17, \omega}, d_{17, \omega}, id_{17, \omega}, \soc_{17, \omega}$ & $W_{17}, PV_{17}, \lambda^{IB\pm}_{17, \omega} \in \R$ & $e^{IB+}_{17, \omega}, e^{IB-}_{17, \omega}$\\
+	23& $fd_{18}, afd^{\pm}_{18}, c_{18, \omega}, d_{18, \omega}, id_{18, \omega}, \soc_{18, \omega}$ & $W_{18}, PV_{18}, \lambda^{IB\pm}_{18, \omega} \in \R$ &  $e^{IB+}_{18, \omega}, e^{IB-}_{18, \omega}$\\
+	24& $fd_{19}, afd^{\pm}_{19}, c_{19, \omega}, d_{19, \omega}, id_{19, \omega}, \soc_{19, \omega}$ & $W_{19}, PV_{19}, \lambda^{IB\pm}_{19, \omega} \in \R$ & $e^{IB+}_{19, \omega}, e^{IB-}_{19, \omega}$\\
+	25& $fd_{20}, afd^{\pm}_{20}, c_{20, \omega}, d_{20, \omega}, id_{20, \omega}, \soc_{20, \omega}$  & $W_{20}, PV_{20}, \lambda^{IB\pm}_{20, \omega} \in \R$ & $e^{IB+}_{20, \omega}, e^{IB-}_{20, \omega}$\\
+	26&  $fd_{21}, afd^{\pm}_{21}, c_{21, \omega}, d_{21, \omega}, id_{21, \omega}, \soc_{21, \omega}$ & $W_{21}, PV_{21}, \lambda^{IB\pm}_{21, \omega} \in \R$ & $e^{IB+}_{21, \omega}, e^{IB-}_{21, \omega}$\\
+	27& $fd_{22}, afd^{\pm}_{22}, c_{22, \omega}, d_{22, \omega}, id_{22, \omega}, \soc_{22, \omega}$ & $W_{22}, PV_{22}, \lambda^{IB\pm}_{22, \omega} \in \R$ & $e^{IB+}_{22, \omega}, e^{IB-}_{22, \omega}$\\
+	28& $fd_{23}, afd^{\pm}_{23}, c_{23, \omega}, d_{23, \omega}, id_{23, \omega}, \soc_{23, \omega}$ & $W_{23}, PV_{23}, \lambda^{IB\pm}_{23, \omega} \in \R$ & $e^{IB+}_{23, \omega}, e^{IB-}_{23, \omega}$\\
+	29& $fd_{24}, afd^{\pm}_{24}, c_{24, \omega}, d_{24, \omega}, id_{24, \omega}, \soc_{24, \omega}$ & $W_{24}, PV_{24}, \lambda^{IB\pm}_{24, \omega} \in \R$ & $e^{IB+}_{24, \omega}, e^{IB-}_{24, \omega}$\\
+		
+	
+\end{tabular}
+\caption{Summary of stages, decision variables, random variable observations and recourse variables.}
+\label{TABLE:stages-rv-dv}
+\end{table}
+
+\section{15 minute resolution model maintaining number of stages}
+
+In this adaptation of the original model, we use a 15-minute resolution for all variables and parameters while keeping the same number of stages. That is, market bids are submitted for each subperiod of 15 minutes, but decisions are made only at the beginning of each hour. Information is only revealed at the hourly stage, yet we retain detailed data for each 15-minute subperiod.
+
+Therefore, the DAM, RM, IM IB and operational variables are indexed in T (period) and Q (subperiod).
+
+\subsection{Fundamental Elements}
+\label{SEC:FundamentalElements2}
+
+\begin{tabularx}{\textwidth}{l X}
+    \textbf{Sets:} \\
+    $\mathcal{T}$ (\texttt{T}) & set of $T$ time periods $\{ 1, \dots, T \}$ [hours/15-min periods]. \\
+    $\mathcal{T}_0$ (\texttt{T0}) & extended set of time periods $\{ 0, \dots, T \}$ [hours/15-min periods]. \\     
+    $\mathcal{Q}$ (\texttt{Q}) & set of Q subperiods per time period \{1,...,Q\}. IM, IB and operational variables are indexed in T and Q. \\
+    $\mathcal{I}$ (\texttt{IM}) & set of $I$ intraday markets $\{1, \dots, I \}$. \\    
+    $\mathcal{T}_i$ (\texttt{TIM}) & set of time periods in intraday market $i \in \mathcal{I}$ [hours/15-min periods]. \\
+    $\mathcal{I}_t$ (\texttt{IMT}) & set of intraday markets where $t \in \mathcal{T}$ is a time period. \\    
+    $\Omega$ (\texttt{S}) & set of scenarios. \\
+    $\mathcal{SG}$ (\texttt{SG}) & set of stages $\{1, \dots, nSG \}$. \\
+    $\mathcal{SG}_0$ (\texttt{SG0}) & extended set of stages $\{0, \dots, nSG \}$. \\     
+    $\mathcal{C}_{sg, \omega}$ (\texttt{c}) & scenario cluster of scenario $\omega \in \Omega$ at stage $sg \in \mathcal{SG}_0$. \\
+    $\mathcal{RV}$ (\texttt{RV}) & set of random variables $\{1, \dots, nRV \}$. \\   
+    \\
+    \textbf{Parameters:} \\
+    $T$ (\texttt{nT}) & number of time periods [24 hours/96 15-min periods]. \\
+    $\Delta T$ (\texttt{dT}) & duration of the period [1 / 0.25 hours]. \\
+    $Q$ (\texttt{nQ}) & number of time sub-periods (4 for quarterly hour resolution). \\
+    $\Delta Q$ (\texttt{dQ}) & duration of the subperiod [hours]. \\
+    $I$ (\texttt{nIM}) & number of intraday markets. \\
+    $nSG$ (\texttt{nSG}) & number of stages (= T). \\
+    $SG^{IM}_i$ (\texttt{sgim}) & stage in which the price of intraday market $i \in \mathcal{I}$ is revealed. \\
+    $nRV$ (\texttt{nRV}) & number of random variables. \\
+    $nRVSG_{sg}$ (\texttt{nRVSG}) & number of random variables revealed at stage $sg \in \mathcal{SG}$. \\
+    $\Pi_{\omega}$ (\texttt{Prob}) & probability of scenario $\omega \in \Omega$. \\
+    $S_{rv, \omega}$ (\texttt{Scen}) & value of random variable $rv \in \mathcal{RV}$ in scenario $\omega \in \Omega$. \\    
+
+\end{tabularx}
+
+\subsection{Flexible Demand}
+\label{SEC:FlexibleDemand2}
+
+\begin{tabularx}{\textwidth}{l X}
+\textbf{Sets:} \\
+$\mathcal{F}$ (\texttt{FI}) & set of time intervals where a fraction of demand $c_f$ has to be met. \\[1mm]
+\\
+\textbf{Parameters:} \\
+$nF$ (\texttt{nFI}) & number of intervals in $\mathcal{F}$. \\
+$D_{t,q}$ (\texttt{FD}) & central demand at $t \in \mathcal{T}$, $q \in \mathcal{Q}$ [MWh]. \\
+$\underline{D}_{t,q}$ (\texttt{FD\_L}) & minimum demand at $t \in \mathcal{T}$, $q \in \mathcal{Q}$ (inflexible demand) [MWh]. \\
+$\overline{D}_{t,q}$ (\texttt{FD\_U}) & maximum demand at $t \in \mathcal{T}$, $q \in \mathcal{Q}$ [MWh]. \\
+$T_f^-$ (\texttt{TF\_L}) & first time step of interval $f \in \mathcal{F}$ [hour]. \\
+$T_f^+$ (\texttt{TF\_U}) & last time step of interval $f \in \mathcal{F}$ [hour]. \\
+$c_f$ (\texttt{coef\_FD}) & fraction of demand that needs to be consumed during interval $f \in \mathcal{F}$. \\
+$C^{FD}$ (\texttt{C\_FD}) & cost per unit of flexible demand used [\euro/MWh]. \\[1mm]
+\\
+\textbf{Variables:} \\
+$fd_{t,q, \omega}$ (\texttt{var\_fd}) & flexible demand at $t \in \mathcal{T}$, $q \in \mathcal{Q}$ under scenario $\omega \in \Omega$ (after flexibility is considered) [MWh]. \\
+$afd_{t,q, \omega}^+$ (\texttt{var\_afd\_p}) & auxiliary variable: positive part of flexible demand shift from central demand $D_{t,q}$ [MWh]. \\
+$afd_{t,q, \omega}^-$ (\texttt{var\_afd\_m}) & auxiliary variable: negative part of flexible demand shift from central demand $D_{t,q}$ [MWh]. \\
+\end{tabularx}
+
+Nonnegativity constraints to the flexible demand variables:
+\begin{equation} \label{EQ:FlexDemandPos2}
+	fd_{t,q, \omega} \geq 0, \ afd_{t,q, \omega}^+ \geq 0, \ afd_{t,q, \omega}^- \geq 0 \quad \forall t \in \mathcal{T}, \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega.
+\end{equation}
+
+Flexible demand bounds: 
+\begin{equation} \label{EQ:FlexDemand_UB_preliminary2}
+	fd_{t,q, \omega} \leq \overline{D}_{t,q} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega
+\end{equation}
+\begin{equation} \label{EQ:FlexDemand_LB_preliminary2}
+	\underline{D}_{t,q} \leq fd_{t,q, \omega} \quad \forall t \in \mathcal{T}, \ q \in \mathcal{Q},\ \forall \omega \in \Omega.
+\end{equation}
+
+Total daily demand (\verb|DailyDem|): 
+\begin{equation} \label{EQ:DailyDem2}
+	\sum_{t \in \mathcal{T}} \sum_{q \in \mathcal{Q}} fd_{t,q, \omega} = \sum_{t \in \mathcal{T}}\sum_{q \in \mathcal{Q}} D_{t,q} \quad \forall \omega \in \Omega.
+\end{equation}
+
+Certai percentage of the central demand needs to be met over a time interval (\verb|InterDem|):
+\begin{equation} \label{EQ:InterDem2}
+	\sum_{T_f^- \leq t \leq T_f^+}\sum_{q \in \mathcal{Q}} fd_{t,q, \omega} \geq c_f \sum_{T_f^- \leq t \leq T_f^+}\sum_{q \in \mathcal{Q}} D_{t,q} \quad \forall f \in \mathcal{F}, \ \forall \omega \in \Omega.
+\end{equation}
+
+Split the variables $fd_{t,w}$ into its positive and negative parts (\verb|FlexDemDisplace|):
+\begin{equation} \label{EQ:FlexDemDisplace2}
+	D_{t,q} - fd_{t,q, \omega} = afd_{t,q, \omega}^+ - afd_{t, q,\omega}^- \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega.
+\end{equation}
+
+\subsection{Wind Farm}
+\label{SEC:WindFarm2}
+
+\begin{tabularx}{\textwidth}{l X}
+    
+    \textbf{Parameters:} \\
+	$SG^{WP}_t$ (\text{sgpw}) & stage in which the wind production at time $t \in \mathcal{T}$ is revealed. \\
+	$W_{t,q, \omega}$ (\text{pW}) & wind production at time $t \in \mathcal{T}$, subperiod  $q \in \mathcal{Q}$ under scenario $\omega \in \Omega$ [MWh]. \\
+	$\overline{P}^W$ (\text{max\_pW}) & wind nameplate capacity [MW]. \\
+\end{tabularx}
+
+\subsection{Solar Farm}
+\label{SEC:SolarFarm2}
+
+\begin{tabularx}{\textwidth}{l X}
+    
+    \textbf{Parameters:} \\
+	$PV_{t,q, \omega}$ (\text{pPV}) & solar production at time $t \in \mathcal{T}$, subperiod $q \in \mathcal{Q}$, under scenario $\omega \in \Omega$ [MWh]. \\
+	$\overline{P}^{PV}$ (\text{max\_pPV}) & solar nameplate capacity [MW]. \\
+\end{tabularx}
+
+\subsection{Battery Energy Storage System}
+\label{SEC:BatteryEnergyStorageSystem2}
+
+\begin{tabularx}{\textwidth}{l X}
+\textbf{Sets:} \\[1mm]
+
+\textbf{Parameters:} \\
+$E^B$ (\texttt{Emax}) & BESS energy capacity [MWh]. \\
+$P^B$ (\texttt{Dmax}) & BESS maximum charging/discharging rate [MW]. \\
+$\eta^B$ (\texttt{RTE}) & BESS round-trip efficiency. \\
+$\overline{\SOC}$ (\texttt{SOCmax}) & BESS maximum state of charge. Unitless, values in $[0, 1]$. \\
+$\underline{\SOC}$ (\texttt{SOCmin}) & BESS minimum state of charge. Unitless, values in $[0, 1]$. \\
+$\SOC_0$ (\texttt{SOCini}) & BESS initial state of charge. Unitless, values in $[0, 1]$. \\
+$\SOC_T$ (\texttt{SOCfin}) & BESS final state of charge. Unitless, values in $[0, 1]$. \\[1mm]
+
+\textbf{Variables:} \\
+$c_{t,q, \omega}$ (\texttt{cV}) & BESS charge rate at time $t \in \mathcal{T}$, $q \in \mathcal{Q}$, under scenario $\omega \in \Omega$ [MW]. \\
+$d_{t,q, \omega}$ (\texttt{dV}) & BESS discharge rate at time $t \in \mathcal{T}$, $q \in \mathcal{Q}$, under scenario $\omega \in \Omega$ [MW]. \\	
+$id_{t,q, \omega}$ (\texttt{idV}) & binary. Indicates the charging ($id_{t,q, \omega} = 0$) or discharging ($id_{t,q, \omega} = 1$) state \\
+& of the BESS at time $t \in \mathcal{T}$, $q \in \mathcal{Q}$ under scenario $\omega \in \Omega$. \\
+$\soc_{t,q, \omega}$ (\texttt{socV}) & state of charge of BESS at time $t \in \mathcal{T}_0$, $q \in \mathcal{Q}$ under scenario $\omega \in \Omega$. Unitless, \\
+& values in $[0, 1]$. \\[1mm]
+\end{tabularx}
+
+Nonnegativity constraints:
+\begin{equation} \label{dVdCPos2}
+	c_{t,q, \omega} \geq 0, \quad d_{t,q, \omega} \geq 0, \quad id_{t,q, \omega} \in \{ 0, 1 \} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}\ \forall \omega \in \Omega.
+\end{equation}
+
+Discharging/charging bounds (\verb|VPP_state_dV| and \verb|VPP_state_cV|):
+\begin{equation} \label{EQ:VPP_state_dV2}
+	d_{t,q, \omega} \leq P^B id_{t,q, \omega} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega
+\end{equation}
+\begin{equation} \label{EQ:VPP_state_cV2}
+	c_{t,q, \omega} \leq P^B (1 - id_{t,q, \omega}) \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q},\ \forall \omega \in \Omega.
+\end{equation}
+
+Variable state of charge $\soc_{t, q,s}$ of the BESS (\verb|SOCV|): 
+\begin{equation}
+\label{EQ:SOCV2}
+soc_{t,q,\omega} =
+\begin{cases}
+soc_{t-1,Q,\omega} + \dfrac{\Delta Q \left(pc_{t,q,\omega} - \dfrac{pd_{t,q,\omega}}{\eta_B}\right)}{E_B}, & q = 1, \\[8pt]
+soc_{t,q-1,\omega} + \dfrac{\Delta Q \left(pc_{t,q,\omega} - \dfrac{pd_{t,q,\omega}}{\eta_B}\right)}{E_B}, & q = 2,\ldots,Q,
+\end{cases}
+\quad \forall t \in T,\; \forall \omega \in \Omega.
+\end{equation}
+Operational limits:
+\begin{equation} \label{EQ:socVOperLimits2}
+	\underline{\SOC} \leq \soc_{t,q, \omega} \leq \overline{\SOC} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q},\ \forall \omega \in \Omega.
+\end{equation}
+Initial and final states of charge of the BESS (\verb|SOCV_ini| and \verb|SOCV_fin|):
+\begin{equation} \label{EQ:SOCV_ini2}
+	\soc_{0, Q, \omega} = \SOC_0 \quad \forall \omega \in \Omega
+\end{equation}
+\begin{equation} \label{EQ:SOCV_fin2}
+	\soc_{T, Q,\omega} = \SOC_T \quad \forall \omega \in \Omega.
+\end{equation}
+
+\subsection{Market Participation}
+\label{SEC:MarketParticipation2}
+
+\subsubsection{Day Ahead Market}
+
+\begin{tabularx}{\textwidth}{l X}
+\textbf{Sets:} \\
+$\mathcal{SSD}$ (\texttt{Ssd}) & $\{(t, q, l, j) \in \mathcal{T} \times \mathcal{Q} \times \Omega \times \Omega \mid l \neq j, \lambda^D_{t, q, l} \leq \lambda^D_{t, q, j} \}$. Rather technical, \\
+& For every $t \in \mathcal{T}$ and $q \in \mathcal{Q}$ provides the scenario pairs $(l, q, j)$ s.t. $\lambda^D_{t,q, l} \leq \lambda^D_{t,q j}$ (order is important). \\	
+& Used to ensure monotonicity of day-ahead bids w.r.t. day-ahead price realisations. \\[1mm]
+
+\textbf{Parameters:} \\
+$\lambda^{D}_{t,q, \omega}$ (\texttt{lD}) & day-ahead market price at time $t \in \mathcal{T}$ $q \in \mathcal{Q}$ under scenario $\omega \in \Omega$ [\euro/MWh]. \\
+$\underline{E}^{DA}$ (\texttt{PDA\_LB}) & minimum bid size to day-ahead market [MWh]. \\[1mm]
+
+\textbf{Variables:} \\
+$e^{DA+}_{t,q, \omega}$ (\texttt{eDA\_p}) & energy matched in the day-ahead market of a selling bid by EC at time $t \in \mathcal{T}$ $q \in \mathcal{Q}$ \\
+& under scenario $\omega \in \Omega$ [MWh]. \\
+$e^{DA-}_{t,q, \omega}$ (\texttt{eDA\_m}) & energy matched in the day-ahead market of a buying bid by EC at time $t \in \mathcal{T}$ $q \in \mathcal{Q}$\\
+& under scenario $\omega \in \Omega$ [MWh]. \\
+$ie^{DA+}_{t,q, \omega}$ (\texttt{ieDA\_p}) & binary. $ie^{DA+}_{t, q,\omega} = 1$ if the EC sells electricity at time $t \in \mathcal{T}$ and $q \in \mathcal{Q}$under scenario $\omega \in \Omega$, \\
+& $ie^{DA+}_{t,q, \omega} = 0$ otherwise. \\
+$ie^{DA-}_{t,q, \omega}$ (\texttt{ieDA\_m}) & binary. $ie^{DA-}_{t,q, \omega} = 1$ if the EC buys electricity at time $t \in \mathcal{T}$ and $q \in \mathcal{Q}$ under scenario $\omega \in \Omega$, \\
+& $ie^{DA-}_{t,q,\omega} = 0$ otherwise. \\
+\end{tabularx}
+
+Nonnegativity constraints:
+\begin{equation} \label{EQ:DAVarDef2}
+	e^{DA+}_{t,q, \omega} \geq 0, \ e^{DA-}_{t,q, \omega} \geq 0, \ ie^{DA+}_{t,q}, ie^{DA-}_{t,q} \in \{0, 1 \} \quad \forall t \in \mathcal{T} \quad \forall q \in \mathcal{Q} \quad \forall \omega \in \Omega.
+\end{equation}
+Bounds on the selling (\verb|DA_sell_bid_LB| and \verb|DA_sell_bid_UB|) and buying (\verb|DA_buy_bid_LB| and \verb|DA_buy_bid_UB|) energy matched quantities:
+\begin{equation} \label{EQ:DA_sell_bid_LB2}
+    \underline{E}^{DA} ie^{DA+}_{t,q, \omega} \leq e^{DA+}_{t,q, \omega} \leq (\overline{P}^W \Delta Q + \overline{P}^{PV} \Delta Q + P^B \Delta Q - \underline{D}_{t,q}) ie^{DA+}_{t,q, \omega}  \quad \forall t \in \mathcal{T}, \forall q \in \mathcal{Q}, \quad \forall \omega \in \Omega.
+\end{equation}
+\begin{equation} \label{EQ:DA_buy_bid_LB2}
+	\underline{E}^{DA} ie^{DA-}_{t,q, \omega} \leq e^{DA-}_{t,q, \omega} \leq (P^B \Delta Q + \overline{D}_{t,q}) ie^{DA-}_{t,q, \omega} \quad \forall t \in \mathcal{T}, \forall q \in \mathcal{Q},\quad \forall \omega \in \Omega.
+\end{equation}
+\begin{equation} \label{EQ:DA_buy_or_sell2}
+	ie^{DA+}_{t,q, \omega} + ie^{DA-}_{t,q, \omega} \leq 1 \quad \forall t \in \mathcal{T}, \forall q \in \mathcal{Q},\quad \forall \omega \in \Omega.
+\end{equation}
+Offer curves need to  be monotone w.r.t. the scenario prices (\verb|DA_bid_mono_1| and \verb|DA_bid_mono_2|)
+\begin{equation} \label{EQ:DA_bid_mono_12}
+	e^{DA+}_{t,q, \omega} \leq e^{DA+}_{t,q, \omega'} \quad \forall (t,q, \omega, \omega') \in \mathcal{SSD}
+\end{equation}
+\begin{equation} \label{EQ:DA_bid_mono_22}
+	e^{DA-}_{t, \omega} \geq e^{DA-}_{t, \omega'} \quad \forall (t,q, \omega, \omega') \in \mathcal{SSD}.
+\end{equation}
+
+\subsubsection{Reserve Market}
+
+\begin{tabularx}{\textwidth}{l X}   
+    \textbf{Parameters:} \\
+    	$\lambda^{R}_{t,q, \omega}$ (\texttt{lR}) & reserve market price at time $t \in \mathcal{T}$ $q \in \mathcal{Q}$ under scenario $\omega \in \Omega$ [\euro/MWh]. \\
+    	$T^R$ (\texttt{TSR}) & duration of reserve response (fixed) [h]. \\
+    	$R^{U, FD}_{t,q}$ (\texttt{RUFD}) & upper bound on the upwards reserve provided by flexible demand [MW]. \\
+    	$R^{D, FD}_{t,q}$ (\texttt{RDFD}) & upper bound on the downwards reserve provided by flexible demand [MW]. \\
+    \\
+       
+    \textbf{Variables:} \\
+	$r^{U}_{t,q, \omega}$ (\texttt{rU}) & upward reserve matched by the EC at time $t \in \mathcal{T}$ $q \in \mathcal{Q}$ under scenario $\omega \in \Omega$ [MW]. \\
+    $r^{D}_{t,q, \omega}$ (\texttt{rD}) & downward reserve matched by the EC at time $t \in \mathcal{T}$ $q \in \mathcal{Q}$ under scenario $\omega \in \Omega$ [MW]. \\
+    $r^{U, B}_{t,q, \omega}$ (\texttt{rU\_B}) & BESS component of upward reserve matched at time $t \in \mathcal{T}$ $q \in \mathcal{Q}$\\
+    & under scenario $\omega \in \Omega$ [MW]. \\
+    $r^{D, B}_{t,q, \omega}$ (\texttt{rD\_B}) & BESS component of downward reserve matched at time $t \in \mathcal{T}$ $q \in \mathcal{Q}$\\
+    & under scenario $\omega \in \Omega$ [MW]. \\
+    $r^{U, FD}_{t,q, \omega}$ (\texttt{rU\_FD}) & flexible demand component of upward reserve matched at time $t \in \mathcal{T}$ $q \in \mathcal{Q}$\\
+    & under scenario $\omega \in \Omega$ [MW]. \\
+    $r^{D, FD}_{t,q, \omega}$ (\texttt{rD\_FD}) & flexible demand component of downward reserve matched at time $t \in \mathcal{T}$ $q \in \mathcal{Q}$\\
+    & under scenario $\omega \in \Omega$ [MW]. \\
+    \\
+\end{tabularx}
+
+Nonnegativity constraints:
+\begin{equation} \label{EQ:RVarDef2}
+    r^{U}_{t,q, \omega} \geq 0, \quad r^{D}_{t,q, \omega} \geq 0, \quad r^{U, B}_{t,q, \omega} \geq 0, \quad r^{D, B}_{t,q, \omega} \geq 0, \quad r^{U, FD}_{t,q, \omega} \geq 0, \quad r^{D, FD}_{t,q, \omega} \geq 0, \forall u \in \mathcal{U}, t \in \mathcal{T}, q \in \mathcal{Q} and \omega \in \Omega. 
+\end{equation}
+Components of the RM (\verb|RM_components_U|and \verb|RM_components_D|):
+
+\begin{equation} \label{EQ:RUcomp2}
+    r^{U}_{t,q, \omega} = r^{U, B}_{t,q ,\omega} +  r^{U, FD}_{t,q, \omega} \quad \forall t \in \mathcal{T}, \forall q \in \mathcal{Q} \ \forall \omega \in \Omega
+\end{equation}
+\begin{equation} \label{EQ:RDcomp2}
+	r^{D}_{t,q, \omega} = r^{D, B}_{t,q, \omega} +  r^{D, FD}_{t,q, \omega} \quad \forall t \in \mathcal{T}, \forall q \in \mathcal{Q} \ \forall \omega \in \Omega.
+\end{equation}
+Enough energy for the demand given the RM (\verb|FlexDem_UB|and \verb|FlexDem_LB|):
+\begin{equation} \label{EQ:FlexDemand_UB2}
+	fd_{t,q, \omega} + T^R r^{D, FD}_{t,q, \omega} \leq \overline{D}_{t,q} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q} \ \forall \omega \in \Omega
+\end{equation}
+\begin{equation} \label{EQ:FlexDemand_LB2}
+	\underline{D}_{t,q} \leq fd_{t,q, \omega} - T^R r^{U, FD}_{t,q, \omega} \quad \forall t \in \mathcal{T}, \ \forall  \in \mathcal{Q}, \ \forall \omega \in \Omega.
+\end{equation}
+
+Bounds for the RM coming from flexible demand (\verb|FlexDemP_DReserve| and \verb|FlexDemP_UReserve|):
+\begin{equation} \label{EQ:FlexDemP_DReserve2}
+	r^{D, FD}_{t,q, \omega} \leq R^{D, FD}_{t,q} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega
+\end{equation}
+\begin{equation} \label{EQ:FlexDemP_UReserve2}
+	r^{U, FD}_{t,q, \omega} \leq R^{U, FD}_{t,q} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega.
+\end{equation}
+
+Bounds for the RM coming from the BESS (\verb|VPP_RU2s| and \verb|VPP_RD2s|):
+\begin{equation} \label{EQ:VPP_RU2s2}
+	r^{U, B} _{t,q, \omega} - c_{t,q, \omega} + d_{t,q, \omega}  \leq P^B \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega
+\end{equation}
+\begin{equation} \label{EQ:VPP_RD2s2}
+	r^{D, B}_{t,q, \omega} + c_{t,q, \omega} - d_{t,q, \omega} \leq P^B \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega.
+\end{equation}
+
+Bounds on the state of the battery including reserve (\verb|VPP_RU_SOCV| and  \verb|VPP_RD_SOCV|):
+\begin{equation} \label{EQ:VPP_RU_SOCV2}
+	\underline{\SOC} \leq \soc_{t,q, \omega} - \frac{T^R r^{U, B}_{t,q, \omega}}{\eta^B E^B} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega
+\end{equation}
+\begin{equation} \label{EQ:VPP_RD_SOCV2}
+	\soc_{t,q, \omega} + \frac{T^R r^{D, B}_{t,q, \omega} }{E^B} \leq \overline{\SOC} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega.
+\end{equation}
+
+\subsubsection{Intraday Markets}
+
+\begin{tabularx}{\textwidth}{l X}
+    
+    \textbf{Parameters:} \\
+    	$\lambda^I_{i, t,q, \omega}$(\texttt{lI}) & intraday market $i \in \mathcal{I}$ price at time $t \in \mathcal{T}$, subperiod $q \in \mathcal{Q}$ under scenario $\omega \in \Omega$ [\euro/MWh]. \\
+	$R^{IDA}$ (\texttt{maxTIM}) & bound on the ratio of energy traded in intraday markets and day ahead \\
+	& market (to avoid speculation).\\
+    \\ 
+       
+    \textbf{Variables:} \\
+    $e^{IM}_{i, t, q, \omega}$ (\texttt{eIM}) & energy matched by the EC at intraday market $i \in \mathcal{I}$ at time $t \in \mathcal{T}, \  q \in \mathcal{Q}$ \\
+    & under scenario $\omega \in \Omega$ [MWh]. \\
+	\\
+\end{tabularx}
+
+Constraint to control speculative behaviour (\verb|IM_bounds_1|, \verb|IM_bounds_2|, \verb|IM_bounds_3| and \verb|IM_bounds_4|):
+\begin{equation} \label{EQ:DM_IM_12}
+	-R^{IDA} (e^{DA+}_{t, \omega} + e^{DA-}_{t, \omega})  \leq \sum_{i \in \mathcal{I}_t} e^{IM}_{i, t, q, \omega} \leq R^{IDA} (e^{DA+}_{t, \omega} + e^{DA-}_{t, \omega}) \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega
+\end{equation}
+\begin{equation} \label{EQ:IM_bounds_3-42}
+	-R^{IDA} (e^{DA+}_{t, \omega} + e^{DA-}_{t, \omega}) \leq e^{IM}_{i, t, \omega} \leq R^{IDA} (e^{DA+}_{t, q, \omega} + e^{DA-}_{t, \omega}) \quad \forall i \in \mathcal{I}, \ \forall t \in \mathcal{T}_i, \ \forall \omega \in \Omega.
+\end{equation}
+
+\subsubsection{System Imbalances}
+
+\begin{tabularx}{\textwidth}{l X}
+    \textbf{Parameters:} \\
+    $\lambda^{IB+}_{t,q, \omega}$ (\texttt{lPIB}) & positive imbalance price at time $t \in \mathcal{T}$ $q \in \mathcal{Q}$ under scenario $\omega \in \Omega$ [\euro/MWh]. \\
+	$\lambda^{IB-}_{t,q, \omega}$ (\texttt{lNIB}) & negative imbalance price at time $t \in \mathcal{T}$ , $q \in \mathcal{Q}$, under scenario $\omega \in \Omega$ [\euro/MWh]. \\
+    $E^{IB+}_{t,q, \omega}$ (\texttt{PIB\_p}) & upper bound on the positive imbalance at time $t \in \mathcal{T}$ , $q \in \mathcal{Q}$ ,\\
+    & under scenario $\omega \in \Omega$ [MWh]. \\
+	$E^{IB-}_{t,q, \omega}$ (\texttt{PIB\_m}) & upper bound on the negative imbalance at time $t \in \mathcal{T}$ , $q \in \mathcal{Q}$ , \\ 
+	& under scenario $\omega \in \Omega$ [MWh]. \\
+    \\ 
+       
+    \textbf{Variables:} \\
+    $e_{t,q, \omega}^{IB-}$ (\texttt{pIB\_m}) & negative imbalance of EC at time $t \in \mathcal{T}$, $q \in \mathcal{Q}$ , under scenario $\omega \in \Omega$ [MWh].	\\
+	$e_{t,q, \omega}^{IB+}$ (\texttt{pIB\_p}) & positive imbalance of EC at time $t \in \mathcal{T}$ , $q \in \mathcal{Q}$ , under scenario $\omega \in \Omega$ [MWh].	\\ 
+    \\
+\end{tabularx}
+
+Nonnegativity constrints:
+\begin{equation} \label{EQ:IBVarDef2}
+    e_{t,q, \omega}^{IB+} \geq 0, \quad e_{t, q,\omega}^{IB-} \geq 0 \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}\ \forall \omega \in \Omega.
+\end{equation}
+
+The imbalances of the EC are defined in the following equation (\verb|Imbalances|)
+\begin{equation} \label{EQ:IBDef2}
+ e^{IB+}_{t,q, \omega} - e^{IB-}_{t,q, \omega} =\frac{ e^{DA-}_{t, \omega}}{Q} + W_{t,q, \omega} + PV_{t,q, \omega} + d_{t,q, \omega} \Delta Q - \Big (\frac{e^{DA+}_{t, \omega}}{Q} + \sum_{i \in \mathcal{I}_t} e^{IM}_{i, t,q, \omega} + fd_{t,q, \omega} + c_{t,q, \omega} \Delta Q \Big ) \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega.
+\end{equation}
+Control for speculative behaviour (\verb|IB_pos_UB| and \verb|IB_neg_UB|):
+\begin{equation} \label{EQ:VPP_IB_MAX2}
+	e_{t,q, \omega}^{IB+} \leq E_{t, q,\omega}^{IB+} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega
+\end{equation}
+\begin{equation} \label{EQ:VPP_IB_MIN2}
+	e_{t,q, \omega}^{IB-} \leq E_{t,q, \omega}^{IB-} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega.
+\end{equation}
+
+\subsection{Nonanticipativity Constraints}
+\label{SEC:NonanticipativityConstraints2}
+For DA matched energy variables (\verb|NAC_eDA_p| and \verb|NAC_eDA_m|)
+\begin{equation} \label{EQ:NAC_eDA_p2}
+	e^{DA+}_{t,q, \omega} = e^{DA+}_{t,q, \omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega}, \ \omega \neq \omega',
+\end{equation}
+\begin{equation} \label{EQ:NAC_eDA_m2}
+	e^{DA-}_{t, q,\omega} = e^{DA-}_{t,q, \omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega} , \ \omega \neq \omega'.
+\end{equation}
+For DA binary variables $ie^{DA+}_{t, \omega}$, we have (\verb|NAC_ieDA_p| and \verb|NAC_ieDA_m|):
+\begin{equation} \label{EQ:NAC_ieDA_p2}
+	ie^{DA+}_{t,q, \omega} = ie^{DA+}_{t,q, \omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega} , \ \omega \neq \omega'.
+\end{equation}
+\begin{equation} \label{EQ:NAC_ieDA_m2}
+	ie^{DA-}_{t,q, \omega} = ie^{DA-}_{t,q, \omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega} , \ \omega \neq \omega'.
+\end{equation}
+For upward reserve variables, we have (\verb|NAC_rU| and \verb|NAC_rU_B| and \verb|NAC_rU_FD|):
+\begin{equation} \label{EQ:NAC_pVRU2}
+	r^U_{t,q, \omega} = r^U_{t,q, \omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega}, \ \omega \neq \omega',
+\end{equation}
+\begin{equation} \label{EQ:NAC_rUB2}
+	r^{U, B}_{t,q, \omega} = r^{U, B}_{t,q, \omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega}, \ \omega \neq \omega',
+\end{equation}
+\begin{equation} \label{EQ:NAC_rUFD2}
+	r^{U, FD}_{t,q, \omega} = r^{U, FD}_{t,q, \omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega}, \ \omega \neq \omega'.
+\end{equation}
+For downward reserve variables, we have (\verb|NAC_rD|, \verb|NAC_rD_B| and \verb|NAC_rD_FD|))
+\begin{equation} \label{EQ:NAC_pVRD2}
+	r^D_{t,q, \omega} = r^D_{t, q,\omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega}, \ \omega \neq \omega',
+\end{equation}
+\begin{equation} \label{EQ:NAC_rDB2}
+	r^{D, B}_{t,q, \omega} = r^{D, B}_{t,q, \omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega}, \ \omega \neq \omega',
+\end{equation}
+\begin{equation} \label{EQ:NAC_rDFD2}
+	r^{D, FD}_{t,q, \omega} = r^{D, FD}_{t,q, \omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q},  \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{1, \omega}, \ \omega \neq \omega'.
+\end{equation}
+For intraday market variables, we have (\verb|NAC_eIM|)
+\begin{equation} \label{EQ:NAC_mUC2}
+	e^{IM}_{i, t,q, \omega} = e^{IM}_{i, t,q, \omega'} \quad \forall i \in \mathcal{I}, \ \forall t \in \mathcal{T}_i, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{IM}_i -1, \omega}, \ \omega \neq \omega'.
+\end{equation}
+For imbalance variables, we have (\verb|NAC_pIB_p| and \verb|NAC_pIB_m|):
+\begin{equation} \label{EQ:NAC_pPIB2}
+	e^{IB+}_{t,q, \omega} = e^{IB+}_{t,q, \omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t, \omega}, \ \omega \neq \omega',
+\end{equation}
+\begin{equation} \label{EQ:NAC_pNIB2}
+	e^{IB-}_{t,q, \omega} = e^{IB-}_{t,q, \omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t, \omega}, \ \omega \neq \omega'.
+\end{equation}
+For flexible demand variables, we have (\verb|NAC_var_fd|, \verb|NAC_var_afd_p| and \verb|NAC_var_afd_m|):
+\begin{equation} \label{EQ:NAC_var_fd2}
+	fd_{t, q,\omega} = fd_{t, q,\omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q},  \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t - 1, \omega}, \ \omega \neq \omega',
+\end{equation}
+\begin{equation} \label{EQ:NAC_var_afd_p2}
+	afd^+_{t,q, \omega} = afd^+_{t, q,\omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t - 1, \omega}, \ \omega \neq \omega',
+\end{equation}
+\begin{equation} \label{EQ:NAC_var_afd_m2}
+	afd^-_{t,q, \omega} = afd^-_{t, q,\omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t - 1, \omega}, \ \omega \neq \omega'.
+\end{equation}
+For BESS operational variables, we have (\verb|NAC_cV|, \verb|NAC_dV|, \verb|NAC_idV|and \verb|NAC_socV|):
+\begin{equation} \label{EQ:NAC_cV2}
+	c_{t, q,\omega} = c_{t,q, \omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q},  \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t - 1, \omega}, \ \omega \neq \omega',
+\end{equation}
+\begin{equation} \label{EQ:NAC_dV2}
+	d_{t, q,\omega} = d_{t,q, \omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t - 1, \omega}, \ \omega \neq \omega',
+\end{equation}
+\begin{equation} \label{EQ:NAC_idV2}
+	id_{t,q, \omega} = id_{t, q,\omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t - 1, \omega}, \ \omega \neq \omega',
+\end{equation}
+\begin{equation} \label{EQ:NAC_socV2}
+	\soc_{t,q, \omega} = \soc_{t,q, \omega'} \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega, \ \forall \omega' \in \mathcal{C}_{SG^{WP}_t - 1, \omega}, \ \omega \neq \omega'.
+\end{equation}
+
+\subsection{Objective Function}
+\label{SEC:ObjectiveFunction2}
+
+We define the objective function Expected Energy Community Social Welfare (EECSW) as follows:
+\begin{subequations}
+	\begin{align}
+		EECSW & := \sum_{t \in \mathcal{T}} \sum_{q \in \mathcal{Q}} \sum_{\omega \in \Omega} \Pi_{\omega} \lambda^D_{t,q, \omega} (e^{DA+}_{t,q, \omega} - e^{DA-}_{t,q, \omega}) \label{EQ:DAincome2} \\
+		& + \sum_{t \in \mathcal{T}}  \sum_{q \in \mathcal{Q}}\sum_{\omega \in \Omega} \Pi_{\omega} \lambda^R_{t,q, \omega} (r^D_{t,q, \omega} + r^U_{t,q, \omega}) T^R \label{EQ:RESincome2} \\
+		& + \sum_{t \in \mathcal{T}} \sum_{q \in \mathcal{Q}} \sum_{\omega \in \Omega} \Pi_{\omega} \sum_{i \in \mathcal{I}_t} \lambda^{I}_{i, t, \omega} e^{IM}_{i, t, \omega} \label{EQ:IMincome2} \\
+		& + \sum_{t \in \mathcal{T}} \sum_{q \in \mathcal{Q}}\sum_{\omega \in \Omega} \Pi_{\omega} \lambda^{IB+}_{t, \omega} e^{IB+}_{t, \omega} \label{EQ:PosIBcollectRights2} \\
+		& - \sum_{t \in \mathcal{T}} \sum_{q \in \mathcal{Q}}\sum_{\omega \in \Omega} \Pi_{\omega} \lambda^{IB-}_{t, \omega} e^{IB-}_{t, \omega} \label{EQ:NegIBPayObligations2} \\
+		& - \sum_{t \in \mathcal{T}} \sum_{q \in \mathcal{Q}}\sum_{\omega \in \Omega} \Pi_{\omega} C^{FD} (afd^+_{t, \omega} + afd^-_{t, \omega}). \label{EQ:DemFlexPenalty2}
+	\end{align}
+	\label{EQ:EECSW2}
+\end{subequations}
+
+\subsection{Complete Model Formulation}
+\label{SEC:CompleteModelFormulation2}
+{\small
+\begin{tabularx}{\textwidth}{c >{\raggedright\arraybackslash}X r}
+
+% Objetivo
+max & $EECSW$ & \\[0.5em]
+
+% Restricciones
+s.t. & \eqref{EQ:FlexDemandPos2}, \eqref{EQ:DailyDem2}, \eqref{EQ:InterDem2}, \eqref{EQ:FlexDemDisplace2} & Flex. Demand Op. \\[0.2em]
+
+& \eqref{dVdCPos2}, \eqref{EQ:VPP_state_dV2}, \eqref{EQ:VPP_state_cV2}, \eqref{EQ:SOCV2}, \eqref{EQ:socVOperLimits2}, \eqref{EQ:SOCV_ini2}, \eqref{EQ:SOCV_fin2} & BESS Op. \\[0.2em]
+
+& \eqref{EQ:DAVarDef2}, \eqref{EQ:DA_sell_bid_LB2}, \eqref{EQ:DA_buy_bid_LB2}, \eqref{EQ:DA_buy_or_sell2}, \eqref{EQ:DA_bid_mono_12}, \eqref{EQ:DA_bid_mono_22} & EC DA \\[0.2em]
+
+& \eqref{EQ:RVarDef2}, \eqref{EQ:RUcomp2}, \eqref{EQ:RDcomp2}, \eqref{EQ:FlexDemand_UB2}, \eqref{EQ:FlexDemand_LB2}, \eqref{EQ:FlexDemP_DReserve2}, \eqref{EQ:FlexDemP_UReserve2}, \eqref{EQ:VPP_RU2s2}, \eqref{EQ:VPP_RD2s2}, \eqref{EQ:VPP_RU_SOCV2}, \eqref{EQ:VPP_RD_SOCV2} & EC RM \\[0.2em]
+
+& \eqref{EQ:DM_IM_12}, \eqref{EQ:IM_bounds_3-42} & EC IM \\[0.2em]
+
+& \eqref{EQ:IBVarDef2}, \eqref{EQ:IBDef2}, \eqref{EQ:VPP_IB_MAX2}, \eqref{EQ:VPP_IB_MIN2} & EC IB \\[0.2em]
+
+& \eqref{EQ:NAC_eDA_p2}, \eqref{EQ:NAC_eDA_m2}, \eqref{EQ:NAC_ieDA_p2}, \eqref{EQ:NAC_ieDA_m2} & NAC DA \\[0.2em]
+
+& \eqref{EQ:NAC_pVRU2}, \eqref{EQ:NAC_rUB2}, \eqref{EQ:NAC_rUFD2}, \eqref{EQ:NAC_pVRD2}, \eqref{EQ:NAC_rDB2}, \eqref{EQ:NAC_rDFD2} & NAC RM \\[0.2em]
+
+& \eqref{EQ:NAC_mUC2} & NAC IM \\[0.2em]
+
+& \eqref{EQ:NAC_pPIB2}, \eqref{EQ:NAC_pNIB2} & NAC Imbalances \\[0.2em]
+
+& \eqref{EQ:NAC_var_fd2}, \eqref{EQ:NAC_var_afd_p2}, \eqref{EQ:NAC_var_afd_m2} & NAC Flex. Demand \\[0.2em]
+
+& \eqref{EQ:NAC_cV2}, \eqref{EQ:NAC_dV2}, \eqref{EQ:NAC_idV2}, \eqref{EQ:NAC_socV2} & NAC BESS Op. \\
+
+\end{tabularx}
+}
+
+\subsection{\texorpdfstring{Summary of Stages for $T = 24$ (hourly) with subperiods}{Summary of Stages for T = 24 (hourly) with subperiods}}
+
+In Table \ref{TABLE:stages-rv-dv-subperiods}, we present a summary of the stages considered. Each stage can contain decision variables, observations and recourse variables. Note that, in terms of the optimization model, recourse variables of one stage are equivalent to decision variables of the next stage.
+
+\begin{table}[H]
+\begin{tabular}{c c c c}
+	Stage & Decision Variables & Observations & Recourse Variables \\
+	1 & & $\lambda^D \in \R^{T\times \mathcal{Q}}$& $e^{DA+}_{t,q, \omega}, e^{DA-}_{t,q, \omega}, ie^{DA+}_{t,q, \omega}, ie^{DA-}_{t,q, \omega}$\\
+	2 & $r^U_{t,q, \omega}, r^{U, B}_{t,q, \omega}, r^{U,q, FD}_{t,q, \omega}, r^{D}_{t,q, \omega}, r^{D, B}_{t,q, \omega}, r^{D, FD}_{t,q, \omega}$ & $\lambda^R \in \R^{T\times \mathcal{Q}}$& \\
+	3 & $e^{IM}_{1, t, q,\omega}$& $\lambda^I_1 \in \R^{T_1 \times \mathcal{Q}}$&  \\
+	4 & $e^{IM}_{2, t,q, \omega}$& $\lambda^I_2 \in \R^{T_2 \times \mathcal{Q}}$&  \\
+	5 & $fd_{1,q}, afd^{\pm}_{1,q}, c_{1,q, \omega}, d_{1,q, \omega}, id_{1,q, \omega}, \soc_{1,q, \omega}$& $W_1, PV_1, \lambda^{IB\pm}_{1, \omega} \in \R^\mathcal{Q}$& $e^{IB+}_{1,q, \omega}, e^{IB-}_{1,q, \omega}$\\
+	6 & $fd_{2,q}, afd^{\pm}_{2,q}, c_{2, q,\omega}, d_{2, q,\omega}, id_{2,q, \omega}, \soc_{2, q,\omega}$& $W_2, PV_2, \lambda^{IB\pm}_{2, \omega} \in \R^\mathcal{Q}$& $e^{IB+}_{2, q,\omega}, e^{IB-}_{2,q, \omega}$\\
+	7& $fd_{3,q}, afd^{\pm}_{3,q}, c_{3,q, \omega}, d_{3,q, \omega}, id_{3,q, \omega}, \soc_{3, q,\omega}$& $W_3, PV_3, \lambda^{IB\pm}_{3, \omega} \in \R^\mathcal{Q}$& $e^{IB+}_{3,q, \omega}, e^{IB-}_{3, q,\omega}$\\
+	8& $fd_{4,q}, afd^{\pm}_{4,q}, c_{4, q,\omega}, d_{4,q, \omega}, id_{4, q,\omega}, \soc_{4, q,\omega}$& $W_4, PV_4, \lambda^{IB\pm}_{4, \omega} \in \R^\mathcal{Q}$& $e^{IB+}_{4, q,\omega}, e^{IB-}_{4, q,\omega}$\\
+	9& $fd_{5,q}, afd^{\pm}_{5,q}, c_{5,q, \omega}, d_{5,q, \omega}, id_{5,q, \omega}, \soc_{5,q, \omega}$ & $W_5, PV_5, \lambda^{IB\pm}_{5, \omega} \in \R^\mathcal{Q}$ & $e^{IB+}_{5,q, \omega}, e^{IB-}_{5,q, \omega}$\\
+	10& $fd_{6,q}, afd^{\pm}_{6,q}, c_{6, q,\omega}, d_{6, q,\omega}, id_{6, q,\omega}, \soc_{6,q, \omega}$& $W_6, PV_6, \lambda^{IB\pm}_{6, \omega} \in \R^\mathcal{Q}$& $e^{IB+}_{6,q, \omega}, e^{IB-}_{6, q,\omega}$\\
+	11& $fd_{7,q}, afd^{\pm}_{7,q}, c_{7, q,\omega}, d_{7, q,\omega}, id_{7, q,\omega}, \soc_{7,q, \omega}$& $W_7, PV_7, \lambda^{IB+}_{7, \omega} \in \R^\mathcal{Q}$& $e^{IB+}_{7,q, \omega}, e^{IB-}_{7,q, \omega}$\\
+	12& $fd_{8,q}, afd^{\pm}_{8,q}, c_{8,q, \omega}, d_{8,q, \omega}, id_{8,q, \omega}, \soc_{8,q, \omega}$ & $W_8, PV_8, \lambda^{IB+}_{8, \omega} \in \R^\mathcal{Q}$ & $p^{IB+}_{8,q, \omega}, p^{IB-}_{8,q, \omega}$ \\
+	13& $fd_{9,q}, afd^{\pm}_{9,q}, c_{9,q, \omega}, d_{9,q, \omega}, id_{9,q, \omega}, \soc_{9,q, \omega}$ & $W_9, PV_9, \lambda^{IB+}_{9, \omega} \in \R^\mathcal{Q}$ & $e^{IB+}_{9,q, \omega}, e^{IB-}_{9,q, \omega}$\\
+	14& $fd_{10,q}, afd^{\pm}_{10,q}, c_{10,q, \omega}, d_{10,q, \omega}, id_{10,q, \omega}, \soc_{10,q, \omega}$ & $W_{10}, PV_{10}, \lambda^{IB\pm}_{10, \omega} \in \R^\mathcal{Q}$ & $e^{IB+}_{10,q, \omega}, e^{IB-}_{10,q, \omega}$\\
+ 15& $e^{IM}_{3, t, q, \omega}$ & $\lambda^I_3 \in \R^{T_3 \times \mathcal{Q}}$&\\
+	16& $fd_{11,q}, afd^{\pm}_{11,q}, c_{11,q, \omega}, d_{11,q, \omega}, id_{11,q, \omega}, \soc_{11,q, \omega}$ & $W_{11}, PV_{11}, \lambda^{IB\pm}_{11, \omega} \in \R^\mathcal{Q}$ & $e^{IB+}_{11,q, \omega}, e^{IB-}_{11,q, \omega}$\\
+	17& $fd_{12,q}, afd^{\pm}_{12,q}, c_{12,q, \omega}, d_{12,q, \omega}, id_{12,q, \omega}, \soc_{12,q, \omega}$ & $W_{12}, PV_{12}, \lambda^{IB\pm}_{12, \omega} \in \R^\mathcal{Q}$ & $p^{IB+}_{12,q, \omega}, p^{IB-}_{12,q, \omega}$ \\
+	18& $fd_{13,q}, afd^{\pm}_{13,q}, c_{13,q, \omega}, d_{13,q, \omega}, id_{13,q, \omega}, \soc_{13,q, \omega}$ & $W_{13}, PV_{13}, \lambda^{IB\pm}_{13, \omega} \in \R^\mathcal{Q}$ & $p^{IB+}_{13,q, \omega}, p^{IB-}_{13,q, \omega}$ \\
+	19& $fd_{14,q}, afd^{\pm}_{14,q}, c_{14,q, \omega}, d_{14,q, \omega}, id_{14,q, \omega}, \soc_{14,q, \omega}$ & $W_{14}, PV_{14}, \lambda^{IB\pm}_{14, \omega} \in \R^\mathcal{Q}$ & $e^{IB+}_{14,q, \omega}, e^{IB-}_{14,q, \omega}$\\
+	20& $fd_{15,q}, afd^{\pm}_{15,q}, c_{15,q, \omega}, d_{15,q, \omega}, id_{15,q, \omega}, \soc_{15,q, \omega}$ & $W_{15}, PV_{15}, \lambda^{IB\pm}_{15, \omega} \in \R^\mathcal{Q}$ & $e^{IB+}_{15,q, \omega}, e^{IB-}_{15,q, \omega}$\\
+	21& $fd_{16,q}, afd^{\pm}_{16,q}, c_{16,q, \omega}, d_{16,q, \omega}, id_{16,q, \omega}, \soc_{16,q, \omega}$ & $W_{16}, PV_{16}, \lambda^{IB\pm}_{16, \omega} \in \R^\mathcal{Q}$ & $e^{IB+}_{16,q, \omega}, e^{IB-}_{16,q, \omega}$\\
+	22& $fd_{17,q}, afd^{\pm}_{17,q}, c_{17,q, \omega}, d_{17,q, \omega}, id_{17,q, \omega}, \soc_{17,q, \omega}$ & $W_{17}, PV_{17}, \lambda^{IB\pm}_{17, \omega} \in \R^\mathcal{Q}$ & $e^{IB+}_{17,q, \omega}, e^{IB-}_{17,q, \omega}$\\
+	23& $fd_{18,q}, afd^{\pm}_{18,q}, c_{18,q, \omega}, d_{18,q, \omega}, id_{18,q, \omega}, \soc_{18,q, \omega}$ & $W_{18}, PV_{18}, \lambda^{IB\pm}_{18, \omega} \in \R^\mathcal{Q}$ &  $e^{IB+}_{18,q, \omega}, e^{IB-}_{18,q, \omega}$\\
+	24& $fd_{19,q}, afd^{\pm}_{19,q}, c_{19,q, \omega}, d_{19,q, \omega}, id_{19,q, \omega}, \soc_{19,q, \omega}$ & $W_{19}, PV_{19}, \lambda^{IB\pm}_{19, \omega} \in \R^\mathcal{Q}$ & $e^{IB+}_{19,q, \omega}, e^{IB-}_{19,q, \omega}$\\
+	25& $fd_{20,q}, afd^{\pm}_{20,q}, c_{20,q, \omega}, d_{20,q, \omega}, id_{20,q, \omega}, \soc_{20,q, \omega}$  & $W_{20}, PV_{20}, \lambda^{IB\pm}_{20, \omega} \in \R^\mathcal{Q}$ & $e^{IB+}_{20,q, \omega}, e^{IB-}_{20,q, \omega}$\\
+	26&  $fd_{21,q}, afd^{\pm}_{21,q}, c_{21,q, \omega}, d_{21,q, \omega}, id_{21,q, \omega}, \soc_{21,q, \omega}$ & $W_{21}, PV_{21}, \lambda^{IB\pm}_{21, \omega} \in \R^\mathcal{Q}$ & $e^{IB+}_{21,q, \omega}, e^{IB-}_{21,q, \omega}$\\
+	27& $fd_{22,q}, afd^{\pm}_{22,q}, c_{22,q, \omega}, d_{22,q, \omega}, id_{22,q, \omega}, \soc_{22,q, \omega}$ & $W_{22}, PV_{22}, \lambda^{IB\pm}_{22, \omega} \in \R^\mathcal{Q}$ & $e^{IB+}_{22,q, \omega}, e^{IB-}_{22,q, \omega}$\\
+	28& $fd_{23,q}, afd^{\pm}_{23,q}, c_{23,q, \omega}, d_{23,q, \omega}, id_{23,q, \omega}, \soc_{23,q, \omega}$ & $W_{23}, PV_{23}, \lambda^{IB\pm}_{23, \omega} \in \R^\mathcal{Q}$ & $e^{IB+}_{23,q, \omega}, e^{IB-}_{23,q, \omega}$\\
+	29& $fd_{24,q}, afd^{\pm}_{24,q}, c_{24,q, \omega}, d_{24,q, \omega}, id_{24,q, \omega}, \soc_{24,q, \omega}$ & $W_{24}, PV_{24}, \lambda^{IB\pm}_{24, \omega} \in \R^\mathcal{Q}$ & $e^{IB+}_{24,q, \omega}, e^{IB-}_{24,q, \omega}$\\
+\end{tabular}
+\caption{Summary of stages, decision variables, random variable observations and recourse variables.}
+\label{TABLE:stages-rv-dv-subperiods}
+\end{table}
