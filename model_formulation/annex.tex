@@ -765,15 +765,15 @@ Discharging/charging bounds (\verb|VPP_state_dV| and \verb|VPP_state_cV|):
 	c_{t,q, \omega} \leq P^B (1 - id_{t,q, \omega}) \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q},\ \forall \omega \in \Omega.
 \end{equation}
 
-Variable state of charge $\soc_{t, q,s}$ of the BESS (\verb|SOCV|): 
+Variable state of charge $\soc_{t, q,\omega}$ of the BESS (\verb|SOCV|):
 \begin{equation}
 \label{EQ:SOCV2}
-soc_{t,q,\omega} =
+\soc_{t,q,\omega} =
 \begin{cases}
-soc_{t-1,Q,\omega} + \dfrac{\Delta Q \left(pc_{t,q,\omega} - \dfrac{pd_{t,q,\omega}}{\eta_B}\right)}{E_B}, & q = 1, \\[8pt]
-soc_{t,q-1,\omega} + \dfrac{\Delta Q \left(pc_{t,q,\omega} - \dfrac{pd_{t,q,\omega}}{\eta_B}\right)}{E_B}, & q = 2,\ldots,Q,
+\soc_{t-1,Q,\omega} + \dfrac{\Delta Q \left(c_{t,q,\omega} - \dfrac{d_{t,q,\omega}}{\eta^B}\right)}{E^B}, & q = 1, \\[8pt]
+\soc_{t,q-1,\omega} + \dfrac{\Delta Q \left(c_{t,q,\omega} - \dfrac{d_{t,q,\omega}}{\eta^B}\right)}{E^B}, & q = 2,\ldots,Q,
 \end{cases}
-\quad \forall t \in T,\; \forall \omega \in \Omega.
+\quad \forall t \in \mathcal{T},\; \forall \omega \in \Omega.
 \end{equation}
 Operational limits:
 \begin{equation} \label{EQ:socVOperLimits2}
@@ -832,7 +832,7 @@ Offer curves need to  be monotone w.r.t. the scenario prices (\verb|DA_bid_mono_
 	e^{DA+}_{t,q, \omega} \leq e^{DA+}_{t,q, \omega'} \quad \forall (t,q, \omega, \omega') \in \mathcal{SSD}
 \end{equation}
 \begin{equation} \label{EQ:DA_bid_mono_22}
-	e^{DA-}_{t, \omega} \geq e^{DA-}_{t, \omega'} \quad \forall (t,q, \omega, \omega') \in \mathcal{SSD}.
+	e^{DA-}_{t,q, \omega} \geq e^{DA-}_{t,q, \omega'} \quad \forall (t,q, \omega, \omega') \in \mathcal{SSD}.
 \end{equation}
 
 \subsubsection{Reserve Market}
@@ -921,10 +921,10 @@ Bounds on the state of the battery including reserve (\verb|VPP_RU_SOCV| and  \v
 
 Constraint to control speculative behaviour (\verb|IM_bounds_1|, \verb|IM_bounds_2|, \verb|IM_bounds_3| and \verb|IM_bounds_4|):
 \begin{equation} \label{EQ:DM_IM_12}
-	-R^{IDA} (e^{DA+}_{t, \omega} + e^{DA-}_{t, \omega})  \leq \sum_{i \in \mathcal{I}_t} e^{IM}_{i, t, q, \omega} \leq R^{IDA} (e^{DA+}_{t, \omega} + e^{DA-}_{t, \omega}) \quad \forall t \in \mathcal{T}, \ \forall \omega \in \Omega
+	-R^{IDA} (e^{DA+}_{t,q, \omega} + e^{DA-}_{t,q, \omega})  \leq \sum_{i \in \mathcal{I}_t} e^{IM}_{i, t, q, \omega} \leq R^{IDA} (e^{DA+}_{t,q, \omega} + e^{DA-}_{t,q, \omega}) \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega
 \end{equation}
 \begin{equation} \label{EQ:IM_bounds_3-42}
-	-R^{IDA} (e^{DA+}_{t, \omega} + e^{DA-}_{t, \omega}) \leq e^{IM}_{i, t, \omega} \leq R^{IDA} (e^{DA+}_{t, q, \omega} + e^{DA-}_{t, \omega}) \quad \forall i \in \mathcal{I}, \ \forall t \in \mathcal{T}_i, \ \forall \omega \in \Omega.
+	-R^{IDA} (e^{DA+}_{t,q, \omega} + e^{DA-}_{t,q, \omega}) \leq e^{IM}_{i, t,q, \omega} \leq R^{IDA} (e^{DA+}_{t,q, \omega} + e^{DA-}_{t,q, \omega}) \quad \forall i \in \mathcal{I}, \ \forall t \in \mathcal{T}_i, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega.
 \end{equation}
 
 \subsubsection{System Imbalances}
@@ -952,7 +952,7 @@ Nonnegativity constrints:
 
 The imbalances of the EC are defined in the following equation (\verb|Imbalances|)
 \begin{equation} \label{EQ:IBDef2}
- e^{IB+}_{t,q, \omega} - e^{IB-}_{t,q, \omega} =\frac{ e^{DA-}_{t, \omega}}{Q} + W_{t,q, \omega} + PV_{t,q, \omega} + d_{t,q, \omega} \Delta Q - \Big (\frac{e^{DA+}_{t, \omega}}{Q} + \sum_{i \in \mathcal{I}_t} e^{IM}_{i, t,q, \omega} + fd_{t,q, \omega} + c_{t,q, \omega} \Delta Q \Big ) \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega.
+ e^{IB+}_{t,q, \omega} - e^{IB-}_{t,q, \omega} = e^{DA-}_{t,q, \omega} + W_{t,q, \omega} + PV_{t,q, \omega} + d_{t,q, \omega} \Delta Q - \Big (e^{DA+}_{t,q, \omega} + \sum_{i \in \mathcal{I}_t} e^{IM}_{i, t,q, \omega} + fd_{t,q, \omega} + c_{t,q, \omega} \Delta Q \Big ) \quad \forall t \in \mathcal{T}, \ \forall q \in \mathcal{Q}, \ \forall \omega \in \Omega.
 \end{equation}
 Control for speculative behaviour (\verb|IB_pos_UB| and \verb|IB_neg_UB|):
 \begin{equation} \label{EQ:VPP_IB_MAX2}
