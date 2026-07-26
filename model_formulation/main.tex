@@ -1,0 +1,74 @@
+\documentclass[a4paper,12pt]{report}
+
+% ------------------------- Text ---------------------------------
+\usepackage[T1]{fontenc} %Accents i guions
+\usepackage[utf8]{inputenc} %Accents
+\usepackage{indentfirst} %Indenta el primer parragraf despres d'un titol (la resta tb per defecte)
+\usepackage{hyperref} % enllaços
+\usepackage{ragged2e} % justificació text
+\setlength{\parskip}{1em} % espai entre parragrafs
+
+% ---------------- Visualització de la pagina -----------
+\usepackage[lmargin=2cm,rmargin=2cm,tmargin=2.5cm,bmargin=2.7cm]{geometry} %marges
+\usepackage{xcolor} % colors personalitzats
+
+% -------------------- Figures i taules --------------------
+\renewcommand\thefigure{\arabic{figure}} % Numeració simple per les figures
+\counterwithin{figure}{chapter} % Es reinicia la numeració de figures a cada capitol
+\usepackage[skip=2pt]{caption} % Redueix espai sota les captions
+\captionsetup[figure]{font=small} % Lletra de les figures petita
+\usepackage{subcaption} %permet subfigures (a), (b), (c)
+\usepackage{tabularx} % Taules amb amplada automatica
+\usepackage{colortbl} % color a files/cols
+\usepackage{multirow} % celes que ocupen diverses files
+\usepackage{graphicx} % \includegraphics
+\usepackage{float} % [H]
+
+% ------------------ Numeracions i llistes ----------------
+\usepackage{enumitem} % personalitzar llistes: itemize, enumerate
+
+% ------------------ Matematiques i simbols ----------------
+\usepackage{amsmath,amsfonts,amssymb}
+\usepackage{eurosym} % \euro
+
+% Model formulation
+\usepackage[utf8]{inputenc}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{tabularx}
+\usepackage{xcolor}
+\usepackage{eurosym}
+
+\usepackage{geometry}
+\usepackage{hyperref}
+
+
+\newcommand{\R}{\mathbb{R}}
+\newcommand{\N}{\mathbb{N}}
+\newcommand{\E}{\mathbb{E}}
+
+\newcommand{\SOC}{\text{SoC}}
+\newcommand{\soc}{\text{soc}}
+
+\newtheorem{notation}{Notation}[section]
+\newtheorem{note}{Note}[section]
+
+\setlength{\parindent}{0pt}
+
+% ------------------ Bibliografia i appendix ---------------
+\usepackage[maxcitenames = 2, hyperref=true, backref=false, abbreviate=false, maxbibnames=10, sorting=none]{biblatex} % no ordenar les referencies
+\addbibresource{References.bib} % carrega fitxer de refs
+\usepackage{appendix}
+
+
+\begin{document}
+\newpage
+\chapter{Annex}
+\input{annex}
+
+\newpage
+\addcontentsline{toc}{chapter}{Bibliography}
+\printbibliography
+
+\end{document}
