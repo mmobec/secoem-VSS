@@ -3,9 +3,13 @@ scenarios/
 data/demand/
 pre_process_AMPL_to_Pyomo_scenario_data/AMPL format scenario data/
 pre_process_AMPL_to_Pyomo_scenario_data/Python format scenario data/
-/model_formulation/ec_model_formulation.aux
-/model_formulation/ec_model_formulation.bcf
-/model_formulation/ec_model_formulation.log
-/model_formulation/ec_model_formulation.out
-/model_formulation/ec_model_formulation.run.xml
-/model_formulation/ec_model_formulation.synctex.gz
+/model_formulation/main.aux
+/model_formulation/main.bbl
+/model_formulation/main.bcf
+/model_formulation/main.blg
+/model_formulation/main.fdb_latexmk
+/model_formulation/main.fls
+/model_formulation/main.log
+/model_formulation/main.out
+/model_formulation/main.run.xml
+/model_formulation/main.synctex.gz
