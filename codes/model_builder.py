@@ -484,14 +484,14 @@ class ModelBuilder:
             obj_expr -= term_flex_demand # Subtract cost
 
             # Slack Variable Penalties (Only for non-DA modes)
-            if self.sim_ctx.market != "DA":
-                term_slack = sum(
-                    m.Prob[s] * m.imbalanceSlackPenalty * (m.IB_pos_slack[t, s] + m.IB_neg_slack[t, s])
-                    for s in m.S for t in m.T
-                )
-                obj_expr -= term_slack
+            #if self.sim_ctx.market != "DA":
+            #    term_slack = sum(
+            #        m.Prob[s] * m.imbalanceSlackPenalty * (m.IB_pos_slack[t, s] + m.IB_neg_slack[t, s])
+            #        for s in m.S for t in m.T
+            #    )
+            #    obj_expr -= term_slack
 
-            obj_expr -= m.lambda_risk * m.CVAR
+            #obj_expr -= m.lambda_risk * m.CVAR
 
             # Adding Hydrogen Components to the objective function
             if self.use_hydro:
