@@ -19,8 +19,11 @@ model_builder.py, instancemanager.py, preprocessing.py, or config_definition.py;
 it only reuses them as-is.
 """
 import copy
+import logging
 
+import pyomo.environ as pyo
 from pyomo.environ import DataPortal, SolverFactory, Var, value
+from pyomo.util.infeasible import log_infeasible_constraints
 
 import config_definition as cfg
 
@@ -153,12 +156,27 @@ def newly_decided_at_stage(t, rp_instance):
         if t == 5:
             cutoff = min(rp_instance.TIM[3])
             elapsed_tq = [(t_, q_) for t_ in T if t_ < cutoff for q_ in Q]
+            # pIB_p/pIB_m are deliberately NOT fixed here, even for elapsed
+            # hours: they are the residual of the Imbalances balance equation
+            # (which also involves pW/pPV), and pW/pPV are recomputed fresh
+            # from each group's own Omega_g-conditional expectation at every
+            # stage. If a child group's Omega_g strictly refines its parent's,
+            # that expectation can shift slightly even for an "elapsed" hour,
+            # and fixing pIB_p/pIB_m to the parent's now-stale balance makes
+            # the equation infeasible. Leaving them free lets each subproblem
+            # reconcile its own balance, which is the correct behaviour for a
+            # computed residual rather than a genuinely memorized decision.
             for v in (
                 "var_fd", "var_afd_p", "var_afd_m", "dV", "cV", "idV",
-                "rU_B", "rD_B", "rU_FD", "rD_FD", "pIB_p", "pIB_m",
+                "rU_B", "rD_B", "rU_FD", "rD_FD",
             ):
                 result.append((v, elapsed_tq))
-            soc_idx = elapsed_tq + [(0, max(Q))]
+            # The day-boundary state of charge is only ever constrained at
+            # (t=0, q=1) -- SOCV_ini_rule sets socV[T0.first(), 1, s] ==
+            # SOCini; socV[0, q, s] for q=2,3,4 is declared (T0 x Q x S) but
+            # never appears in any constraint, so it never gets a solved
+            # value and must not be included here.
+            soc_idx = elapsed_tq + [(0, min(Q))]
             result.append(("socV", soc_idx))
         return result
 
@@ -203,12 +221,40 @@ def snapshot_solution(instance):
 
 
 def solve_ev_instance(instance, label=""):
-    """Solves one EV_g subproblem with the same Gurobi options as the RP model."""
+    """
+    Solves one EV_g subproblem with the same Gurobi options as the RP model.
+
+    If the subproblem is infeasible, this does NOT crash: Proposition 5's own
+    proof allows for EDEV_T (and by extension any EDEV_t) to have no feasible
+    solution ("the result is trivial"), so an infeasible EV_g is a legitimate,
+    if unwelcome, outcome to handle rather than a hard error. Diagnostics are
+    logged (via pyomo's own infeasibility utilities, the same ones solver.py's
+    debug_infeasibility() already uses elsewhere in this codebase) and
+    (None, status) is returned so the caller can decide how to proceed.
+    """
     solver = SolverFactory("gurobi")
     for k, v in cfg.SOLVER_OPTIONS.items():
         solver.options[k] = v
     results = solver.solve(instance, tee=False)
     status = results.solver.termination_condition
+
+    if status not in (
+        pyo.TerminationCondition.optimal,
+        pyo.TerminationCondition.maxTimeLimit,
+        pyo.TerminationCondition.locallyOptimal,
+    ):
+        print(f"    [{label}] status={status}  INFEASIBLE OR UNSOLVED -- diagnostics follow:")
+        for v in instance.component_data_objects(Var, active=True):
+            if v.value is None:
+                v.set_value(0)
+        # log_infeasible_constraints() logs through Python's logging module,
+        # not print(); without raising the logger's level it silently emits
+        # nothing (this bit me on the first diagnostic pass).
+        logger = logging.getLogger("pyomo.util.infeasible")
+        logger.setLevel(logging.INFO)
+        log_infeasible_constraints(instance, tol=1e-6, log_expression=True, log_variables=True)
+        return None, status
+
     obj = value(instance.EECSW)
     print(f"    [{label}] status={status}  Z_EV_g={obj:.4f}")
     return obj, status

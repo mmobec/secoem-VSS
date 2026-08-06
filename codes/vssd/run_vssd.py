@@ -75,9 +75,11 @@ def compute_vssd_chain(sim):
     for t in range(1, 7):
         print(f"  G_{t} ({MACRO_STAGES[t - 1]}): {len(groups_by_stage[t])} group(s)")
 
-    solution_cache = {}   # (t, group_id) -> snapshot dict
-    z_ev_by_stage = {}    # t -> {group_id: Z_EV^g}
-    edev_by_stage = {}    # t -> EDEV_t
+    solution_cache = {}      # (t, group_id) -> snapshot dict
+    z_ev_by_stage = {}       # t -> {group_id: Z_EV^g}
+    edev_by_stage = {}       # t -> EDEV_t
+    excluded_weight_by_stage = {}  # t -> probability mass excluded as infeasible
+    infeasible_ids = set()   # group_ids infeasible (or descended from infeasible) at t-1
 
     for t in range(1, 7):
         print(f"\n-- Stage t={t} ({MACRO_STAGES[t - 1]}) --")
@@ -88,7 +90,18 @@ def compute_vssd_chain(sim):
             fixed_specs += newly_decided_at_stage(tau, rp_instance)
 
         z_by_group = {}
+        next_infeasible_ids = set()
         for g in groups:
+            # Proposition 5 anticipates infeasible EV_g as a legitimate outcome
+            # (see edev_vssd.compute_edev_t); a group whose ancestor was
+            # infeasible has no fixed-value chain to inherit and must be
+            # skipped too, cascading down the tree.
+            if t > 1 and g.parent_id in infeasible_ids:
+                print(f"    [t={t} g={g.group_id}] SKIPPED: ancestor (t={t - 1}, "
+                      f"g={g.parent_id}) was infeasible")
+                next_infeasible_ids.add(g.group_id)
+                continue
+
             instance = build_ev_instance(abstract_model, rp_instance, rp_scenario_data, g)
 
             if t > 1:
@@ -98,13 +111,21 @@ def compute_vssd_chain(sim):
             label = f"t={t} g={g.group_id} |Omega_g|={len(g.omega)} w={g.weight:.4f}"
             z_g, status = solve_ev_instance(instance, label=label)
 
+            if z_g is None:
+                next_infeasible_ids.add(g.group_id)
+                continue
+
             z_by_group[g.group_id] = z_g
             solution_cache[(t, g.group_id)] = snapshot_solution(instance)
 
+        infeasible_ids = next_infeasible_ids
         z_ev_by_stage[t] = z_by_group
-        edev_t = compute_edev_t(groups, z_by_group)
+        edev_t, excluded_weight = compute_edev_t(groups, z_by_group)
         edev_by_stage[t] = edev_t
-        print(f"EDEV_{t} = {edev_t:.4f}")
+        excluded_weight_by_stage[t] = excluded_weight
+        print(f"EDEV_{t} = {edev_t:.4f}"
+              + (f"  (excluded {excluded_weight:.4f} infeasible probability mass, renormalized)"
+                 if excluded_weight > 0 else ""))
 
     vssd = compute_vssd(rp_value, edev_by_stage)
     vssd_by_stage = compute_vssd_t(rp_value, edev_by_stage)
@@ -116,7 +137,7 @@ def compute_vssd_chain(sim):
     report = validate_propositions(rp_value, edev_by_stage, vssd_by_stage)
     print_report(report)
 
-    _write_results_csv(sim_ctx, rp_value, edev_by_stage, vssd, vssd_by_stage)
+    _write_results_csv(sim_ctx, rp_value, edev_by_stage, vssd, vssd_by_stage, excluded_weight_by_stage)
 
     return {
         "sim": sim,
@@ -124,18 +145,20 @@ def compute_vssd_chain(sim):
         "edev_by_stage": edev_by_stage,
         "vssd": vssd,
         "vssd_by_stage": vssd_by_stage,
+        "excluded_weight_by_stage": excluded_weight_by_stage,
         "validation": report,
     }
 
 
-def _write_results_csv(sim_ctx, rp_value, edev_by_stage, vssd, vssd_by_stage):
+def _write_results_csv(sim_ctx, rp_value, edev_by_stage, vssd, vssd_by_stage, excluded_weight_by_stage):
     out_path = os.path.join(cfg.PROJECT_ROOT, sim_ctx.pathres, "edev_vssd_results.csv")
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w", newline="") as f:
         writer = csv.writer(f)
-        writer.writerow(["stage_t", "market", "EDEV_t", "VSSD_t"])
+        writer.writerow(["stage_t", "market", "EDEV_t", "VSSD_t", "excluded_infeasible_weight"])
         for t in range(1, 7):
-            writer.writerow([t, MACRO_STAGES[t - 1], edev_by_stage[t], vssd_by_stage[t]])
+            writer.writerow([t, MACRO_STAGES[t - 1], edev_by_stage[t], vssd_by_stage[t],
+                              excluded_weight_by_stage[t]])
         writer.writerow([])
         writer.writerow(["RP", rp_value])
         writer.writerow(["VSSD", vssd])

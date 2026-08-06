@@ -11,9 +11,29 @@ def compute_edev_t(groups, z_ev_by_group):
     Definition 4: EDEV_t = sum_{g in G_t} w^g * Z_EV^g.
 
     `groups` is the list of ScenarioGroup for macro-stage t (scenario_groups.py).
-    `z_ev_by_group` maps group_id -> Z_EV^g (the solved EV_g objective value).
+    `z_ev_by_group` maps group_id -> Z_EV^g for every group that solved to
+    optimality; a group missing from this dict is one whose EV_g subproblem
+    was infeasible (see ev_subproblem.solve_ev_instance) -- Proposition 5's own
+    proof treats this as a legitimate outcome ("if EDEV_T has no feasible
+    solution... the result is trivial"), not an error condition.
+
+    Policy: infeasible groups are excluded and the remaining groups' weights
+    are renormalized to sum to 1, rather than propagating -inf or silently
+    under-weighting EDEV_t. Returns (EDEV_t, excluded_weight) so the caller
+    can report how much probability mass was infeasible at this stage.
+    Raises if every group at this stage is infeasible (EDEV_t is then
+    genuinely undefined, matching Prop. 5's "trivial" case).
     """
-    return sum(g.weight * z_ev_by_group[g.group_id] for g in groups)
+    solved = [g for g in groups if g.group_id in z_ev_by_group]
+    excluded_weight = sum(g.weight for g in groups if g.group_id not in z_ev_by_group)
+    total_weight = sum(g.weight for g in solved)
+    if total_weight <= 0:
+        raise RuntimeError(
+            "compute_edev_t: every group at this stage is infeasible; "
+            "EDEV_t is undefined (Proposition 5's 'trivial' case)."
+        )
+    edev_t = sum((g.weight / total_weight) * z_ev_by_group[g.group_id] for g in solved)
+    return edev_t, excluded_weight
 
 
 def compute_vssd(rp_value, edev_by_stage):
