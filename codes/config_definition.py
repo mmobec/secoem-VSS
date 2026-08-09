@@ -44,7 +44,7 @@ famscen_all = "FTC_20251031_20251130_c30_sc300_15min_ren_same"
 
 
 # Suppose we have SIMS = [001..031]
-n_days = 1
+n_days = 30
 SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days for brevity
 
 pathscen_all = f"scenarios/{famscen_all}"

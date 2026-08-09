@@ -13,7 +13,12 @@ never modifies any of those files. Running `python modular_ec_run.py` is
 completely unaffected by this script's existence.
 
 Usage (from the codes/ directory, or anywhere -- this script fixes up sys.path):
-    python vssd/run_vssd.py [sim]
+    python vssd/run_vssd.py        # runs every sim in cfg.SIMS (parallel), writes
+                                    # the cross-day summary (tables/vssd_t.txt,
+                                    # vssd_<famscen>_summary.out) alongside each
+                                    # day's own edev_vssd_results.csv
+    python vssd/run_vssd.py <sim>  # runs a single sim only (e.g. "001"), no
+                                    # cross-day summary
 """
 import os
 import sys
@@ -23,6 +28,7 @@ if _CODES_DIR not in sys.path:
     sys.path.insert(0, _CODES_DIR)
 
 import csv
+import multiprocessing as mp
 
 from pyomo.environ import value
 
@@ -113,6 +119,7 @@ def compute_vssd_chain(sim):
     _write_results_csv(sim_ctx, rp_value, edev_by_stage, vssd, vssd_by_stage)
 
     return {
+        "sim": sim,
         "rp_value": rp_value,
         "edev_by_stage": edev_by_stage,
         "vssd": vssd,
@@ -135,6 +142,54 @@ def _write_results_csv(sim_ctx, rp_value, edev_by_stage, vssd, vssd_by_stage):
     print(f"\nResults written to {out_path}")
 
 
+def _write_summary(chain_results):
+    """Aggregates one compute_vssd_chain() result per sim into cross-day tables,
+    mirroring SimulationSummaryWriter's tables/*.txt + *_summary.out pattern for
+    the main EC pipeline (results/<famscen>/DA/tables/, results/<famscen>/DA/)."""
+    table_dir = os.path.join(cfg.PROJECT_ROOT, "results", cfg.famscen_all, "DA", "tables")
+    os.makedirs(table_dir, exist_ok=True)
+
+    vssd_t_path = os.path.join(table_dir, "vssd_t.txt")
+    with open(vssd_t_path, "w") as f:
+        f.write("stage    " + " ".join(f"{r['sim']:>7s}" for r in chain_results) + "\n")
+        for t in range(1, 7):
+            f.write(
+                f"VSSD_{t}  "
+                + " ".join(f"{r['vssd_by_stage'][t]:7.2f}" for r in chain_results)
+                + "\n"
+            )
+
+    summary_path = os.path.join(
+        cfg.PROJECT_ROOT, "results", cfg.famscen_all, "DA", f"vssd_{cfg.famscen_all}_summary.out"
+    )
+    with open(summary_path, "w") as f:
+        f.write("############################################################\n")
+        f.write(f"VSSD summary ({len(chain_results)} days)\n")
+        f.write("           " + " ".join(f"{r['sim']:>10s}" for r in chain_results) + "\n")
+        f.write("RP         " + " ".join(f"{r['rp_value']:10.2f}" for r in chain_results) + "\n")
+        f.write("VSSD       " + " ".join(f"{r['vssd']:10.2f}" for r in chain_results) + "\n")
+        f.write(
+            "valid      "
+            + " ".join(f"{'OK' if r['validation']['ok'] else 'FAIL':>10s}" for r in chain_results)
+            + "\n"
+        )
+        f.write("############################################################\n")
+
+    print(f"\nVSSD_t table written to {vssd_t_path}")
+    print(f"VSSD summary written to {summary_path}")
+
+
+def main():
+    """Runs compute_vssd_chain for every sim in cfg.SIMS (parallel, mirrors
+    modular_ec_run.py's mp.Pool loop), then writes the cross-day summary."""
+    with mp.Pool(processes=mp.cpu_count()) as pool:
+        chain_results = pool.map(compute_vssd_chain, cfg.SIMS)
+    _write_summary(chain_results)
+    return chain_results
+
+
 if __name__ == "__main__":
-    sim_arg = sys.argv[1] if len(sys.argv) > 1 else cfg.SIMS[0]
-    compute_vssd_chain(sim_arg)
+    if len(sys.argv) > 1:
+        compute_vssd_chain(sys.argv[1])
+    else:
+        main()
