@@ -81,10 +81,21 @@ def build_ev_instance(abstract_model, rp_instance, rp_scenario_data, group):
     for key, val in raw.items():
         portal[key] = copy.deepcopy(val)
 
-    # A single deterministic scenario, probability 1.
+    # A single deterministic scenario, probability 1. nS is deliberately left as-is
+    # (not overridden to 1): it only sizes S0 = RangeSet(1, nS), the *complete*
+    # scenario range that Prob0/Scen0/c's raw (copied, untouched) data is indexed
+    # over -- shrinking it here would invalidate those entries. S (within S0) is
+    # the actual preserved-scenario subset, so collapsing it to {1} is sufficient.
     portal["S"] = {None: [1]}
-    portal["nS"] = {None: 1}
     portal["Prob"] = {1: 1.0}
+    # Scen is indexed over nRV x S (not S0), so it doesn't survive S collapsing to
+    # {1} the way Prob0/Scen0/c do -- its raw (copied) entries span the RP's whole
+    # preserved S and would fail the same "index not valid" way Prob0 did before nS
+    # was left alone. It's dead weight here regardless: preprocessing.py only ever
+    # used Scen to derive lD/lR/lI/lPIB/lNIB, and this function recomputes all five
+    # directly from Omega_g-conditional expectations, so nothing in vssd/ ever reads
+    # instance.Scen. default=0.0 on the Param makes an empty dict valid.
+    portal["Scen"] = {}
 
     for pname in _RAW_PARAMS_TQ:
         cond = _cond_expectation_raw(raw[pname], prob, tq_keys, omega_g, w_g)
