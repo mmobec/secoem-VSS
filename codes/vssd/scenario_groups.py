@@ -6,8 +6,8 @@ the stochastic solution in multistage problems." TOP 15, 48-64. Section 4.
 
 This module builds G_t (Definition 4) for the 6 market-clearing macro-stages of the
 EC model (DA, RM, IM1, IM2, IM3, IB) directly from an already-solved RP instance's
-own scenario clustering parameters (c, SSG, probc) -- no separate tree object is
-built. See VSSD_implementation_report.md, sections 3.1-3.3, for the rationale behind
+own scenario clustering (c, SSG) and scenario probabilities (Prob) -- no separate
+tree object is built. See VSSD_implementation_report.md, sections 3.1-3.3, for the rationale behind
 this stage mapping (why the ~29 intermediate hourly recourse stages do not need
 their own groups, why G_1 is not a trivial single root group here, and why G_2
 coincides with G_1).
@@ -29,7 +29,10 @@ class ScenarioGroup:
     sg: int                 # underlying fine SG index used for this macro-stage's NAC
     group_id: int            # representative scenario id: the key into c[sg, group_id]
     omega: tuple             # Omega_g: preserved scenarios sharing this cluster
-    weight: float             # w^g = probc[sg, group_id] = sum_{s in Omega_g} Prob[s]
+    weight: float             # w^g = sum_{s in Omega_g} Prob[s] (computed directly from
+                              # Prob -- instance.probc is never populated by
+                              # instancemanager.py's compute_representative_scenarios(),
+                              # so it cannot be relied on here)
     parent_id: object        # pi(g): group_id of the ancestor cluster at stage t-1
                               # (None for t=1, which has no ancestor)
 
@@ -70,8 +73,14 @@ def macro_stage_sg(instance, t):
 def build_macro_stage_groups(instance):
     """
     Definition 4 / Section 4 Steps 1-4 (Escudero et al. 2007): builds G_t for
-    t=1..6 from the RP instance's own scenario clustering (c[sg,s], SSG[sg],
-    probc[sg,s]), already computed by InstanceManager.compute_representative_scenarios().
+    t=1..6 from the RP instance's own scenario clustering (c[sg,s], SSG[sg]),
+    already computed by InstanceManager.compute_representative_scenarios(), with
+    each group's weight w^g computed directly from Prob[s] here rather than read
+    from instance.probc (that Param is declared in model_builder.py but never
+    populated -- compute_representative_scenarios() builds an equivalent
+    probc_dict and discards it instead of storing it on the instance, so
+    instance.probc stays at its default=0.0 / can raise KeyError for
+    representatives outside instance.S).
 
     Returns {t: [ScenarioGroup, ...]} for t=1..6.
     """
@@ -88,7 +97,7 @@ def build_macro_stage_groups(instance):
             omega = tuple(sorted(s for s in instance.c[sg, r] if s in instance.S))
             if not omega:
                 continue
-            w = float(value(instance.probc[sg, r]))
+            w = sum(float(value(instance.Prob[s])) for s in omega)
 
             parent_id = None
             if prev_membership is not None:

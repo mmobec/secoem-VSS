@@ -2,7 +2,7 @@
 Lightweight, dependency-free regression test for scenario_groups.py.
 
 Exercises build_macro_stage_groups() against a small hand-built mock of the
-Pyomo instance attributes it reads (sgim, nSG, SSG, c, probc, S) -- no Pyomo or
+Pyomo instance attributes it reads (sgim, nSG, SSG, c, Prob, S) -- no Pyomo or
 Gurobi required, so this can run anywhere. Run directly:
 
     python vssd/test_scenario_groups.py
@@ -18,13 +18,13 @@ from vssd.scenario_groups import build_macro_stage_groups, macro_stage_sg
 class _Mock:
     """Minimal stand-in for the RP Pyomo instance attributes scenario_groups.py reads."""
 
-    def __init__(self, sgim, nSG, S, SSG, c, probc):
+    def __init__(self, sgim, nSG, S, SSG, c, prob):
         self._sgim = sgim
         self._nSG = nSG
         self.S = S
         self._SSG = SSG
         self._c = c
-        self._probc = probc
+        self._prob = prob
 
     class _Indexed:
         def __init__(self, data):
@@ -50,8 +50,8 @@ class _Mock:
         return self._Indexed(self._c)
 
     @property
-    def probc(self):
-        return self._Indexed(self._probc)
+    def Prob(self):
+        return self._Indexed(self._prob)
 
 
 def build_mock():
@@ -80,14 +80,10 @@ def build_mock():
         (4, 1): [1], (4, 2): [2], (4, 3): [3], (4, 4): [4],
         (5, 1): [1], (5, 2): [2], (5, 3): [3], (5, 4): [4],
     }
-    probc = {
-        (1, 1): 0.5, (1, 3): 0.5,
-        (2, 1): 0.5, (2, 3): 0.25, (2, 4): 0.25,
-        (3, 1): 0.25, (3, 2): 0.25, (3, 3): 0.25, (3, 4): 0.25,
-        (4, 1): 0.25, (4, 2): 0.25, (4, 3): 0.25, (4, 4): 0.25,
-        (5, 1): 0.25, (5, 2): 0.25, (5, 3): 0.25, (5, 4): 0.25,
-    }
-    return _Mock(sgim, nSG, S, SSG, c, probc)
+    # 4 equal-probability scenarios (0.25 each); group weights below are derived by
+    # summing these, matching what scenario_groups.py now computes directly from Prob.
+    prob = {1: 0.25, 2: 0.25, 3: 0.25, 4: 0.25}
+    return _Mock(sgim, nSG, S, SSG, c, prob)
 
 
 def run():
