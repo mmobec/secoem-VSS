@@ -79,29 +79,29 @@ def build_ev_instance(abstract_model, rp_instance, rp_scenario_data, group):
 
     portal = DataPortal()
     for key, val in raw.items():
-        portal.data()[key] = copy.deepcopy(val)
+        portal[key] = copy.deepcopy(val)
 
     # A single deterministic scenario, probability 1.
-    portal.data()["S"] = {None: [1]}
-    portal.data()["nS"] = {None: 1}
-    portal.data()["Prob"] = {1: 1.0}
+    portal["S"] = {None: [1]}
+    portal["nS"] = {None: 1}
+    portal["Prob"] = {1: 1.0}
 
     for pname in _RAW_PARAMS_TQ:
         cond = _cond_expectation_raw(raw[pname], prob, tq_keys, omega_g, w_g)
-        portal.data()[pname] = {key + (1,): val for key, val in cond.items()}
+        portal[pname] = {key + (1,): val for key, val in cond.items()}
 
     for pname in _RAW_PARAMS_ITQ:
         cond = _cond_expectation_raw(raw[pname], prob, itq_keys, omega_g, w_g)
-        portal.data()[pname] = {key + (1,): val for key, val in cond.items()}
+        portal[pname] = {key + (1,): val for key, val in cond.items()}
 
     for pname in _INSTANCE_PARAMS_TQ:
         param = getattr(rp_instance, pname)
         cond = _cond_expectation_instance(param, prob, tq_keys, omega_g, w_g)
-        portal.data()[pname] = {key + (1,): val for key, val in cond.items()}
+        portal[pname] = {key + (1,): val for key, val in cond.items()}
 
     # A single scenario has nothing to be nonanticipative with: every NAC index
     # set built from consecutive_scenarios() becomes empty automatically.
-    portal.data()["c"] = {(sg, 1): [1] for sg in rp_instance.SG0}
+    portal["c"] = {(sg, 1): [1] for sg in rp_instance.SG0}
 
     instance = abstract_model.create_instance(portal)
 
