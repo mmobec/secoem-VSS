@@ -39,12 +39,13 @@ probl = 'ec'
 
 # Suppose we define a scenario family (famscen) & set of SIMS in Python:
 
+#famscen_all = "FTC_20251031_20251130_c30_sc10_15min_ren_same"
 famscen_all = "FTC_20251031_20251130_c30_sc300_15min_ren_same"
 #famscen_all = "FTC_10_2023_12_HYDRO"
 
 
 # Suppose we have SIMS = [001..031]
-n_days = 30
+n_days = 1
 SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days for brevity
 
 pathscen_all = f"scenarios/{famscen_all}"
