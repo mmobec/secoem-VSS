@@ -183,11 +183,23 @@ def snapshot_solution(instance):
     """
     Records every Var's solved (or fixed) value, so this group's children can
     inherit whatever was decided by this point in the chain (Section 4 Step 2).
+
+    Some Var indices (e.g. socV at T0=0 for quarters other than the one the
+    SOCV_ini constraint actually pins) are structurally never referenced by any
+    constraint or the objective, so Gurobi never assigns them a value -- skip
+    those rather than let value() raise. Safe to skip: apply_fixed_values() only
+    ever looks up the specific (var, idx) pairs newly_decided_at_stage() lists,
+    never a full variable, so a skipped index is simply never requested.
     """
-    return {
-        v.name: {idx: value(v[idx]) for idx in v}
-        for v in instance.component_objects(Var, active=True)
-    }
+    result = {}
+    for v in instance.component_objects(Var, active=True):
+        vals = {}
+        for idx in v:
+            val = value(v[idx], exception=False)
+            if val is not None:
+                vals[idx] = val
+        result[v.name] = vals
+    return result
 
 
 def solve_ev_instance(instance, label=""):
