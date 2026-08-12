@@ -276,6 +276,88 @@ def relax_im_bounds_for_fixed_da(instance):
     )
 
 
+# Matches model_builder.py's own imbalanceSlackPenalty default (100) -- that
+# Param is only ever declared in the RM/"IM" market branch (model_builder.py:850),
+# never under market="DA", so it doesn't exist on any VSSD instance to read from.
+_IB_SLACK_PENALTY_RATE = 100.0
+
+
+def relax_ib_bounds_for_fixed_da(instance):
+    """
+    IM1/IM2/IM3/IB fix: reproduce model_builder.py's IB_pos_UB/IB_neg_UB "not DA"
+    fallback on an EV_g instance (call only for t>=3, after apply_fixed_values()
+    and alongside relax_im_bounds_for_fixed_da()) -- the same structural bug as
+    that function fixes, hitting a different pair of constraints.
+
+    IB_pos_UB/IB_neg_UB bound pIB_p/pIB_m by PIB_p/PIB_m under market="DA"
+    (model_builder.py:839-846), with no slack -- vs. market in {"RM","IM*"},
+    which relaxes to PIB_p/PIB_m + IB_pos_slack/IB_neg_slack (model_builder.py:
+    848-857). Every EV_g here is built under market="DA" (see module docstring),
+    so it always carries the hard, no-slack branch.
+
+    Unlike eDA (a decision variable RP can choose to avoid pinching its own
+    cap), PIB_p/PIB_m are pure precomputed DATA (instancemanager.py::
+    compute_imbalance_bounds(): PIB_p[t,q,s] = max(0, pW[t,q,s]+pPV[t,q,s] -
+    mean_pW[t,q]-mean_pPV[t,q]), i.e. the *positive part* of a scenario's
+    deviation from the population-mean renewable output). PIB_p[t,q,s]=0
+    whenever that scenario sits at or below the mean at that quarter -- not a
+    rare edge case but the routine outcome for roughly half of all
+    scenario/quarter pairs, and for a singleton group (|Omega_g|=1, as
+    confirmed for the t=3 g=10 group this was diagnosed against via Gurobi
+    IIS) there's no averaging to smooth it away: PIB_p for the group *is*
+    PIB_p for that one scenario. RP never hits this because it solves every
+    scenario's full joint recourse (eIM, battery, flexible demand) with
+    nothing pre-fixed, so it always has some other way to keep pIB_p<=0 when
+    PIB_p=0; an EV_g downstream in the fixing chain may not, once earlier
+    stages' fixed values have already used up that recourse.
+
+    IB_pos_slack/IB_neg_slack (bounded [0,200]) already exist on every VSSD
+    instance regardless of market -- their declaration is gated on
+    `self.model != "DA"` (model_builder.py:399), which compares the
+    AbstractModel object itself to the string "DA" and is therefore always
+    True, a latent bug that happens to work in our favour here: the slack
+    variables are present, just never wired into an active constraint under
+    market="DA". This reproduces the RM/IM branch's constraint formula
+    directly, reusing those already-declared variables.
+
+    Objective correction: pIB_p enters EECSW as pure revenue (Prob*lPIB*pIB_p,
+    model_builder.py:481-485, added in a maximization). Relaxing its cap
+    without pricing IB_pos_slack would let the optimizer manufacture up to
+    200 units of free revenue whenever profitable, not just enough to escape
+    a spurious infeasibility -- silently inflating Z_EV^g/EDEV_t rather than
+    reporting a genuine economic estimate (IB_neg_slack is self-limiting even
+    unpenalized, since pIB_m is a cost term, but both are penalized here to
+    match model_builder.py's own -- currently commented-out, model_builder.py:
+    499-505 -- design intent exactly). EECSW is deactivated and recreated
+    under the same name (not a new one) so solve_ev_instance()'s existing
+    value(instance.EECSW) call keeps working, now evaluating the penalized
+    expression the instance was actually optimized against.
+    """
+    for name in ("IB_pos_UB", "IB_neg_UB"):
+        getattr(instance, name).deactivate()
+
+    def IB_pos_UB_relaxed_rule(m, t, q, s):
+        return m.pIB_p[t, q, s] <= value(m.PIB_p[t, q, s]) + m.IB_pos_slack[t, q, s]
+    instance.IB_pos_UB_relaxed = pyo.Constraint(
+        instance.T, instance.Q, instance.S, rule=IB_pos_UB_relaxed_rule
+    )
+
+    def IB_neg_UB_relaxed_rule(m, t, q, s):
+        return m.pIB_m[t, q, s] <= value(m.PIB_m[t, q, s]) + m.IB_neg_slack[t, q, s]
+    instance.IB_neg_UB_relaxed = pyo.Constraint(
+        instance.T, instance.Q, instance.S, rule=IB_neg_UB_relaxed_rule
+    )
+
+    penalty = sum(
+        value(instance.Prob[s]) * _IB_SLACK_PENALTY_RATE *
+        (instance.IB_pos_slack[t, q, s] + instance.IB_neg_slack[t, q, s])
+        for t in instance.T for q in instance.Q for s in instance.S
+    )
+    new_expr = instance.EECSW.expr - penalty
+    instance.del_component("EECSW")
+    instance.EECSW = pyo.Objective(expr=new_expr, sense=pyo.maximize)
+
+
 def snapshot_solution(instance):
     """
     Records every Var's solved (or fixed) value, so this group's children can

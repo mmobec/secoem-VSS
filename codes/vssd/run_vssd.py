@@ -43,6 +43,7 @@ from vssd.ev_subproblem import (
     build_ev_instance,
     apply_fixed_values,
     relax_im_bounds_for_fixed_da,
+    relax_ib_bounds_for_fixed_da,
     snapshot_solution,
     newly_decided_at_stage,
     solve_ev_instance,
@@ -115,6 +116,14 @@ def compute_vssd_chain(sim):
                 # instead of the "DA"-branch cap collapsing to 0 (see
                 # ev_subproblem.relax_im_bounds_for_fixed_da's docstring).
                 relax_im_bounds_for_fixed_da(instance)
+                # Same structural bug, different constraint pair: PIB_p/PIB_m
+                # are precomputed data (routinely 0 for ~half of scenario/
+                # quarter pairs), and the "DA"-branch IB_pos_UB/IB_neg_UB has
+                # no slack fallback either. Reproduce the RM/IM branch's
+                # slack-relaxed formula, priced to avoid manufacturing free
+                # pIB_p revenue (see ev_subproblem.relax_ib_bounds_for_fixed_da's
+                # docstring).
+                relax_ib_bounds_for_fixed_da(instance)
 
             label = f"t={t} g={g.group_id} |Omega_g|={len(g.omega)} w={g.weight:.4f}"
             z_g, status = solve_ev_instance(instance, label=label)
