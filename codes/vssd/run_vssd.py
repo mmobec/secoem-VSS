@@ -42,6 +42,7 @@ from vssd.scenario_groups import build_macro_stage_groups, MACRO_STAGES
 from vssd.ev_subproblem import (
     build_ev_instance,
     apply_fixed_values,
+    relax_im_bounds_for_fixed_da,
     snapshot_solution,
     newly_decided_at_stage,
     solve_ev_instance,
@@ -107,6 +108,13 @@ def compute_vssd_chain(sim):
             if t > 1:
                 ancestor_snapshot = solution_cache[(t - 1, g.parent_id)]
                 apply_fixed_values(instance, ancestor_snapshot, fixed_specs)
+
+            if t >= 3:
+                # IM1/IM2/IM3/IB: eDA is now fixed (from t=1) and may be ~0 at
+                # some (t,q) -- reproduce the real pipeline's FD_U fallback
+                # instead of the "DA"-branch cap collapsing to 0 (see
+                # ev_subproblem.relax_im_bounds_for_fixed_da's docstring).
+                relax_im_bounds_for_fixed_da(instance)
 
             label = f"t={t} g={g.group_id} |Omega_g|={len(g.omega)} w={g.weight:.4f}"
             z_g, status = solve_ev_instance(instance, label=label)

@@ -197,6 +197,85 @@ def apply_fixed_values(instance, ancestor_snapshot, fixed_specs):
             var_obj[full_idx].fix()
 
 
+def relax_im_bounds_for_fixed_da(instance):
+    """
+    IM1/IM2/IM3/IB fix: reproduce model_builder.py's _cap20() "not DA" fallback
+    on an EV_g instance whose eDA_p/eDA_m are already fixed (call only for t>=3,
+    after apply_fixed_values()).
+
+    IM_bounds_1_pos/2/3/4 bound eIM by cap = maxTIM * (eDA_p + eDA_m)
+    (model_builder.py:749-781). That formula is a Python closure over
+    self.sim_ctx.market, baked into the constraint expressions once when
+    ModelBuilder builds the abstract model -- and every EV_g in this package is
+    built from a single abstract model constructed under market="DA" (see this
+    file's module docstring), so every instance permanently carries the "DA"
+    branch of _cap20, with no fallback for a ~0 fixed DA position:
+        cap = maxTIM * (eDA_p[t,q,s] + eDA_m[t,q,s])
+    Once eDA is fixed to a real number (t>=2) and that number is ~0 at some
+    (t,q) -- an entirely ordinary outcome, plenty of quarters clear nothing in
+    DA -- cap collapses to exactly 0 regardless of maxTIM's value, forcing
+    eIM[.,t,q,.] == 0 there. If the group's own Omega_g-conditional-average
+    forecast needs any nonzero imbalance at that quarter, the subproblem is
+    flatly infeasible: confirmed as the actual failure mode behind the t=3
+    (IM1) infeasibilities hit in this package (eIM[1,1,1,1] uninitialized,
+    Gurobi "Model was proven to be infeasible" -- reproduced identically at
+    maxTIM=0.2 and maxTIM=1, ruling out the band width itself as the cause).
+
+    The real sequential pipeline never hits this: once sim_ctx.market != "DA",
+    _cap20()'s else branch falls back to FD_U[t,q] (flexible-demand upper
+    bound, much larger) whenever the fixed DA position is ~0. That branch is
+    unreachable from this package's single "DA"-shaped abstract model, so it's
+    reproduced here directly on the instance instead: deactivate the four
+    baked-in constraints and re-add them with the same D>EPS-else-FD_U formula,
+    reading eDA_p/eDA_m as plain fixed numbers.
+
+    Scope: only for macro-stages where eDA is genuinely already fixed and the
+    "DA"-branch is not what the real pipeline would use at that stage. Not
+    called for t=1 (eDA still free -- the original "DA"-branch constraint,
+    with cap as a live expression, is already correct there) or t=2 (RM):
+    empirically, RM's own group partition coincides with DA's (see
+    scenario_groups.py), so its own conditional-average forecast is
+    self-consistent with the eDA it inherits and this mismatch does not arise
+    there (0% exclusion observed at t=1/t=2 in testing, vs. 62%+ from t=3
+    onward) -- revisit if that changes.
+    """
+    EPS = 1e-9
+    for name in ("IM_bounds_1_pos", "IM_bounds_2", "IM_bounds_3", "IM_bounds_4"):
+        getattr(instance, name).deactivate()
+
+    def _cap(m, t, q, s):
+        D = value(m.eDA_p[t, q, s]) + value(m.eDA_m[t, q, s])
+        return m.maxTIM * D if D > EPS else m.FD_U[t, q]
+
+    def IM_bounds_1_pos_rule(m, t, q, s):
+        return sum(
+            m.eIM_pos[i, t, q, s] + m.eIM_neg[i, t, q, s] for i in m.IMT[t]
+        ) <= _cap(m, t, q, s)
+    instance.IM_bounds_1_pos_relaxed = pyo.Constraint(
+        instance.T, instance.Q, instance.S, rule=IM_bounds_1_pos_rule
+    )
+
+    def IM_bounds_2_rule(m, t, q, s):
+        return sum(
+            m.eIM_pos[i, t, q, s] + m.eIM_neg[i, t, q, s] for i in m.IMT[t]
+        ) >= -_cap(m, t, q, s)
+    instance.IM_bounds_2_relaxed = pyo.Constraint(
+        instance.T, instance.Q, instance.S, rule=IM_bounds_2_rule
+    )
+
+    def IM_bounds_3_rule(m, i, t, q, s):
+        return m.eIM[i, t, q, s] >= -_cap(m, t, q, s)
+    instance.IM_bounds_3_relaxed = pyo.Constraint(
+        instance.IM, instance.T, instance.Q, instance.S, rule=IM_bounds_3_rule
+    )
+
+    def IM_bounds_4_rule(m, i, t, q, s):
+        return m.eIM[i, t, q, s] <= _cap(m, t, q, s)
+    instance.IM_bounds_4_relaxed = pyo.Constraint(
+        instance.IM, instance.T, instance.Q, instance.S, rule=IM_bounds_4_rule
+    )
+
+
 def snapshot_solution(instance):
     """
     Records every Var's solved (or fixed) value, so this group's children can
