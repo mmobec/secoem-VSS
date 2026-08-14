@@ -275,6 +275,27 @@ def relax_im_bounds_for_fixed_da(instance):
         instance.IM, instance.T, instance.Q, instance.S, rule=IM_bounds_4_rule
     )
 
+    # Price the FD_U-fallback eIM usage at C_FD (model_builder.py:88), the
+    # model's own existing, active flexible-demand cost rate -- the same rate
+    # that already prices var_afd_p/var_afd_m (model_builder.py:493-497).
+    # eIM enters EECSW as pure revenue (term_im, model_builder.py:472-478); an
+    # unpriced FD_U-sized cap would let the optimizer manufacture free revenue
+    # at every (t,q,s) where the fallback fires, not just escape the spurious
+    # infeasibility. Only the fallback branch (D<=EPS) is priced -- when
+    # D>EPS, cap=maxTIM*D is the model's own real rule, untouched, no penalty.
+    penalty_eIM = sum(
+        value(instance.Prob[s]) * value(instance.C_FD)
+        * (instance.eIM_pos[i, t, q, s] + instance.eIM_neg[i, t, q, s])
+        for t in instance.T
+        for q in instance.Q
+        for s in instance.S
+        if value(instance.eDA_p[t, q, s]) + value(instance.eDA_m[t, q, s]) <= EPS
+        for i in instance.IMT[t]
+    )
+    new_expr = instance.EECSW.expr - penalty_eIM
+    instance.del_component("EECSW")
+    instance.EECSW = pyo.Objective(expr=new_expr, sense=pyo.maximize)
+
 
 # Matches model_builder.py's own imbalanceSlackPenalty default (100) -- that
 # Param is only ever declared in the RM/"IM" market branch (model_builder.py:850),
