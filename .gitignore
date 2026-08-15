@@ -3,6 +3,16 @@ scenarios/
 data/demand/
 pre_process_AMPL_to_Pyomo_scenario_data/AMPL format scenario data/
 pre_process_AMPL_to_Pyomo_scenario_data/Python format scenario data/
+
+# Python environment / bytecode
+venv/
+__pycache__/
+*.pyc
+
+# Local run output / diagnostics
+*.log
+*.ilp
+analises_results_*.html
 /model_formulation/main.aux
 /model_formulation/main.bbl
 /model_formulation/main.bcf
