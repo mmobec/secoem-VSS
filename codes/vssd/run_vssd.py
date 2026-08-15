@@ -41,6 +41,7 @@ from solver import Solver
 from vssd.scenario_groups import build_macro_stage_groups, MACRO_STAGES
 from vssd.ev_subproblem import (
     build_ev_instance,
+    build_full_instance,
     apply_fixed_values,
     relax_im_bounds_for_fixed_da,
     relax_ib_bounds_for_fixed_da,
@@ -62,6 +63,74 @@ def solve_rp(sim):
     instance_wrapper.compute_instance()
     Solver(instance_wrapper, sim_ctx).solve()
     return instance_wrapper.instance, scenario_data, abstract_model, sim_ctx
+
+
+def compute_edev2_recourse(sim_ctx, rp_instance, rp_scenario_data, abstract_model,
+                            groups_by_stage, solution_cache):
+    """
+    Supplementary dynamic-family comparator -- not part of Escudero's own
+    Definition 4 chain. For each of G_1's groups, fixes eDA at that group's
+    own EV_1 solved value (identical for every real member scenario, so
+    DA_bid_mono is trivially satisfied within the group -- it only ever
+    compares members against each other, and cross-group pairs never coexist
+    in the same instance), then solves RM through IB with genuine,
+    non-averaged recourse for that group's real member scenarios jointly
+    (instead of the dynamic chain's further group-averaging).
+
+    Tighter than EDEV_2 (which keeps averaging RM..IB too as well), but --
+    unlike the static EEV_2 (run_static_vss.py) -- does NOT carry
+    Proposition 1's <= RP guarantee: it silently accepts that the 30 groups'
+    independently-solved DA values are not jointly consistent with each other
+    (each EV_1 subproblem is a single-scenario deterministic solve, blind to
+    every other group -- see this session's EEV_2 investigation) rather than
+    fixing that inconsistency at the source, as the static chain's classical
+    single-EV fixing does.
+
+    Infeasible groups are excluded and the remaining groups' weights are
+    renormalized, mirroring compute_edev_t()'s own group-level exclusion
+    policy (Proposition 5's "trivial" case) -- not the static chain's finer
+    grained, IIS-based per-scenario exclusion (Definition 3).
+    """
+    print("\n-- Computing EDEV_2_recourse (fix DA-stage per-group at EV_1's own "
+          "value, solve RM..IB with real per-scenario recourse within each group) --")
+
+    fixed_specs_1 = newly_decided_at_stage(1, rp_instance)
+    z_sum = 0.0
+    excluded_weight = 0.0
+
+    for g in groups_by_stage[1]:
+        snap = solution_cache[(1, g.group_id)]
+        instance = build_full_instance(
+            sim_ctx, abstract_model, rp_scenario_data, rp_instance, set(g.omega), renormalize=False
+        )
+        for var_name, idx_list in fixed_specs_1:
+            var_obj = getattr(instance, var_name)
+            for idx in idx_list:
+                val = snap[var_name][idx + (1,)]
+                for s in g.omega:
+                    var_obj[idx + (s,)].set_value(val)
+                    var_obj[idx + (s,)].fix()
+
+        relax_im_bounds_for_fixed_da(instance)
+        relax_ib_bounds_for_fixed_da(instance)
+
+        label = f"EDEV_2_recourse g={g.group_id} |Omega_g|={len(g.omega)} w={g.weight:.4f}"
+        z_g, status = solve_ev_instance(instance, label=label)
+        if z_g is None:
+            excluded_weight += g.weight
+            continue
+        z_sum += z_g
+
+    survived_weight = 1.0 - excluded_weight
+    if survived_weight <= 0:
+        raise RuntimeError(
+            "compute_edev2_recourse: every group is infeasible; EDEV_2_recourse is undefined."
+        )
+    edev2_recourse = z_sum / survived_weight
+    print(f"EDEV_2_recourse = {edev2_recourse:.4f}"
+          + (f"  (excluded {excluded_weight:.4f} infeasible probability mass, renormalized)"
+             if excluded_weight > 0 else ""))
+    return edev2_recourse, excluded_weight
 
 
 def compute_vssd_chain(sim):
@@ -154,7 +223,15 @@ def compute_vssd_chain(sim):
     report = validate_propositions(rp_value, edev_by_stage, vssd_by_stage)
     print_report(report)
 
-    _write_results_csv(sim_ctx, rp_value, edev_by_stage, vssd, vssd_by_stage, excluded_weight_by_stage)
+    edev2_recourse, edev2_recourse_excluded_weight = compute_edev2_recourse(
+        sim_ctx, rp_instance, rp_scenario_data, abstract_model, groups_by_stage, solution_cache
+    )
+    vssd2_recourse = rp_value - edev2_recourse
+    print(f"VSSD_2_recourse = RP - EDEV_2_recourse = {rp_value:.4f} - {edev2_recourse:.4f} "
+          f"= {vssd2_recourse:.4f}")
+
+    _write_results_csv(sim_ctx, rp_value, edev_by_stage, vssd, vssd_by_stage, excluded_weight_by_stage,
+                        edev2_recourse, vssd2_recourse, edev2_recourse_excluded_weight)
 
     return {
         "sim": sim,
@@ -164,10 +241,14 @@ def compute_vssd_chain(sim):
         "vssd_by_stage": vssd_by_stage,
         "excluded_weight_by_stage": excluded_weight_by_stage,
         "validation": report,
+        "edev2_recourse": edev2_recourse,
+        "vssd2_recourse": vssd2_recourse,
+        "edev2_recourse_excluded_weight": edev2_recourse_excluded_weight,
     }
 
 
-def _write_results_csv(sim_ctx, rp_value, edev_by_stage, vssd, vssd_by_stage, excluded_weight_by_stage):
+def _write_results_csv(sim_ctx, rp_value, edev_by_stage, vssd, vssd_by_stage, excluded_weight_by_stage,
+                        edev2_recourse, vssd2_recourse, edev2_recourse_excluded_weight):
     out_path = os.path.join(cfg.PROJECT_ROOT, sim_ctx.pathres, "edev_vssd_results.csv")
     os.makedirs(os.path.dirname(out_path), exist_ok=True)
     with open(out_path, "w", newline="") as f:
@@ -179,6 +260,10 @@ def _write_results_csv(sim_ctx, rp_value, edev_by_stage, vssd, vssd_by_stage, ex
         writer.writerow([])
         writer.writerow(["RP", rp_value])
         writer.writerow(["VSSD", vssd])
+        writer.writerow([])
+        writer.writerow(["EDEV_2_recourse", edev2_recourse, "excluded_infeasible_weight",
+                          edev2_recourse_excluded_weight])
+        writer.writerow(["VSSD_2_recourse", vssd2_recourse])
     print(f"\nResults written to {out_path}")
 
 

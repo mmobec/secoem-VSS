@@ -14,18 +14,28 @@ solution values obtained in the chain"). See VSSD_implementation_report.md §3.4
 for why this design was chosen and how PIB_p/PIB_m are handled.
 
 The model shape is always built with sim_ctx.market == "DA" (per the user's
-decision -- see report §2.1/2.5): this file never imports or modifies
-model_builder.py, instancemanager.py, preprocessing.py, or config_definition.py;
-it only reuses them as-is.
+decision -- see report §2.1/2.5): this file never modifies model_builder.py,
+instancemanager.py, preprocessing.py, or config_definition.py; it only reuses
+them as-is (InstanceManager included, for build_full_instance() below).
+
+Also provides build_full_instance()/solve_full_instance_with_exclusion(), used
+by both run_static_vss.py's static EEV_t/VSS_t chain (Definition 1) and
+run_vssd.py's supplementary EDEV_2_recourse comparator: unlike build_ev_instance
+(one synthetic averaged scenario), these build a genuine multi-scenario
+instance over a set of real, surviving scenarios, with Gurobi-IIS-based
+scenario exclusion on infeasibility (Definition 3's remedy).
 """
 import copy
 import logging
+import os
+import re
 
 import pyomo.environ as pyo
 from pyomo.environ import DataPortal, SolverFactory, Var, value
 from pyomo.util.infeasible import log_infeasible_constraints
 
 import config_definition as cfg
+from instancemanager import InstanceManager
 
 # Stochastic parameters loaded straight into scenario_data (before instance
 # creation) as plain {(t,q,s): value} / {(i,t,q,s): value} dicts by
@@ -440,3 +450,160 @@ def solve_ev_instance(instance, label=""):
     obj = value(instance.EECSW)
     print(f"    [{label}] status={status}  Z_EV_g={obj:.4f}")
     return obj, status
+
+
+def build_full_instance(sim_ctx, abstract_model, rp_scenario_data, rp_instance,
+                         surviving_scenarios, renormalize=True):
+    """
+    Builds a fresh full-scale instance restricted to `surviving_scenarios` (a
+    set of real scenario ids) -- each scenario keeps its own real data, no
+    Omega_g-conditional averaging (unlike build_ev_instance()).
+
+    If renormalize, probabilities are rescaled to sum to 1 (a genuine
+    reduced-scenario EEV_t solve, once infeasible scenarios have been
+    excluded). If not, every scenario keeps its own real, absolute Prob value
+    (for partitioning RP's own scenarios into disjoint groups whose
+    sub-objectives sum back to RP's own total exactly, as
+    run_vssd.compute_edev2_recourse() does).
+
+    Goes through the real InstanceManager.compute_instance() pipeline (not
+    build_ev_instance()'s portal shortcut), because pW/pPV/PIB_p/PIB_m must be
+    genuinely recomputed from each surviving real scenario's own Scen data,
+    not substituted by a conditional average.
+    """
+    raw = rp_scenario_data.data()
+    prob = {s: value(rp_instance.Prob[s]) for s in rp_instance.S}
+    surviving_scenarios = set(int(s) for s in surviving_scenarios)
+
+    portal = DataPortal()
+    for key, val in raw.items():
+        portal[key] = copy.deepcopy(val)
+    portal["S"] = {None: sorted(surviving_scenarios)}
+    if renormalize:
+        total_w = sum(prob[s] for s in surviving_scenarios)
+        portal["Prob"] = {s: prob[s] / total_w for s in surviving_scenarios}
+    else:
+        portal["Prob"] = {s: prob[s] for s in surviving_scenarios}
+    # Every S-indexed (not S0-indexed) raw param needs the same restriction as
+    # S itself: Scen0/Prob0/c stay untouched (indexed over S0), but Scen and
+    # the market-price params below are indexed over S and would otherwise
+    # keep entries for excluded scenarios, outside S's new, smaller domain.
+    portal["Scen"] = {
+        (rv, s): v for (rv, s), v in raw["Scen"].items() if s in surviving_scenarios
+    }
+    for pname in _RAW_PARAMS_TQ + _RAW_PARAMS_ITQ:
+        portal[pname] = {
+            key: v for key, v in raw[pname].items() if key[-1] in surviving_scenarios
+        }
+
+    instance_wrapper = InstanceManager(portal, sim_ctx, abstract_model)
+    instance_wrapper.compute_instance()
+    return instance_wrapper.instance
+
+
+# Matches every "name(idx)" occurrence in a Gurobi IIS .ilp file (LP format),
+# both constraint names and every variable reference inside their bodies.
+_NAME_IDX_RE = re.compile(r"([A-Za-z_][A-Za-z0-9_]*)\(([\d_]+)\)")
+
+
+def _parse_iis_scenarios(ilp_path):
+    """
+    Extracts every real-scenario index appearing in an IIS .ilp file -- scans
+    every name(digits_and_underscores) occurrence (constraint names *and*
+    every variable reference in their bodies, plus Bounds/Binaries) from
+    "Subject To" through "End".
+
+    DA_bid_mono (and any other "*mono*"-named constraint) encodes two scenario
+    indices directly in its own name (the last two underscore-separated
+    tokens, l and k) -- both are extracted even when Gurobi's presolve has
+    eliminated every variable from that row (e.g. both endpoints already
+    fixed), leaving nothing else in the file to name them.
+    """
+    scenarios = set()
+    active = False
+    with open(ilp_path) as f:
+        for line in f:
+            stripped = line.strip()
+            if stripped == "Subject To":
+                active = True
+                continue
+            if stripped == "End":
+                break
+            if not active:
+                continue
+            for name, idx in _NAME_IDX_RE.findall(line):
+                tokens = idx.split("_")
+                if not tokens or not tokens[-1].isdigit():
+                    continue
+                if "mono" in name.lower() and len(tokens) >= 2 and tokens[-2].isdigit():
+                    scenarios.add(int(tokens[-2]))
+                scenarios.add(int(tokens[-1]))
+    return scenarios
+
+
+def solve_full_instance_with_exclusion(
+    sim_ctx, abstract_model, rp_scenario_data, rp_instance, fix_fn, label,
+    max_rounds=10, max_excluded_weight=0.5,
+):
+    """
+    Solves a full-scale (real, multi-scenario) instance, calling
+    fix_fn(instance, surviving_scenarios) to apply whatever fixing is needed
+    before each solve. On infeasibility, computes a Gurobi IIS (ResultFile=
+    *.ilp), removes every scenario named in it via _parse_iis_scenarios(),
+    renormalizes the survivors' weights, and retries (Escudero Definition 3's
+    own remedy). Stops -- returning (None, excluded_weight) -- once a solve
+    succeeds, the IIS names no new scenario (nothing left to exclude), or a
+    safety cap trips (max_rounds, max_excluded_weight).
+
+    Returns (obj_or_None, excluded_weight).
+    """
+    all_scenarios = set(int(s) for s in rp_instance.S)
+    excluded = set()
+
+    for round_no in range(max_rounds):
+        surviving = all_scenarios - excluded
+        if not surviving:
+            print(f"    [{label}] all scenarios excluded -- giving up")
+            return None, sum(value(rp_instance.Prob[s]) for s in all_scenarios)
+
+        instance = build_full_instance(
+            sim_ctx, abstract_model, rp_scenario_data, rp_instance, surviving, renormalize=True
+        )
+        fix_fn(instance, surviving)
+        relax_im_bounds_for_fixed_da(instance)
+        relax_ib_bounds_for_fixed_da(instance)
+
+        ilp_path = os.path.join(cfg.PROJECT_ROOT, f"vssd_{label}_round{round_no}.ilp")
+        solver = SolverFactory("gurobi")
+        for k, v in cfg.SOLVER_OPTIONS.items():
+            solver.options[k] = v
+        solver.options["ResultFile"] = ilp_path
+        results = solver.solve(instance, tee=False, symbolic_solver_labels=True)
+        status = results.solver.termination_condition
+
+        if status == pyo.TerminationCondition.optimal:
+            obj = value(instance.EECSW)
+            excluded_weight = sum(value(rp_instance.Prob[s]) for s in excluded)
+            print(f"    [{label}] round {round_no}: status=optimal  Z={obj:.4f}"
+                  + (f"  (excluded {excluded_weight:.4f} probability mass)" if excluded else ""))
+            return obj, excluded_weight
+
+        if not os.path.exists(ilp_path):
+            print(f"    [{label}] round {round_no}: status={status}, no IIS written -- giving up")
+            return None, sum(value(rp_instance.Prob[s]) for s in excluded)
+
+        new_bad = _parse_iis_scenarios(ilp_path) & surviving
+        if not new_bad:
+            print(f"    [{label}] round {round_no}: infeasible, IIS named no new scenarios -- giving up")
+            return None, sum(value(rp_instance.Prob[s]) for s in excluded)
+
+        excluded |= new_bad
+        excluded_weight = sum(value(rp_instance.Prob[s]) for s in excluded)
+        print(f"    [{label}] round {round_no}: infeasible, excluding scenarios {sorted(new_bad)} "
+              f"(cumulative excluded weight {excluded_weight:.4f})")
+        if excluded_weight > max_excluded_weight:
+            print(f"    [{label}] excluded weight exceeds {max_excluded_weight} -- giving up")
+            return None, excluded_weight
+
+    print(f"    [{label}] hit max_rounds={max_rounds} -- giving up")
+    return None, sum(value(rp_instance.Prob[s]) for s in excluded)
