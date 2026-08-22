@@ -405,7 +405,7 @@ class PostProcess:
 
 
     def store_ib_var(self, var_name, ib_path):
-        file = os.path.join(ib_path, "{var_name}.txt")
+        file = os.path.join(ib_path, f"{var_name}.txt")
         atrribute = getattr(self.instance, var_name)   #this gets self.instance.PIB for example 
         with open(file, "w") as f:
             for s in self.instance.S:
