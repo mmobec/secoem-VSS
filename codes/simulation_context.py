@@ -55,8 +55,8 @@ class SimulationContext:
         if self.include_hydro:
             self.demfile_h2 = f"demand_h2-{sim}.dat"
         
-        self.famscen = cfg.famscen_all+"\\"+market_path_var
-        self.pathscen = cfg.pathscen_all+"\\"+market_path_var
+        self.famscen = Path(cfg.famscen_all) / market_path_var
+        self.pathscen = Path(cfg.pathscen_all) / market_path_var
         self.previous_results_path = self.get_previous_results_dir()
 
         # make sure resultfolders exist (relative to parent directory)
