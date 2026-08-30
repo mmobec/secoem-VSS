@@ -6,7 +6,7 @@ from pathlib import Path
 All static parameters for a simulation
 """
 
-PROJECT_ROOT = Path.home() / "OneDrive" / "Documentos" / "MESIO" / "TFM" / "Repos" / "mmobec-pyomo"   #This is the root directory
+PROJECT_ROOT = Path("/users/delfos/aina/mmobec-pyomo")   #This is the root directory
 
 MARKET_CHAIN = ["DA", "RM", "IM1", "IM2", "IM3", "IB"]
 
