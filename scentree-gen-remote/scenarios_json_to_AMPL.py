@@ -47,6 +47,15 @@ DAY2 {...},
 """
 JSON Scenario Tree -> AMPL formatter
 =====================================
+Low-level converter: day_to_ampl() turns one day's scenario-tree JSON object
+into AMPL .dat text. Also usable standalone via run()/CLI below, which reads
+and writes .dat files in the same input folder (no reorganizing of output).
+
+build_scenarios_AMPL.py imports day_to_ampl() from this file and is the
+batch driver actually used for QHS/HG: it walks dif_ren_scentree/ and
+same_ren_scentree/, and writes the converted .dat files into the
+reorganized scenarios_AMPL/ tree that batch_run_scenarios.py expects.
+
 Input:  JSON array with one scenario tree object per day [{}, {}, ...]
         All files are read from and written to the same folder.
 Output: One AMPL .dat file per day, named:

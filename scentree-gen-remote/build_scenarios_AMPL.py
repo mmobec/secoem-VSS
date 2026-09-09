@@ -1,17 +1,22 @@
 """
-Builds scenarios_AMPL/ from every results_N.json (one per day) of every
-scenariotree_XX folder under dif_ren_scentree and same_ren_scentree.
+Batch driver: imports day_to_ampl() from scenarios_json_to_AMPL.py (the
+low-level per-day converter) and adds discovery + output reorganization
+on top of it. Builds scenarios_AMPL/ from every results_N.json (one per
+day) of every scenariotree_XX folder under dif_ren_scentree and
+same_ren_scentree -- this is the script to run for QHS/HG conversion,
+not scenarios_json_to_AMPL.py's own standalone run()/CLI, which writes
+.dat files back into the same input folder instead.
 
 Output layout:
   scenarios_AMPL/
-    scenarios_AMPL_dif_ren/
-      FTC_20251031_20251130_c30_scXX_15min_different_ren/
+    scenarios_AMPL_QHS/
+      FTC_20251031_20251130_c31_scXX_15min_different_ren/
         DA/
-          FTC_20251031_20251130_c30_scXX_15min_different_ren-NNN_DA.dat
-    scenarios_AMPL_same_ren/
-      FTC_20251031_20251130_c30_scXX_15min_same_ren/
+          FTC_20251031_20251130_c31_scXX_15min_different_ren-NNN_DA.dat
+    scenarios_AMPL_HG/
+      FTC_20251031_20251130_c31_scXX_15min_same_ren/
         DA/
-          FTC_20251031_20251130_c30_scXX_15min_same_ren-NNN_DA.dat
+          FTC_20251031_20251130_c31_scXX_15min_same_ren-NNN_DA.dat
 """
 
 import os
@@ -25,12 +30,12 @@ SCRIPT_DIR = os.path.dirname(os.path.abspath(__file__))
 SOURCES = [
     {
         "src_root": os.path.join(SCRIPT_DIR, "dif_ren_scentree"),
-        "out_subfolder": "scenarios_AMPL_dif_ren",
+        "out_subfolder": "scenarios_AMPL_QHS",
         "ren_suffix": "different_ren",
     },
     {
         "src_root": os.path.join(SCRIPT_DIR, "same_ren_scentree"),
-        "out_subfolder": "scenarios_AMPL_same_ren",
+        "out_subfolder": "scenarios_AMPL_HG",
         "ren_suffix": "same_ren",
     },
 ]
@@ -90,7 +95,7 @@ def main():
                 print(f"  SKIP  {tree_folder} (no results_N.json)")
                 continue
 
-            base_name = f"FTC_20251031_20251130_c30_sc{num_scen}_15min_{ren_suffix}"
+            base_name = f"FTC_20251031_20251130_c31_sc{num_scen}_15min_{ren_suffix}"
             out_dir = os.path.join(OUT_ROOT, out_subfolder, base_name, "DA")
             os.makedirs(out_dir, exist_ok=True)
 
