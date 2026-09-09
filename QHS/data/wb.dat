@@ -1,0 +1,13 @@
+# BESS:
+param min_pVD_rel := .1;    # % of the mean_pW taken as the min VPP's bid to DM [MW]
+param RTE         := 1;   # Round Trip Efficiency.
+param SOCmin      := 0.1;     # BESS's minimum SOC.
+param SOCmax      := 0.9;     # BESS's maximum SOC.
+param SOCini      := 0.2;   # BESS's initial SOC (MUST BE >= SOCmin!!!)
+param SOCfin      := 0.6;   # BESS's final   SOC (MUST BE >= SOCmin!!!)
+param surplusIM   := 1.0;   # -surplusIM*pVD[t] <= pVI1[t,s] <=  surplusIM*pVD[t]
+param surplusIB   := 100.0;   # pPIB[t,s], pPIB <= surplusIB*sigma_pW[t]);
+param surplusNIB  := 1.0;   # pPIB[t,s], pPIB <= surplusIB*sigma_pW[t]);
+param Pavg 		  := 150;   # total average power
+param Emax        := 100;   # BESS's capacity [MWh].
+param Dmax        := 80;   	# Max charge/discharge, [MW].
