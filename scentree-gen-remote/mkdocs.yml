@@ -1,0 +1,58 @@
+site_name: scentree
+
+theme:
+  name: material
+  logo: assets/logo.svg
+  favicon: assets/logo.svg
+  features:
+    - navigation.tabs
+    - navigation.sections
+    - navigation.expand
+    - content.code.copy
+  palette:
+    primary: custom
+    accent: custom
+
+extra_css:
+  - stylesheets/extra.css
+
+markdown_extensions:
+  - toc:
+      toc_depth: 3
+  - pymdownx.superfences
+  - pymdownx.highlight
+  - pymdownx.inlinehilite
+  - pymdownx.snippets
+  - admonition
+  - attr_list
+
+plugins:
+  - search
+  - mkdocstrings:
+      default_handler: python
+      handlers:
+        python:
+          paths: [scentree]
+          options:
+            show_source: false
+            show_root_heading: true
+            show_root_toc_entry: false
+            show_object_full_path: false
+            show_symbol_type_heading: true
+            show_symbol_type_toc: true
+            separate_signature: true
+            show_signature_annotations: true
+            line_length: 100
+
+nav:
+  - Getting started:
+    - Introduction: index.md
+    - Installation: content/getting_started/installation.md
+    - Examples: content/getting_started/examples.md
+    - Citation: content/getting_started/citation.md
+    - Acknowledgements: content/getting_started/acknowledgements.md
+  - API reference:
+      - Loader: content/api/loader.md
+      - Scenario fan generator: content/api/fan_generator.md
+      - Scenario tree construction: content/api/tree_construction.md
+      - Output: content/api/output.md

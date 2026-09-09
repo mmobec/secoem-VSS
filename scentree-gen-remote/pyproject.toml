@@ -1,0 +1,102 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scentree"
+version = "0.0.4"
+description = "A Python package to generate scenario trees for multi-stage stochastic programming problems."
+readme = {file = "README.md", content-type = "text/markdown"}
+license = {file = "LICENSE"}
+authors = [
+    {name = "Cristian Pachón García", email = "cristian.pachon@upc.edu"},
+    {name = "Albert Solà Vilalta", email = "albert.sola.vilalta@upc.edu"},
+    {name = "F.-Javier Heredia", email="f.javier.heredia@upc.edu"},
+]
+maintainers = [
+    {name = "Cristian Pachón García", email = "cristian.pachon@upc.edu"},
+    {name = "Albert Solà Vilalta", email = "albert.sola.vilalta@upc.edu"},
+]
+keywords = [
+    "forecasting",
+    "machine-learning",
+    "scenario-tree",
+    "stochastic-optimization",
+    "stochastic-programming",
+]
+classifiers = [
+    "License :: OSI Approved :: European Union Public Licence 1.2 (EUPL 1.2)",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: OS Independent",
+]
+requires-python = ">=3.12"
+dependencies = [
+    "matplotlib>=3.8",
+    "numpy>=2.3",
+    "pydantic>=2.5",
+    "scikit-learn>=1.7",
+    "scipy>=1.17.1",
+    "statsmodels>=0.14",
+    "tqdm>=4.66",
+]
+
+[project.optional-dependencies]
+dev = [
+    "black>=23.11,<24",
+    "build>=1.2",
+    "flake8>=6.1,<7",
+    "flake8-pyproject>=1.2",
+    "ipykernel>=6.30,<7",
+    "ipywidgets>=8,<9",
+    "mypy>=1.8,<2",
+    "pdbpp>=0.11,<0.12",
+    "types-tqdm>=4.66,<5",
+    "twine>=6.0",
+    "validate-pyproject>=0.24",
+]
+
+docs = [
+    "mkdocs>=1.5,<2",
+    "mkdocstrings[python]>=0.25,<1",
+    "mkdocs-material>=9,<10",
+]
+
+test = [
+    "pytest>=8",
+]
+
+[project.urls]
+Homepage = "https://github.com/mmobec/scentree"
+Documentation = "https://scentree.readthedocs.io/"
+Repository = "https://github.com/mmobec/scentree"
+Issues = "https://github.com/mmobec/scentree/issues"
+
+[tool.setuptools]
+include-package-data = true
+
+[tool.setuptools.packages.find]
+include = ["scentree*"]
+where = ["."]
+
+[tool.black]
+line-length = 100
+diff = true
+skip-string-normalization = false
+verbose = true
+
+[tool.flake8]
+max-line-length = 100
+exclude = [".git", "__pycache__", "build", "dist", ".venv", "*.pyc"]
+
+[tool.mypy]
+python_version = "3.12"
+check_untyped_defs = true
+disallow_untyped_defs = true
+strict_optional = true
+warn_return_any = true
+warn_unused_ignores = true
+
+[[tool.mypy.overrides]]
+ignore_missing_imports = true
+module = ["sklearn.*", "scipy.*", "statsmodels.*"]
