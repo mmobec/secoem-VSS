@@ -16,3 +16,10 @@ venv/
 .venv/
 .ipynb_checkpoints/
 *.egg-info/
+
+# Raw per-run solution exports (~280 MB, 5385 small .txt files). Kept locally
+# so the analysis notebooks can be re-run against them, but never pushed:
+# committing them and deleting them in a later commit would leave them in the
+# repository history for good, so they are excluded from the start.
+Results/Execution of model/results/*
+!Results/Execution of model/results/.gitkeep
