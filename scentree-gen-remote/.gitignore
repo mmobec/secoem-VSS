@@ -5,3 +5,8 @@ __pycache__/
 site/
 build/
 dist/
+
+dif_ren_scentree/*
+!dif_ren_scentree/.gitkeep
+same_ren_scentree/*
+!same_ren_scentree/.gitkeep
