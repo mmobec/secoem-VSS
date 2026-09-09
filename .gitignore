@@ -1,0 +1,17 @@
+# Large generated simulation/scenario data — kept locally for running
+# simulations from this repo, but never pushed to the remote.
+scentree-gen-remote/same_ren_scentree/*
+!scentree-gen-remote/same_ren_scentree/.gitkeep
+
+scentree-gen-remote/dif_ren_scentree/*
+!scentree-gen-remote/dif_ren_scentree/.gitkeep
+
+scentree-gen-remote/scenarios_AMPL/*
+!scentree-gen-remote/scenarios_AMPL/.gitkeep
+
+# Python / environment clutter
+__pycache__/
+*.pyc
+venv/
+.ipynb_checkpoints/
+*.egg-info/
