@@ -1,0 +1,156 @@
+# Parameters for Flexible Demand Model 
+## Central Demand
+param FD := 1 17.23
+            2 15.54
+            3 14.79
+            4 14.45
+            5 14.37
+            6 15.1
+            7 17.85
+            8 22.03
+            9 24.36
+            10 25.25
+            11 26.51
+            12 26.91
+            13 27.66
+            14 28.27
+            15 28.44
+            16 27.49
+            17 26.65
+            18 26.18
+            19 25.83
+            20 27.54
+            21 27.4
+            22 25.45
+            23 22.43
+            24 19.46
+; 
+ 
+## Lower Bound on Flexible Demand 
+param FD_L := 1 13.78
+            2 12.44
+            3 11.83
+            4 11.56
+            5 11.5
+            6 12.08
+            7 14.28
+            8 17.62
+            9 19.49
+            10 20.2
+            11 21.2
+            12 21.52
+            13 22.13
+            14 22.61
+            15 22.75
+            16 21.99
+            17 21.32
+            18 20.94
+            19 20.66
+            20 22.03
+            21 21.92
+            22 20.36
+            23 17.94
+            24 15.56
+; 
+ 
+## Upper Bound on Flexible Demand 
+param FD_U := 1 20.67
+            2 18.65
+            3 17.75
+            4 17.34
+            5 17.25
+            6 18.12
+            7 21.42
+            8 26.44
+            9 29.23
+            10 30.3
+            11 31.81
+            12 32.29
+            13 33.19
+            14 33.92
+            15 34.13
+            16 32.99
+            17 31.98
+            18 31.42
+            19 31.0
+            20 33.04
+            21 32.88
+            22 30.54
+            23 26.91
+            24 23.35
+; 
+ 
+## Upper Bound on Upwards Reserve Provided by Flexible Demand 
+param RUFD := 1 6.89
+            2 6.22
+            3 5.92
+            4 5.78
+            5 5.75
+            6 6.04
+            7 7.14
+            8 8.81
+            9 9.74
+            10 10.1
+            11 10.6
+            12 10.76
+            13 11.06
+            14 11.31
+            15 11.38
+            16 11.0
+            17 10.66
+            18 10.47
+            19 10.33
+            20 11.01
+            21 10.96
+            22 10.18
+            23 8.97
+            24 7.78
+; 
+ 
+## Upper Bound on Downwards Reserve Provided by Flexible Demand 
+param RDFD := 1 41.34
+            2 37.31
+            3 35.49
+            4 34.67
+            5 34.49
+            6 36.24
+            7 42.83
+            8 52.87
+            9 58.46
+            10 60.59
+            11 63.61
+            12 64.57
+            13 66.38
+            14 67.84
+            15 68.25
+            16 65.98
+            17 63.96
+            18 62.83
+            19 61.99
+            20 66.09
+            21 65.75
+            22 61.08
+            23 53.82
+            24 46.69
+; 
+ 
+## Number nFI of time intervals in which a certain fraction of the demand has to be met (card(set F)) 
+param nFI := 2; 
+ 
+## First time step of interval f in FI 
+param TF_L :=   1 7 
+                2 18
+; 
+ 
+## Last time step of interval f in FI
+param TF_U :=   1 9 
+                2 22
+; 
+ 
+## Fraction of central demand that needs to be met during interval f in FI 
+param coef_FD :=    1 1 
+                    2 1
+; 
+ 
+## Cost per unit of flexible demand activated [EUR]
+param C_FD := 1; 
