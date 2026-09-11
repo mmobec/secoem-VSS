@@ -49,7 +49,7 @@ n_days = 1
 SIMS = [f"{i:03d}" for i in range(1, n_days+1)]  # Example with just few days for brevity
 
 pathscen_all = f"scenarios/{famscen_all}"
-pathdem  = "data/demand/2025-10-31_2025-11-30/quarterly_same_ren"
+pathdem  = "data/demand-15mins/"
 pathdem_h2 = "data/demand_h2"
 base_result_dir = Path("results")
 

@@ -6,7 +6,7 @@ from pathlib import Path
 All static parameters for a simulation
 """
 
-PROJECT_ROOT = Path("/users/delfos/aina/mmobec-pyomo")   #This is the root directory
+PROJECT_ROOT = Path(__file__).resolve().parent.parent
 
 MARKET_CHAIN = ["DA", "RM", "IM1", "IM2", "IM3", "IB"]
 
@@ -69,6 +69,6 @@ SOLVER_OPTIONS = {
 
     # --- Logging & run control ---
     "DisplayInterval": 2,
-    "TimeLimit":       3600,     # seconds
+    "TimeLimit":       14400,     # seconds
     "Seed":            2,
 }
