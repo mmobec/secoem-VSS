@@ -1,0 +1,500 @@
+ren_type,branch,num_scenarios_folder,scenario_dir,lane,pinned_cores,concurrency_lanes,threads_per_solve,pid,hostname,static_time_s,vssd_time_s,wall_time_total_s,rp_value,ev_value,vss_2,vss_6,excluded_weight_static_6,edev_6,vssd,vssd_6,excluded_weight_dynamic_6,vssd2_recourse,excluded_weight_dynamic2_recourse,propositions_valid,status,error,traceback
+same_ren,15min_ren_same,70,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc70_15min_same_ren,2,"8,9,10,11",16,4,4064607,azathoth,141.25383400917053,267.16927552223206,410.43586778640747,-21773.894036054186,-22191.261260530122,135.4884488239768,843.9316114871617,0,-21115.954407486293,-657.9396285678922,-657.9396285678922,0,-624.8429293401059,0.0,False,ok,,
+same_ren,15min_ren_same,80,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc80_15min_same_ren,3,"12,13,14,15",16,4,4064610,azathoth,142.80573320388794,319.2383074760437,464.0738980770111,-20698.985488162572,-21022.45371391152,106.36323428876494,747.3789097013614,0,-20205.225472507915,-493.76001565465776,-493.76001565465776,0,-714.4788984191619,0.0,False,ok,,
+same_ren,15min_ren_same,100,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc100_15min_same_ren,5,"20,21,22,23",16,4,4064609,azathoth,121.87904262542725,442.00617146492004,565.9109926223755,-22344.79752998512,-22828.927270070177,381.79635258172857,816.0337420495889,0,-21187.723796402926,-1157.073733582194,-1157.073733582194,0,-1139.4531141084335,0.0,False,ok,,
+same_ren,15min_ren_same,90,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc90_15min_same_ren,4,"16,17,18,19",16,4,4064608,azathoth,149.40452527999878,489.35329008102417,640.7773232460022,-22911.968192841814,-23396.642474124055,226.20648307231022,935.305143517071,0,-22075.359100710863,-836.6090921309515,-836.6090921309515,0.05555555555555555,-835.2073811323062,0.0,False,ok,,
+same_ren,15min_ren_same,110,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc110_15min_same_ren,6,"24,25,26,27",16,4,4064613,azathoth,170.5287971496582,642.9495558738708,815.4962904453278,-22273.824603720917,-22813.155400721163,363.15355942651513,974.8888249165539,0,-21073.047245547183,-1200.7773581737347,-1200.7773581737347,0.05454545454545455,-1306.2800588054597,0.0,False,ok,,
+same_ren,15min_ren_same,120,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc120_15min_same_ren,7,"28,29,30,31",16,4,4064612,azathoth,198.63038229942322,780.7418179512024,981.38898396492,-21767.67884735505,-22202.2078142249,174.31645528400986,877.6586783935709,0,-20723.233223862062,-1044.4456234929894,-1044.4456234929894,0,-1191.421889351488,0.0,False,ok,,
+same_ren,15min_ren_same,130,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc130_15min_same_ren,8,"32,33,34,35",16,4,4064615,azathoth,202.6696581840515,820.175733089447,1024.8655915260315,-21673.726987104255,-22043.973855188397,300.3809071073665,735.7222977306046,0,-21006.70720363808,-667.019783466174,-667.019783466174,0.2076923076923077,-1111.6745637719177,0.0,False,ok,,
+same_ren,15min_ren_same,150,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc150_15min_same_ren,10,"40,41,42,43",16,4,4064619,azathoth,240.7833616733551,1034.6666193008423,1282.001697063446,-22248.50733079756,-22758.53694876077,263.5997788993154,866.065494838098,0,-21421.97321480109,-826.5341159964701,-826.5341159964701,0.12666666666666668,-1130.4648294477556,0.0,False,ok,,
+same_ren,15min_ren_same,170,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc170_15min_same_ren,12,"48,49,50,51",16,4,4064611,azathoth,327.59397411346436,1397.6095707416534,1727.2065694332123,-21570.61925077611,-21822.32104957164,110.9150793139961,638.3659628533824,0,-20649.17026526091,-921.4489855152024,-921.4489855152024,0.017647058823529408,-994.4168459989123,0.0,False,ok,,
+same_ren,15min_ren_same,220,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc220_15min_same_ren,3,"12,13,14,15",16,4,4064610,azathoth,392.18897438049316,1930.9245855808258,2323.114263534546,-21669.889095558527,-22059.271322228982,200.9798421218111,750.033352562572,0,-20877.812934942023,-792.0761606165033,-792.0761606165033,0.013636363636363648,-919.8758082978857,0.0,False,ok,,
+same_ren,15min_ren_same,160,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc160_15min_same_ren,11,"44,45,46,47",16,4,4064614,azathoth,1595.014105796814,1239.6447439193726,2836.6373212337494,-21518.68762605199,-21790.951752806617,98.356088403576,657.9650645392685,0,-20495.080468735225,-1023.6071573167646,-1023.6071573167646,0.04375,-1078.5146460603464,0.0,False,ok,,
+same_ren,15min_ren_same,250,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc250_15min_same_ren,6,"24,25,26,27",16,4,4064613,azathoth,374.96554827690125,2152.868634700775,2527.835142850876,-21886.831859098824,-22448.29961207992,138.72986115188178,876.4244924352133,0,-20395.679339181836,-1491.1525199169882,-1491.1525199169882,0.068,-1227.682351397405,0.0,False,ok,,
+same_ren,15min_ren_same,260,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc260_15min_same_ren,7,"28,29,30,31",16,4,4064612,azathoth,535.1211671829224,2524.3181569576263,3059.4395627975464,-21299.28511417757,-21816.24259573926,220.05081345811413,847.6700353678134,0,-20329.264315462362,-970.0207987152098,-970.0207987152098,0.0076923076923077,-1040.502182243581,0.0,False,ok,,
+same_ren,15min_ren_same,270,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc270_15min_same_ren,8,"32,33,34,35",16,4,4064615,azathoth,570.6766035556793,2676.2845528125763,3246.961740732193,-21931.78552413664,-22342.368782782545,115.787534446692,685.1521552296508,0,-21010.781160359704,-921.0043637769377,-921.0043637769377,0.03703703703703703,-1076.5324830552963,0.0,False,ok,,
+same_ren,15min_ren_same,280,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc280_15min_same_ren,10,"40,41,42,43",16,4,4064619,azathoth,448.73608207702637,2674.907502412796,3123.644490003586,-21981.333602049606,-22371.272646726513,118.63859281069745,716.1369515141087,0,-20908.950104434414,-1072.383497615192,-1072.383497615192,0.08571428571428572,-1129.2637956446051,0.0,False,ok,,
+same_ren,15min_ren_same,320,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc320_15min_same_ren,6,"24,25,26,27",16,4,4064613,azathoth,691.2534160614014,3893.4503955841064,4584.704072475433,-21721.807070745395,-22220.900271173297,239.17683059287083,888.0660225758002,0,-20807.715433092497,-914.0916376528985,-914.0916376528985,0.015625,-1009.7049366754545,0.0,False,ok,,
+same_ren,15min_ren_same,340,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc340_15min_same_ren,8,"32,33,34,35",16,4,4064615,azathoth,705.4106252193451,3719.620882987976,4425.031898736954,-21670.500037151578,-22066.108719789776,131.534094880084,724.9250069008303,0,-20636.51397049334,-1033.986066658239,-1033.986066658239,0.01176470588235294,-983.8361059321869,0.0,False,ok,,
+same_ren,15min_ren_same,330,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc330_15min_same_ren,7,"28,29,30,31",16,4,4064612,azathoth,2975.5027611255646,4271.217440366745,7246.7204439640045,-21886.74214641552,-22307.269477441172,169.67121028716429,751.6195334863223,0,-21093.459826388604,-793.2823200269158,-793.2823200269158,0.1333333333333333,-1007.3343079028491,0.0,False,ok,,
+same_ren,15min_ren_same,380,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc380_15min_same_ren,7,"28,29,30,31",16,4,4064612,azathoth,936.1075744628906,5473.722930431366,6409.830757379532,-21774.39443694759,-22107.333663096204,65.26016319403425,635.702570927002,0,-20590.895627655624,-1183.4988092919666,-1183.4988092919666,0.023684210526315776,-1191.5442545114965,0.0,False,ok,,
+same_ren,15min_ren_same,140,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc140_15min_same_ren,9,"36,37,38,39",16,4,4064618,azathoth,20307.68567633629,1006.2381272315979,21315.93866801262,-21793.404241511736,-22157.084894207,223.09461912720144,729.4088959319306,0,-20876.02755283259,-917.3766886791454,-917.3766886791454,0.03571428571428571,-908.0467856841206,0.0,False,ok,,
+same_ren,15min_ren_same,190,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc190_15min_same_ren,14,"56,57,58,59",16,4,4064617,azathoth,29180.895901203156,1636.645277261734,30819.55385351181,-21880.280628189244,-22282.24531407298,274.916094634209,,1.0000000000000007,-20913.257978350844,-967.0226498384,-967.0226498384,0.0526315789473684,-1231.3148013335122,0.0,False,ok,,
+same_ren,15min_ren_same,210,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc210_15min_same_ren,2,"8,9,10,11",16,4,4064607,azathoth,29182.015733480453,1879.1939153671265,31061.209824562073,-22939.70798038942,-23399.72783806946,237.81141029293576,,0.9999999999999992,-21778.590108014716,-1161.1178723747034,-1161.1178723747034,0.0380952380952381,-1435.042915566817,0.0,False,ok,,
+same_ren,15min_ren_same,310,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc310_15min_same_ren,11,"44,45,46,47",16,4,4064614,azathoth,31409.11911559105,3191.478904247284,34600.598204135895,-21526.957510445107,-21925.77989165314,194.62423759730154,,0.9999999999999994,-20636.683302821184,-890.2742076239228,-890.2742076239228,0.01935483870967742,-939.599032430353,0.0,False,ok,,
+same_ren,15min_ren_same,240,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc240_15min_same_ren,4,"16,17,18,19",16,4,4064608,azathoth,36571.47442269325,2242.161206960678,38813.63646674156,-21644.549062726157,-21964.22118966596,120.71638643871484,647.0615905423874,0,-20542.64421054973,-1101.904852176427,-1101.904852176427,0.02083333333333334,-1141.5713023889766,0.0,False,ok,,
+same_ren,15min_ren_same,420,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc420_15min_same_ren,2,"8,9,10,11",16,4,4064607,azathoth,3918.8680367469788,6050.34619307518,9969.214444637299,-21510.631143571223,-21769.268000140404,65.8906883393829,601.9050789312314,0,-20431.062561456998,-1079.5685821142251,-1079.5685821142251,0.00476190476190476,-1220.6907318819212,0.0,False,ok,,
+same_ren,15min_ren_same,200,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc200_15min_same_ren,15,"60,61,62,63",16,4,4064616,azathoth,42172.08515524864,1736.193071603775,43910.26111483574,-22410.717006227544,-22774.945153463537,162.88572103279876,,1.0000000000000004,-21091.552202479856,-1319.164803747688,-1319.164803747688,0.035,-1454.6793427920165,0.0,False,ok,,
+same_ren,15min_ren_same,60,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc60_15min_same_ren,1,"4,5,6,7",16,4,4064606,azathoth,44364.10117530823,309.51029753685,44675.650604724884,-20822.962922843817,-21287.6120801519,144.83497561751938,,1.0000000000000009,-20094.50468006962,-728.4582427741989,-728.4582427741989,0,-926.2875774504937,0.0,False,ok,,
+same_ren,15min_ren_same,440,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc440_15min_same_ren,4,"16,17,18,19",16,4,4064608,azathoth,930.7391624450684,6311.642320156097,7242.381704092026,-21407.161226984394,-21671.225899229954,70.45040757496827,699.5896666276894,0,-20287.753762285392,-1119.4074646990011,-1119.4074646990011,0.00227272727272727,-1208.02065169872,0.0,False,ok,,
+same_ren,15min_ren_same,50,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc50_15min_same_ren,0,"0,1,2,3",16,4,4064603,azathoth,47751.267929792404,168.58194494247437,47921.885091781616,-22533.476012379517,-22578.086899657806,133.85790713419192,,1.0000000000000002,-21857.981148226037,-675.4948641534793,-675.4948641534793,0,-840.683033292833,0.0,False,ok,,
+same_ren,15min_ren_same,290,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc290_15min_same_ren,12,"48,49,50,51",16,4,4064611,azathoth,43797.8337059021,2933.6386761665344,46731.47257351875,-22154.892965732433,-22492.58975245859,109.45056675867818,,1.0000000000000002,-20860.86830760373,-1294.0246581287029,-1294.0246581287029,0.01724137931034483,-1194.6179429082476,0.0,False,ok,,
+same_ren,15min_ren_same,450,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc450_15min_same_ren,2,"8,9,10,11",16,4,4064607,azathoth,1227.7771859169006,6222.644032239914,7450.421414852142,-21675.4769893518,-21939.847547593246,72.77167032575744,644.3531483582155,0,-20678.190918941553,-997.2860704102459,-997.2860704102459,0.12666666666666668,-1272.9325546780929,0.0,False,ok,,
+same_ren,15min_ren_same,370,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc370_15min_same_ren,8,"32,33,34,35",16,4,4064615,azathoth,36151.53791856766,4759.627403974533,40911.1655755043,-21676.410362818868,-22004.559603230988,71.79032556357197,,0.9999999999999987,-20654.666701275713,-1021.7436615431543,-1021.7436615431543,0.02432432432432432,-1051.2339594656405,0.0,False,ok,,
+same_ren,15min_ren_same,300,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc300_15min_same_ren,3,"12,13,14,15",16,4,4064610,azathoth,44602.2136156559,3016.2516944408417,47618.465515851974,-22026.52271475209,-22455.8157789221,140.89354488123718,,0.999999999999999,-20767.91985143898,-1258.60286331311,-1258.60286331311,0.01,-1266.7267808359684,0.0,False,ok,,
+same_ren,15min_ren_same,470,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc470_15min_same_ren,1,"4,5,6,7",16,4,4064606,azathoth,960.537385225296,6692.7028930187225,7653.240478515625,-21812.10509925368,-22122.819393457423,110.17306860706958,668.103343076531,0,-20672.564089320036,-1139.541009933644,-1139.541009933644,0,-1224.5338577206385,0.0,False,ok,,
+same_ren,15min_ren_same,480,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc480_15min_same_ren,4,"16,17,18,19",16,4,4064608,azathoth,878.3228168487549,6441.881251573563,7320.20427274704,-21588.224257008893,-21893.530747119334,66.38254005705676,662.115843056541,0,-20588.221196637773,-1000.0030603711202,-1000.0030603711202,0.00833333333333332,-1278.7127082003572,0.0,False,ok,,
+same_ren,15min_ren_same,400,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc400_15min_same_ren,9,"36,37,38,39",16,4,4064618,azathoth,29592.282350301743,5120.009496212006,34712.292043447495,-21674.25707794406,-21987.594493367662,65.85748153369423,,0.9999999999999976,-20559.517337901725,-1114.739740042336,-1114.739740042336,0.0125,-1215.8923654100072,0.0,False,ok,,
+same_ren,15min_ren_same,350,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc350_15min_same_ren,10,"40,41,42,43",16,4,4064619,azathoth,47452.71153974533,4499.937387704849,51952.64913511276,-21913.32777699122,-22298.49697814484,100.97918734215273,,1.0000000000000009,-20877.823009800308,-1035.5047671909124,-1035.5047671909124,0,-1108.6398912599107,0.0,False,ok,,
+same_ren,15min_ren_same,490,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc490_15min_same_ren,0,"0,1,2,3",16,4,4064603,azathoth,1090.4484317302704,7582.367771148682,8672.81638789177,-21754.526972384785,-22028.072712151592,76.38367520674728,689.3504405484055,0,-20595.76037272684,-1158.7665996579453,-1158.7665996579453,0.010204081632653048,-1257.7173536214395,0.0,False,ok,,
+same_ren,15min_ren_same,360,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc360_15min_same_ren,6,"24,25,26,27",16,4,4064613,azathoth,44136.03283524513,4711.635150671005,48847.66825342178,-21681.41433344161,-21942.58360920651,89.91867319655648,,0.9999999999999989,-20776.261686803187,-905.1526466384239,-905.1526466384239,0.025,-1038.1886424128243,0.0,False,ok,,
+same_ren,15min_ren_same,500,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc500_15min_same_ren,12,"48,49,50,51",16,4,4064611,azathoth,1121.9629867076874,,8629.655896186829,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 126, in _run_one
+    vssd_result = compute_vssd_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 226, in compute_vssd_chain
+    edev2_recourse, edev2_recourse_excluded_weight = compute_edev2_recourse(
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 118, in compute_edev2_recourse
+    z_g, status = solve_ev_instance(instance, label=label)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/ev_subproblem.py"", line 430, in solve_ev_instance
+    results = solver.solve(instance, tee=False)
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,510,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc510_15min_same_ren,2,"8,9,10,11",16,4,4064607,azathoth,1314.6160578727722,,8204.359349012375,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 126, in _run_one
+    vssd_result = compute_vssd_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 198, in compute_vssd_chain
+    z_g, status = solve_ev_instance(instance, label=label)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/ev_subproblem.py"", line 430, in solve_ev_instance
+    results = solver.solve(instance, tee=False)
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,530,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc530_15min_same_ren,3,"12,13,14,15",16,4,4064610,azathoth,1611.2897992134094,,6690.218266248703,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 126, in _run_one
+    vssd_result = compute_vssd_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 198, in compute_vssd_chain
+    z_g, status = solve_ev_instance(instance, label=label)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/ev_subproblem.py"", line 430, in solve_ev_instance
+    results = solver.solve(instance, tee=False)
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,560,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc560_15min_same_ren,9,"36,37,38,39",16,4,4064618,azathoth,,,1154.9081563949585,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 121, in compute_static_chain
+    z_eev, excluded_weight = solve_full_instance_with_exclusion(
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/ev_subproblem.py"", line 581, in solve_full_instance_with_exclusion
+    results = solver.solve(instance, tee=False, symbolic_solver_labels=True)
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,600,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc600_15min_same_ren,12,"48,49,50,51",16,4,4064611,azathoth,,,124.82589221000671,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,570,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc570_15min_same_ren,10,"40,41,42,43",16,4,4064619,azathoth,,,891.5881817340851,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 121, in compute_static_chain
+    z_eev, excluded_weight = solve_full_instance_with_exclusion(
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/ev_subproblem.py"", line 581, in solve_full_instance_with_exclusion
+    results = solver.solve(instance, tee=False, symbolic_solver_labels=True)
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,580,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc580_15min_same_ren,0,"0,1,2,3",16,4,4064603,azathoth,,,671.2249474525452,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 98, in compute_static_chain
+    z_ev, ev_snapshot = solve_classical_ev(rp_instance, rp_scenario_data, abstract_model)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 80, in solve_classical_ev
+    z_ev, status = solve_ev_instance(instance, label=""classical EV"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/ev_subproblem.py"", line 430, in solve_ev_instance
+    results = solver.solve(instance, tee=False)
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,590,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc590_15min_same_ren,6,"24,25,26,27",16,4,4064613,azathoth,,,662.4166085720062,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 98, in compute_static_chain
+    z_ev, ev_snapshot = solve_classical_ev(rp_instance, rp_scenario_data, abstract_model)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 80, in solve_classical_ev
+    z_ev, status = solve_ev_instance(instance, label=""classical EV"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/ev_subproblem.py"", line 430, in solve_ev_instance
+    results = solver.solve(instance, tee=False)
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,180,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc180_15min_same_ren,13,"52,53,54,55",16,4,4064620,azathoth,58350.82259273529,,58389.06094288826,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 126, in _run_one
+    vssd_result = compute_vssd_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 140, in compute_vssd_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,460,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc460_15min_same_ren,15,"60,61,62,63",16,4,4064616,azathoth,,,15117.2142932415,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 121, in compute_static_chain
+    z_eev, excluded_weight = solve_full_instance_with_exclusion(
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/ev_subproblem.py"", line 581, in solve_full_instance_with_exclusion
+    results = solver.solve(instance, tee=False, symbolic_solver_labels=True)
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,230,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc230_15min_same_ren,5,"20,21,22,23",16,4,4064609,azathoth,58682.14915180206,,58724.97662258148,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 126, in _run_one
+    vssd_result = compute_vssd_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 140, in compute_vssd_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,410,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc410_15min_same_ren,14,"56,57,58,59",16,4,4064617,azathoth,,,30309.830675125122,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 121, in compute_static_chain
+    z_eev, excluded_weight = solve_full_instance_with_exclusion(
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/ev_subproblem.py"", line 581, in solve_full_instance_with_exclusion
+    results = solver.solve(instance, tee=False, symbolic_solver_labels=True)
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,390,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc390_15min_same_ren,7,"28,29,30,31",16,4,4064612,azathoth,,,44314.23737978935,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 121, in compute_static_chain
+    z_eev, excluded_weight = solve_full_instance_with_exclusion(
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/ev_subproblem.py"", line 581, in solve_full_instance_with_exclusion
+    results = solver.solve(instance, tee=False, symbolic_solver_labels=True)
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,520,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc520_15min_same_ren,8,"32,33,34,35",16,4,4064615,azathoth,,,16438.219309806824,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 121, in compute_static_chain
+    z_eev, excluded_weight = solve_full_instance_with_exclusion(
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/ev_subproblem.py"", line 581, in solve_full_instance_with_exclusion
+    results = solver.solve(instance, tee=False, symbolic_solver_labels=True)
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,430,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc430_15min_same_ren,11,"44,45,46,47",16,4,4064614,azathoth,,,29673.95433330536,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 121, in compute_static_chain
+    z_eev, excluded_weight = solve_full_instance_with_exclusion(
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/ev_subproblem.py"", line 581, in solve_full_instance_with_exclusion
+    results = solver.solve(instance, tee=False, symbolic_solver_labels=True)
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,540,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc540_15min_same_ren,1,"4,5,6,7",16,4,4064606,azathoth,,,15245.107526063919,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 121, in compute_static_chain
+    z_eev, excluded_weight = solve_full_instance_with_exclusion(
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/ev_subproblem.py"", line 581, in solve_full_instance_with_exclusion
+    results = solver.solve(instance, tee=False, symbolic_solver_labels=True)
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,550,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc550_15min_same_ren,4,"16,17,18,19",16,4,4064608,azathoth,,,15426.019391536713,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 121, in compute_static_chain
+    z_eev, excluded_weight = solve_full_instance_with_exclusion(
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/ev_subproblem.py"", line 581, in solve_full_instance_with_exclusion
+    results = solver.solve(instance, tee=False, symbolic_solver_labels=True)
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,180,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc180_15min_same_ren,0,"0,1,2,3",16,4,157130,azathoth,,,34.336509704589844,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,230,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc230_15min_same_ren,1,"4,5,6,7",16,4,157135,azathoth,,,40.85173296928406,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,460,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc460_15min_same_ren,5,"20,21,22,23",16,4,157136,azathoth,,,85.60004782676697,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,430,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc430_15min_same_ren,4,"16,17,18,19",16,4,157147,azathoth,,,93.76021814346313,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,390,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc390_15min_same_ren,2,"8,9,10,11",16,4,157138,azathoth,,,94.88469529151917,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,410,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc410_15min_same_ren,3,"12,13,14,15",16,4,157134,azathoth,,,98.05511379241943,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,540,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc540_15min_same_ren,10,"40,41,42,43",16,4,157143,azathoth,,,110.91838312149048,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,500,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc500_15min_same_ren,6,"24,25,26,27",16,4,157137,azathoth,,,111.59756875038147,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,560,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc560_15min_same_ren,12,"48,49,50,51",16,4,157142,azathoth,,,113.21402168273926,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,590,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc590_15min_same_ren,15,"60,61,62,63",16,4,157144,azathoth,,,120.42152738571167,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,550,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc550_15min_same_ren,11,"44,45,46,47",16,4,157146,azathoth,,,124.24907779693604,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,510,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc510_15min_same_ren,7,"28,29,30,31",16,4,157139,azathoth,,,124.50509643554688,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,580,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc580_15min_same_ren,14,"56,57,58,59",16,4,157145,azathoth,,,129.40741181373596,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,570,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc570_15min_same_ren,13,"52,53,54,55",16,4,157133,azathoth,,,134.76403427124023,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,530,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc530_15min_same_ren,9,"36,37,38,39",16,4,157140,azathoth,,,142.58632636070251,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,520,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc520_15min_same_ren,8,"32,33,34,35",16,4,157141,azathoth,,,148.91083216667175,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+same_ren,15min_ren_same,600,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_HG/FTC_20251031_20251130_c31_sc600_15min_same_ren,0,"0,1,2,3",16,4,157130,azathoth,,,117.85489225387573,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_static_vss.py"", line 93, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/vssd/run_vssd.py"", line 64, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/HG/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"

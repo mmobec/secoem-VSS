@@ -1,0 +1,691 @@
+ren_type,branch,num_scenarios_folder,scenario_dir,lane,pinned_cores,concurrency_lanes,threads_per_solve,pid,hostname,static_time_s,vssd_time_s,wall_time_total_s,rp_value,ev_value,vss_2,vss_6,excluded_weight_static_6,edev_6,vssd,vssd_6,excluded_weight_dynamic_6,vssd2_recourse,excluded_weight_dynamic2_recourse,propositions_valid,status,error,traceback
+dif_ren,15min_different_ren,50,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc50_15min_different_ren,0,"0,1,2,3",16,4,104407,azathoth,,,21.10917043685913,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,60,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc60_15min_different_ren,1,"4,5,6,7",16,4,104411,azathoth,,,23.792869567871094,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,70,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc70_15min_different_ren,2,"8,9,10,11",16,4,104412,azathoth,,,28.862738132476807,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,80,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc80_15min_different_ren,3,"12,13,14,15",16,4,104418,azathoth,,,39.71894192695618,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,90,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc90_15min_different_ren,4,"16,17,18,19",16,4,104415,azathoth,,,47.49831557273865,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,110,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc110_15min_different_ren,6,"24,25,26,27",16,4,104413,azathoth,,,49.26297974586487,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,120,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc120_15min_different_ren,7,"28,29,30,31",16,4,104417,azathoth,,,51.64281988143921,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,100,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc100_15min_different_ren,5,"20,21,22,23",16,4,104414,azathoth,,,53.24493718147278,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,130,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc130_15min_different_ren,8,"32,33,34,35",16,4,104416,azathoth,,,65.52148532867432,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,140,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc140_15min_different_ren,9,"36,37,38,39",16,4,104421,azathoth,,,74.94577646255493,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,150,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc150_15min_different_ren,10,"40,41,42,43",16,4,104422,azathoth,,,83.48215794563293,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,160,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc160_15min_different_ren,12,"48,49,50,51",16,4,104423,azathoth,,,95.79887580871582,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,170,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc170_15min_different_ren,11,"44,45,46,47",16,4,104420,azathoth,,,101.94627547264099,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,180,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc180_15min_different_ren,13,"52,53,54,55",16,4,104424,azathoth,,,103.23007464408875,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,190,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc190_15min_different_ren,14,"56,57,58,59",16,4,104410,azathoth,,,114.47823286056519,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,200,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc200_15min_different_ren,15,"60,61,62,63",16,4,104419,azathoth,,,122.93684649467468,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,220,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc220_15min_different_ren,1,"4,5,6,7",16,4,104411,azathoth,,,134.0239062309265,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,210,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc210_15min_different_ren,0,"0,1,2,3",16,4,104407,azathoth,,,143.53657388687134,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,230,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc230_15min_different_ren,2,"8,9,10,11",16,4,104412,azathoth,,,154.64377164840698,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,240,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc240_15min_different_ren,3,"12,13,14,15",16,4,104418,azathoth,,,164.83851027488708,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,250,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc250_15min_different_ren,4,"16,17,18,19",16,4,104415,azathoth,,,172.79529547691345,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,260,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc260_15min_different_ren,6,"24,25,26,27",16,4,104413,azathoth,,,189.21326899528503,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,270,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc270_15min_different_ren,7,"28,29,30,31",16,4,104417,azathoth,,,194.22351574897766,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,280,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc280_15min_different_ren,5,"20,21,22,23",16,4,104414,azathoth,,,202.95244002342224,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,290,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc290_15min_different_ren,8,"32,33,34,35",16,4,104416,azathoth,,,206.84579229354858,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,300,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc300_15min_different_ren,9,"36,37,38,39",16,4,104421,azathoth,,,254.34043049812317,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,50,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc50_15min_different_ren,0,"0,1,2,3",16,4,157629,azathoth,,,20.620649337768555,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,60,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc60_15min_different_ren,1,"4,5,6,7",16,4,157633,azathoth,,,23.63259744644165,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,70,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc70_15min_different_ren,2,"8,9,10,11",16,4,157632,azathoth,,,28.775145769119263,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,80,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc80_15min_different_ren,3,"12,13,14,15",16,4,157636,azathoth,,,39.28162741661072,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,90,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc90_15min_different_ren,4,"16,17,18,19",16,4,157637,azathoth,,,46.446224212646484,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,110,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc110_15min_different_ren,6,"24,25,26,27",16,4,157635,azathoth,,,47.95801520347595,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,100,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc100_15min_different_ren,5,"20,21,22,23",16,4,157638,azathoth,,,49.44415283203125,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,120,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc120_15min_different_ren,7,"28,29,30,31",16,4,157639,azathoth,,,51.75229096412659,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,130,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc130_15min_different_ren,8,"32,33,34,35",16,4,157640,azathoth,,,65.16536974906921,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,140,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc140_15min_different_ren,9,"36,37,38,39",16,4,157645,azathoth,,,74.82566404342651,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,150,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc150_15min_different_ren,10,"40,41,42,43",16,4,157641,azathoth,,,84.08149838447571,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,160,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc160_15min_different_ren,11,"44,45,46,47",16,4,157644,azathoth,,,95.89936089515686,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,170,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc170_15min_different_ren,12,"48,49,50,51",16,4,157643,azathoth,,,96.76353573799133,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,180,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc180_15min_different_ren,13,"52,53,54,55",16,4,157634,azathoth,,,104.68366551399231,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,190,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc190_15min_different_ren,14,"56,57,58,59",16,4,157646,azathoth,,,114.26842951774597,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,200,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc200_15min_different_ren,15,"60,61,62,63",16,4,157642,azathoth,,,123.50425839424133,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,220,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc220_15min_different_ren,1,"4,5,6,7",16,4,157633,azathoth,,,137.88745737075806,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,210,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc210_15min_different_ren,0,"0,1,2,3",16,4,157629,azathoth,,,145.57959628105164,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,230,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc230_15min_different_ren,2,"8,9,10,11",16,4,157632,azathoth,,,159.9123945236206,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
+dif_ren,15min_different_ren,240,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc240_15min_different_ren,3,"12,13,14,15",16,4,157636,azathoth,,,165.18210649490356,,,,,,,,,,,,,error,ApplicationError: Solver (gurobi) did not exit normally,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 657, in solve
+    raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
+pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
+"
