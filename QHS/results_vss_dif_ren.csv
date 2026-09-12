@@ -689,3 +689,269 @@ dif_ren,15min_different_ren,240,/users/delfos/aina/secoem-VSS/scentree-gen-remot
     raise ApplicationError(""Solver (%s) did not exit normally"" % self.name)
 pyomo.common.errors.ApplicationError: Solver (gurobi) did not exit normally
 "
+dif_ren,15min_different_ren,50,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc50_15min_different_ren,1,"4,5,6,7",16,4,336240,azathoth,1087.4257082939148,1274.8257501125336,2363.6669116020203,-17533.559617192226,-17455.470292492566,87.53638371115085,491.6869867675814,0,-16941.16739439994,-592.3922227922849,-592.3922227922849,0,-636.7897520255756,0.0,False,ok,,
+dif_ren,15min_different_ren,70,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc70_15min_different_ren,3,"12,13,14,15",16,4,336243,azathoth,1110.982455253601,1417.217101097107,2529.602989435196,-16767.16851734117,-16804.854714235986,120.25967010793829,692.1693812315789,0,-16639.910280284195,-127.25823705697621,-127.25823705697621,0,-322.17241829897466,0.0,False,ok,,
+dif_ren,15min_different_ren,60,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc60_15min_different_ren,0,"0,1,2,3",16,4,336237,azathoth,2073.4138853549957,2104.441150903702,4179.267965555191,-17217.31723520562,-17169.381157515123,212.16210392237917,666.3715164376954,0,-16879.82315584164,-337.49407936397984,-337.49407936397984,0,-419.537688556622,0.0,False,ok,,
+dif_ren,15min_different_ren,80,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc80_15min_different_ren,2,"8,9,10,11",16,4,336249,azathoth,3179.592273950577,3220.9260835647583,6401.923539638519,-16204.060255798864,-15990.920832838443,96.3907219676039,479.25702790265495,0,-15960.142759510245,-243.91749628861908,-243.91749628861908,0,-533.0407289468676,0.0,False,ok,,
+dif_ren,15min_different_ren,110,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc110_15min_different_ren,6,"24,25,26,27",16,4,336253,azathoth,4290.6158618927,5021.719774723053,9313.734889268875,-17238.01875705116,-17518.148974688836,395.85875147116894,914.9463372939208,0,-16483.006091839234,-755.0126652119252,-755.0126652119252,0,-907.9520299036394,0.00909090909090909,False,ok,,
+dif_ren,15min_different_ren,100,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc100_15min_different_ren,4,"16,17,18,19",16,4,336241,azathoth,5026.896508693695,5387.706007242203,10416.002811431885,-17285.647129707966,-17336.668372555214,300.717054096669,724.375677048567,0,-16802.91425615201,-482.73287355595676,-482.73287355595676,0,-660.4676463342767,0.0,False,ok,,
+dif_ren,15min_different_ren,90,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc90_15min_different_ren,5,"20,21,22,23",16,4,336252,azathoth,5678.2105531692505,5716.542550086975,11396.154699802399,-17639.689939077827,-17558.4618778512,111.37969542461724,597.6371231476842,0,-16740.990737615062,-898.6992014627649,-898.6992014627649,0.05555555555555555,-674.9270963464587,0.01111111111111111,False,ok,,
+dif_ren,15min_different_ren,160,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc160_15min_different_ren,11,"44,45,46,47",16,4,336247,azathoth,,,14510.613522052765,,,,,,,,,,,,,error,ValueError: Cannot load a SolverResults object with bad status: aborted,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 691, in solve
+    _model.solutions.load_from(
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/core/base/PyomoModel.py"", line 230, in load_from
+    raise ValueError(
+ValueError: Cannot load a SolverResults object with bad status: aborted
+"
+dif_ren,15min_different_ren,170,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc170_15min_different_ren,12,"48,49,50,51",16,4,336254,azathoth,,,14511.951112985611,,,,,,,,,,,,,error,ValueError: Cannot load a SolverResults object with bad status: aborted,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 691, in solve
+    _model.solutions.load_from(
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/core/base/PyomoModel.py"", line 230, in load_from
+    raise ValueError(
+ValueError: Cannot load a SolverResults object with bad status: aborted
+"
+dif_ren,15min_different_ren,180,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc180_15min_different_ren,13,"52,53,54,55",16,4,336251,azathoth,,,14521.146392345428,,,,,,,,,,,,,error,ValueError: Cannot load a SolverResults object with bad status: aborted,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 691, in solve
+    _model.solutions.load_from(
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/core/base/PyomoModel.py"", line 230, in load_from
+    raise ValueError(
+ValueError: Cannot load a SolverResults object with bad status: aborted
+"
+dif_ren,15min_different_ren,200,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc200_15min_different_ren,15,"60,61,62,63",16,4,336250,azathoth,,,14547.931946992874,,,,,,,,,,,,,error,ValueError: Cannot load a SolverResults object with bad status: aborted,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 691, in solve
+    _model.solutions.load_from(
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/core/base/PyomoModel.py"", line 230, in load_from
+    raise ValueError(
+ValueError: Cannot load a SolverResults object with bad status: aborted
+"
+dif_ren,15min_different_ren,190,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc190_15min_different_ren,14,"56,57,58,59",16,4,336244,azathoth,,,14551.434987545013,,,,,,,,,,,,,error,ValueError: Cannot load a SolverResults object with bad status: aborted,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 691, in solve
+    _model.solutions.load_from(
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/core/base/PyomoModel.py"", line 230, in load_from
+    raise ValueError(
+ValueError: Cannot load a SolverResults object with bad status: aborted
+"
+dif_ren,15min_different_ren,120,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc120_15min_different_ren,8,"32,33,34,35",16,4,336245,azathoth,7076.703732967377,8028.906677246094,15107.00357747078,-17064.283747953607,-17289.593640477113,381.1103929359051,806.8850086085222,0,-16427.01662281741,-637.2671251361971,-637.2671251361971,0,-828.6691099678064,0.00833333333333333,False,ok,,
+dif_ren,15min_different_ren,210,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc210_15min_different_ren,1,"4,5,6,7",16,4,336240,azathoth,,,14643.578108787537,,,,,,,,,,,,,error,ValueError: Cannot load a SolverResults object with bad status: aborted,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 691, in solve
+    _model.solutions.load_from(
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/core/base/PyomoModel.py"", line 230, in load_from
+    raise ValueError(
+ValueError: Cannot load a SolverResults object with bad status: aborted
+"
+dif_ren,15min_different_ren,220,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc220_15min_different_ren,3,"12,13,14,15",16,4,336243,azathoth,,,14568.748010158539,,,,,,,,,,,,,error,ValueError: Cannot load a SolverResults object with bad status: aborted,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 691, in solve
+    _model.solutions.load_from(
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/core/base/PyomoModel.py"", line 230, in load_from
+    raise ValueError(
+ValueError: Cannot load a SolverResults object with bad status: aborted
+"
+dif_ren,15min_different_ren,130,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc130_15min_different_ren,7,"28,29,30,31",16,4,336242,azathoth,8692.942944049835,9843.109835624695,18537.44805932045,-17354.755091332903,-17543.378842782997,344.6763781381378,757.9387601020135,0,-16639.471211441192,-715.283879891711,-715.283879891711,0,-868.7128060914329,0.00769230769230769,False,ok,,
+dif_ren,15min_different_ren,230,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc230_15min_different_ren,0,"0,1,2,3",16,4,336237,azathoth,,,14655.17622089386,,,,,,,,,,,,,error,ValueError: Cannot load a SolverResults object with bad status: aborted,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 691, in solve
+    _model.solutions.load_from(
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/core/base/PyomoModel.py"", line 230, in load_from
+    raise ValueError(
+ValueError: Cannot load a SolverResults object with bad status: aborted
+"
+dif_ren,15min_different_ren,240,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc240_15min_different_ren,2,"8,9,10,11",16,4,336249,azathoth,,,14611.208154439926,,,,,,,,,,,,,error,ValueError: Cannot load a SolverResults object with bad status: aborted,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 691, in solve
+    _model.solutions.load_from(
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/core/base/PyomoModel.py"", line 230, in load_from
+    raise ValueError(
+ValueError: Cannot load a SolverResults object with bad status: aborted
+"
+dif_ren,15min_different_ren,250,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc250_15min_different_ren,6,"24,25,26,27",16,4,336253,azathoth,,,14638.53555893898,,,,,,,,,,,,,error,ValueError: Cannot load a SolverResults object with bad status: aborted,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 691, in solve
+    _model.solutions.load_from(
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/core/base/PyomoModel.py"", line 230, in load_from
+    raise ValueError(
+ValueError: Cannot load a SolverResults object with bad status: aborted
+"
+dif_ren,15min_different_ren,140,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc140_15min_different_ren,9,"36,37,38,39",16,4,336246,azathoth,15041.6938290596,9748.970207929611,24792.05646300316,-17159.221385164903,-16945.605461416908,0.2697697130533925,378.1287601775184,0,-16026.786830531757,-786.2374411105484,-786.2374411105484,0.00714285714285714,-1035.0413063981523,0.00714285714285714,False,ok,,
+dif_ren,15min_different_ren,260,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc260_15min_different_ren,4,"16,17,18,19",16,4,336241,azathoth,,,14646.70778465271,,,,,,,,,,,,,error,ValueError: Cannot load a SolverResults object with bad status: aborted,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 691, in solve
+    _model.solutions.load_from(
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/core/base/PyomoModel.py"", line 230, in load_from
+    raise ValueError(
+ValueError: Cannot load a SolverResults object with bad status: aborted
+"
+dif_ren,15min_different_ren,270,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc270_15min_different_ren,5,"20,21,22,23",16,4,336252,azathoth,,,14649.137564659119,,,,,,,,,,,,,error,ValueError: Cannot load a SolverResults object with bad status: aborted,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 691, in solve
+    _model.solutions.load_from(
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/core/base/PyomoModel.py"", line 230, in load_from
+    raise ValueError(
+ValueError: Cannot load a SolverResults object with bad status: aborted
+"
+dif_ren,15min_different_ren,150,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc150_15min_different_ren,10,"40,41,42,43",16,4,336248,azathoth,12361.57804107666,13711.243215560913,26074.21070599556,-16935.522913775985,-17398.50115951237,507.27080990830655,1047.1350943518155,0,-16187.54340699828,-747.979506777705,-747.979506777705,0,-1005.8356536620995,0.00666666666666667,False,ok,,
+dif_ren,15min_different_ren,290,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc290_15min_different_ren,12,"48,49,50,51",16,4,336254,azathoth,,,14652.388868570328,,,,,,,,,,,,,error,ValueError: Cannot load a SolverResults object with bad status: aborted,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 691, in solve
+    _model.solutions.load_from(
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/core/base/PyomoModel.py"", line 230, in load_from
+    raise ValueError(
+ValueError: Cannot load a SolverResults object with bad status: aborted
+"
+dif_ren,15min_different_ren,280,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc280_15min_different_ren,11,"44,45,46,47",16,4,336247,azathoth,,,14664.667082309723,,,,,,,,,,,,,error,ValueError: Cannot load a SolverResults object with bad status: aborted,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 691, in solve
+    _model.solutions.load_from(
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/core/base/PyomoModel.py"", line 230, in load_from
+    raise ValueError(
+ValueError: Cannot load a SolverResults object with bad status: aborted
+"
+dif_ren,15min_different_ren,300,/users/delfos/aina/secoem-VSS/scentree-gen-remote/scenarios_AMPL/scenarios_AMPL_QHS/FTC_20251031_20251130_c31_sc300_15min_different_ren,13,"52,53,54,55",16,4,336251,azathoth,,,14724.588915586472,,,,,,,,,,,,,error,ValueError: Cannot load a SolverResults object with bad status: aborted,"Traceback (most recent call last):
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/batch_run_vss.py"", line 122, in _run_one
+    static_result = compute_static_chain(""001"")
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_static_vss.py"", line 89, in compute_static_chain
+    rp_instance, rp_scenario_data, abstract_model, sim_ctx = solve_rp(sim)
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/vssd/run_vssd.py"", line 73, in solve_rp
+    Solver(instance_wrapper, sim_ctx).solve()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 107, in solve
+    self._solve_model()
+  File ""/users/delfos/aina/secoem-VSS/QHS/codes/solver.py"", line 95, in _solve_model
+    self.results = solver.solve(instance, tee=True, symbolic_solver_labels=True)  # Solve and print log
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/opt/base/solvers.py"", line 691, in solve
+    _model.solutions.load_from(
+  File ""/users/delfos/aina/mmobec-pyomo/venv/lib/python3.10/site-packages/pyomo/core/base/PyomoModel.py"", line 230, in load_from
+    raise ValueError(
+ValueError: Cannot load a SolverResults object with bad status: aborted
+"
