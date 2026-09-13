@@ -42,22 +42,36 @@ class ScenarioGroup:
 def macro_stage_sg(instance, t):
     """
     Maps macro-stage t=1..6 (DA, RM, IM1, IM2, IM3, IB) onto the fine-grained SG
-    index whose cluster c[sg, .] the model's own nonanticipativity constraints use
-    to enforce that stage's headline decision.
+    index whose cluster c[sg, .] should be used as that stage's *information set*
+    for Definition 4's grouping -- i.e. what's actually known when that stage's
+    decision is committed, not necessarily whatever index the model's own NAC
+    happens to use.
 
-    t=1 (DA):  sg=1            -- eDA_p/eDA_m/ieDA_p/ieDA_m NAC'd at c[1,.]
-                                   (model_builder.py::_build_stage1_nac_index, stage=1)
-    t=2 (RM):  sg=1            -- rU/rD are NAC'd at the SAME c[1,.] as DA whenever
-                                   the model is built with market="DA" (confirmed:
-                                   _build_stage1_nac_index's market=="DA" branch
-                                   includes rU/rU_B/rU_FD/rD/rD_B/rD_FD at stage=1,
-                                   model_builder.py:1204-1209) -- RM bids are
-                                   submitted alongside DA bids, before DA clears,
-                                   same real-world timing as HG. Consequence: G_2 ==
-                                   G_1 as a partition, so EDEV_2 == EDEV_1 exactly.
+    t=1 (DA), t=2 (RM): sg=0   -- the true tree root (c[0,1] = every preserved
+                                   scenario, undifferentiated). model_builder.py's
+                                   own _build_stage1_nac_index NAC's eDA_p/eDA_m/
+                                   rU/rD at c[1,.] instead (confirmed via
+                                   preprocessing.py::allocate_market_prices():
+                                   sg=1's random variables ARE lD, the realized
+                                   DA price itself) -- but c[1,.] cannot be the
+                                   right information set for a decision that is
+                                   submitted *into* that same DA auction: the bid
+                                   (or bid-curve breakpoints) is chosen before the
+                                   price is known, not conditioned on its outcome.
+                                   Using sg=0 here makes G_1 (and G_2, since RM is
+                                   submitted alongside DA, same real-world timing)
+                                   a single group spanning every scenario --
+                                   consequently Z_EV^{g in G_1} degenerates to
+                                   exactly the classical EV problem (Definition 1),
+                                   so EDEV_1 == EV and EDEV_2 == EDEV_1 hold by
+                                   construction, not by coincidence.
     t=3,4,5 (IM1,IM2,IM3): sg = sgim[i]-1, i = t-2
                                    (model_builder.py's IM-NAC branch always uses
-                                   sgim[i]-1 for a market="DA"-built instance)
+                                   sgim[i]-1 for a market="DA"-built instance) --
+                                   one stage *before* that IM's own price is
+                                   revealed, the same "not yet known" logic as
+                                   sg=0 above, just applied at IM's own later point
+                                   in the tree instead of at the true root.
     t=6 (IB):  sg=nSG           -- the last stage (nSG=102 for QHS, vs. 30 for HG);
                                    preprocessing.py::allocate_market_prices()
                                    confirms lPIB/lNIB occupy the nSG-th stage's
@@ -65,9 +79,9 @@ def macro_stage_sg(instance, t):
                                    final stage.
     """
     if t == 1:
-        return 1
+        return 0
     if t == 2:
-        return 1
+        return 0
     if t in (3, 4, 5):
         i = t - 2
         return int(value(instance.sgim[i])) - 1

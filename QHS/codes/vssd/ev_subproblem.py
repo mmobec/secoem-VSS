@@ -34,11 +34,10 @@ or config_definition.py; it only reuses them as-is (InstanceManager included, fo
 build_full_instance() below).
 
 Also provides build_full_instance()/solve_full_instance_with_exclusion(), used
-by both run_static_vss.py's static EEV_t/VSS_t chain (Definition 1) and
-run_vssd.py's supplementary EDEV_2_recourse comparator: unlike build_ev_instance
-(one synthetic averaged scenario), these build a genuine multi-scenario
-instance over a set of real, surviving scenarios, with Gurobi-IIS-based
-scenario exclusion on infeasibility (Definition 3's remedy).
+by run_static_vss.py's static EEV_t/VSS_t chain (Definition 1): unlike
+build_ev_instance (one synthetic averaged scenario), these build a genuine
+multi-scenario instance over a set of real, surviving scenarios, with
+Gurobi-IIS-based scenario exclusion on infeasibility (Definition 3's remedy).
 """
 import copy
 import logging
@@ -474,18 +473,13 @@ def solve_ev_instance(instance, label=""):
 
 
 def build_full_instance(sim_ctx, abstract_model, rp_scenario_data, rp_instance,
-                         surviving_scenarios, renormalize=True):
+                         surviving_scenarios):
     """
     Builds a fresh full-scale instance restricted to `surviving_scenarios` (a
     set of real scenario ids) -- each scenario keeps its own real data, no
-    Omega_g-conditional averaging (unlike build_ev_instance()).
-
-    If renormalize, probabilities are rescaled to sum to 1 (a genuine
-    reduced-scenario EEV_t solve, once infeasible scenarios have been
-    excluded). If not, every scenario keeps its own real, absolute Prob value
-    (for partitioning RP's own scenarios into disjoint groups whose
-    sub-objectives sum back to RP's own total exactly, as
-    run_vssd.compute_edev2_recourse() does).
+    Omega_g-conditional averaging (unlike build_ev_instance()). Probabilities
+    are rescaled to sum to 1 (a genuine reduced-scenario EEV_t solve, once
+    infeasible scenarios have been excluded).
 
     Goes through the real InstanceManager.compute_instance() pipeline (not
     build_ev_instance()'s portal shortcut), because pW/pPV/PIB_p/PIB_m must be
@@ -502,11 +496,8 @@ def build_full_instance(sim_ctx, abstract_model, rp_scenario_data, rp_instance,
     for key, val in raw.items():
         portal[key] = copy.deepcopy(val)
     portal["S"] = {None: sorted(surviving_scenarios)}
-    if renormalize:
-        total_w = sum(prob[s] for s in surviving_scenarios)
-        portal["Prob"] = {s: prob[s] / total_w for s in surviving_scenarios}
-    else:
-        portal["Prob"] = {s: prob[s] for s in surviving_scenarios}
+    total_w = sum(prob[s] for s in surviving_scenarios)
+    portal["Prob"] = {s: prob[s] / total_w for s in surviving_scenarios}
     # Every S-indexed (not S0-indexed) raw param needs the same restriction as
     # S itself: Scen0/Prob0/c stay untouched (indexed over S0), but Scen and
     # the market-price params below are indexed over S and would otherwise
@@ -590,7 +581,7 @@ def solve_full_instance_with_exclusion(
             return None, sum(value(rp_instance.Prob[s]) for s in all_scenarios)
 
         instance = build_full_instance(
-            sim_ctx, abstract_model, rp_scenario_data, rp_instance, surviving, renormalize=True
+            sim_ctx, abstract_model, rp_scenario_data, rp_instance, surviving
         )
         fix_fn(instance, surviving)
         relax_im_bounds_for_fixed_da(instance)
