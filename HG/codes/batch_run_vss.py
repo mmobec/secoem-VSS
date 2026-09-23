@@ -78,10 +78,11 @@ def load_done_keys(csv_path):
     return done
 
 
-def _worker_init(lane_queue, threads_per_solve):
+def _worker_init(lane_queue, threads_per_solve, core_offset=0):
     global _LANE, _CORES
     _LANE = lane_queue.get()
-    _CORES = list(range(_LANE * threads_per_solve, _LANE * threads_per_solve + threads_per_solve))
+    base = core_offset + _LANE * threads_per_solve
+    _CORES = list(range(base, base + threads_per_solve))
     if hasattr(os, "sched_setaffinity"):
         try:
             os.sched_setaffinity(0, _CORES)
@@ -90,7 +91,7 @@ def _worker_init(lane_queue, threads_per_solve):
 
 
 def _run_one(num_scen, family_dir, ren_type, branch_label, threads_per_solve,
-             time_limit, n_lanes):
+             time_limit, n_lanes, project_root=None):
     row = {fn: "" for fn in FIELDNAMES}
     row.update({
         "ren_type": ren_type,
@@ -108,7 +109,10 @@ def _run_one(num_scen, family_dir, ren_type, branch_label, threads_per_solve,
     t_wall_start = time.time()
     try:
         import config_definition as cfg
-        cfg.PROJECT_ROOT = __import__("pathlib").Path(CODES_DIR).resolve().parent
+        cfg.PROJECT_ROOT = (
+            __import__("pathlib").Path(project_root) if project_root
+            else __import__("pathlib").Path(CODES_DIR).resolve().parent
+        )
         cfg.famscen_all = os.path.basename(family_dir)
         cfg.pathscen_all = family_dir
         cfg.SIMS = ["001"]
@@ -161,6 +165,13 @@ def main():
     ap.add_argument("--threads", type=int, default=4)
     ap.add_argument("--time-limit", type=int, default=14400)
     ap.add_argument("--only", default=None, help="comma-separated scenario counts to run, e.g. 50,60")
+    ap.add_argument("--project-root", default=None,
+                     help="override cfg.PROJECT_ROOT (results/<famscen>/... lands here); "
+                          "defaults to the codes/ dir's parent")
+    ap.add_argument("--core-offset", type=int, default=0,
+                     help="shift pinned core ranges by this many cores, so a concurrent "
+                          "batch (e.g. QHS's own run) doesn't collide on the same physical "
+                          "cores -- lane L is pinned to [core_offset + L*threads, ...)")
     args = ap.parse_args()
 
     entries = discover_scenario_dirs(args.root)
@@ -194,12 +205,12 @@ def main():
         max_workers=n_lanes,
         mp_context=ctx,
         initializer=_worker_init,
-        initargs=(lane_queue, args.threads),
+        initargs=(lane_queue, args.threads, args.core_offset),
     ) as executor:
         futures = {
             executor.submit(
                 _run_one, num_scen, family_dir, args.ren_type, args.branch_label,
-                args.threads, args.time_limit, n_lanes,
+                args.threads, args.time_limit, n_lanes, args.project_root,
             ): num_scen
             for num_scen, family_dir in todo
         }
