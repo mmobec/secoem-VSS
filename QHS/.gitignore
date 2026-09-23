@@ -3,16 +3,6 @@ scenarios/
 data/demand/
 pre_process_AMPL_to_Pyomo_scenario_data/AMPL format scenario data/
 pre_process_AMPL_to_Pyomo_scenario_data/Python format scenario data/
-/model_formulation/main.aux
-/model_formulation/main.bbl
-/model_formulation/main.bcf
-/model_formulation/main.blg
-/model_formulation/main.fdb_latexmk
-/model_formulation/main.fls
-/model_formulation/main.log
-/model_formulation/main.out
-/model_formulation/main.run.xml
-/model_formulation/main.synctex.gz
 /.venv
 /codes/__pycache__/
 /codes/models/__pycache__

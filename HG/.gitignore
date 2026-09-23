@@ -13,13 +13,3 @@ __pycache__/
 *.log
 *.ilp
 analises_results_*.html
-/model_formulation/main.aux
-/model_formulation/main.bbl
-/model_formulation/main.bcf
-/model_formulation/main.blg
-/model_formulation/main.fdb_latexmk
-/model_formulation/main.fls
-/model_formulation/main.log
-/model_formulation/main.out
-/model_formulation/main.run.xml
-/model_formulation/main.synctex.gz
