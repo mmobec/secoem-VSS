@@ -269,3 +269,27 @@ notebooks actually run against by default.
    `results/<famscen>/DA/ec/001/` (feeds `section_4_3`).
 5. **Regenerate figures** — run the `section_4_1`/`section_4_2`/`section_4_3`
    notebooks under `Results/` against the outputs of steps 1–4.
+
+## Acknowledgements
+
+This work has been supported with grants PID2022-139219OB-I00 and Cetp-FP-2023-00185 from the Spanish Ministerio de Ciencia, Innovación y Universidades. This research has been funded by CETPartnership, the Clean Energy Transition Partnership under the 2023 joint call for research proposals, co-funded by the European Commission (GA N°101069750) and with the funding organisations FFG (Austria), AEI (Spain) and MUR (Italy).
+
+## License
+
+This project is licensed under the EUPL v. 1.2. See the [LICENSE](LICENSE) file for details.
+
+Copyright © 2026 Universitat Politècnica de Catalunya (UPC) - BarcelonaTech
+
+### Authors
+
+Aina Sánchez Parada, F.-Javier Heredia, Albert Solà Vilalta.
+
+### Maintainers
+
+Aina Sánchez Parada: aina.sanchez.parada (at) estudiantat.upc.edu
+
+Albert Solà Vilalta: albert.sola.vilalta (at) upc.edu
+
+## Contact
+
+For questions or contributions, please open an issue or contact the repository maintainers.
